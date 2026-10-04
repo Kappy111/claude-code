@@ -1,0 +1,51 @@
+{
+  "name": "voice-typer",
+  "version": "1.0.0",
+  "description": "Press a hotkey to record your voice, transcribe it locally with Whisper, and auto-paste the text wherever your cursor is. Local & free. Works on macOS and Windows.",
+  "main": "src/main.js",
+  "author": "",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder",
+    "dist:mac": "electron-builder --mac",
+    "dist:win": "electron-builder --win"
+  },
+  "dependencies": {
+    "@huggingface/transformers": "^3.3.3"
+  },
+  "devDependencies": {
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.voicetyper.app",
+    "productName": "Voice Typer",
+    "files": [
+      "src/**/*",
+      "node_modules/**/*"
+    ],
+    "mac": {
+      "category": "public.app-category.productivity",
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "extendInfo": {
+        "NSMicrophoneUsageDescription": "Voice Typer needs microphone access to record and transcribe your speech.",
+        "LSUIElement": true
+      }
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "category": "Utility"
+    }
+  }
+}

@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta http-equiv="Content-Security-Policy"
+          content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';" />
+    <title>Voice Typer</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header>
+      <div class="logo">🎙️</div>
+      <div>
+        <h1>Voice Typer</h1>
+        <p class="sub">Local, free voice-to-text. Press your shortcut to dictate anywhere.</p>
+      </div>
+    </header>
+
+    <section class="status-card" id="statusCard">
+      <div class="dot" id="statusDot"></div>
+      <div class="status-text">
+        <strong id="statusTitle">Starting…</strong>
+        <span id="statusDetail">Loading the transcription model.</span>
+      </div>
+    </section>
+
+    <div class="notice" id="notice" hidden></div>
+
+    <form id="form">
+      <label class="field">
+        <span class="label">Keyboard shortcut</span>
+        <button type="button" class="shortcut-input" id="shortcutBtn">
+          <span id="shortcutText">—</span>
+        </button>
+        <span class="hint">Click, then press the key combo. Press the same shortcut to start and stop recording.</span>
+      </label>
+
+      <label class="field">
+        <span class="label">Transcription model</span>
+        <select id="model">
+          <option value="Xenova/whisper-tiny.en">Whisper Tiny (English, fastest, ~75 MB)</option>
+          <option value="Xenova/whisper-base.en">Whisper Base (English, balanced, ~145 MB)</option>
+          <option value="Xenova/whisper-small.en">Whisper Small (English, best, ~490 MB)</option>
+          <option value="Xenova/whisper-tiny">Whisper Tiny (multilingual, ~75 MB)</option>
+          <option value="Xenova/whisper-base">Whisper Base (multilingual, ~145 MB)</option>
+          <option value="Xenova/whisper-small">Whisper Small (multilingual, ~490 MB)</option>
+        </select>
+        <span class="hint">Downloaded once, then runs offline on your device.</span>
+      </label>
+
+      <label class="field" id="languageField" hidden>
+        <span class="label">Language</span>
+        <select id="language">
+          <option value="auto">Auto-detect</option>
+          <option value="english">English</option>
+          <option value="spanish">Spanish</option>
+          <option value="french">French</option>
+          <option value="german">German</option>
+          <option value="italian">Italian</option>
+          <option value="portuguese">Portuguese</option>
+          <option value="dutch">Dutch</option>
+          <option value="russian">Russian</option>
+          <option value="chinese">Chinese</option>
+          <option value="japanese">Japanese</option>
+          <option value="korean">Korean</option>
+          <option value="hindi">Hindi</option>
+          <option value="arabic">Arabic</option>
+        </select>
+      </label>
+
+      <label class="field">
+        <span class="label">Microphone</span>
+        <select id="mic">
+          <option value="">System default</option>
+        </select>
+      </label>
+
+      <label class="row">
+        <input type="checkbox" id="autoPaste" />
+        <span>Auto-paste at my cursor when transcription finishes</span>
+      </label>
+
+      <label class="row">
+        <input type="checkbox" id="sounds" />
+        <span>Play start/stop sounds</span>
+      </label>
+
+      <div class="actions">
+        <button type="button" id="testBtn" class="secondary">Test recording</button>
+        <button type="submit" id="saveBtn">Save</button>
+      </div>
+    </form>
+
+    <footer>
+      <p id="permHint"></p>
+    </footer>
+
+    <script src="./settings.js"></script>
+  </body>
+</html>
