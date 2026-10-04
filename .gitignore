@@ -1,0 +1,4 @@
+# Generated distribution artifacts (built on demand from source)
+voice-typer-extension.zip
+*.crx
+*.pem
