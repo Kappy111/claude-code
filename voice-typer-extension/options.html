@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Voice Typer — Settings</title>
+    <link rel="stylesheet" href="page.css" />
+  </head>
+  <body class="page">
+    <div class="wrap narrow">
+      <h1>🎙️ Voice Typer settings</h1>
+
+      <label class="field">
+        <span class="label">Transcription model</span>
+        <select id="model">
+          <option value="Xenova/whisper-tiny.en">Whisper Tiny (English, fastest, ~75 MB)</option>
+          <option value="Xenova/whisper-base.en">Whisper Base (English, balanced, ~145 MB)</option>
+          <option value="Xenova/whisper-small.en">Whisper Small (English, best, ~490 MB)</option>
+          <option value="Xenova/whisper-tiny">Whisper Tiny (multilingual, ~75 MB)</option>
+          <option value="Xenova/whisper-base">Whisper Base (multilingual, ~145 MB)</option>
+          <option value="Xenova/whisper-small">Whisper Small (multilingual, ~490 MB)</option>
+        </select>
+        <span class="hint">Downloaded once, then runs offline on your device.</span>
+      </label>
+
+      <label class="field" id="languageField" hidden>
+        <span class="label">Language</span>
+        <select id="language">
+          <option value="auto">Auto-detect</option>
+          <option value="english">English</option>
+          <option value="spanish">Spanish</option>
+          <option value="french">French</option>
+          <option value="german">German</option>
+          <option value="italian">Italian</option>
+          <option value="portuguese">Portuguese</option>
+          <option value="dutch">Dutch</option>
+          <option value="russian">Russian</option>
+          <option value="chinese">Chinese</option>
+          <option value="japanese">Japanese</option>
+          <option value="korean">Korean</option>
+          <option value="hindi">Hindi</option>
+          <option value="arabic">Arabic</option>
+        </select>
+      </label>
+
+      <label class="field">
+        <span class="label">Microphone</span>
+        <select id="mic">
+          <option value="">System default</option>
+        </select>
+        <span class="hint" id="micHint"></span>
+      </label>
+
+      <label class="row">
+        <input type="checkbox" id="autoInsert" />
+        <span>Type the text at my cursor automatically (otherwise just copy to clipboard)</span>
+      </label>
+
+      <label class="row">
+        <input type="checkbox" id="preferGpu" />
+        <span>Use GPU (WebGPU) when available — faster on supported devices</span>
+      </label>
+
+      <label class="row">
+        <input type="checkbox" id="sounds" />
+        <span>Play start/stop sounds</span>
+      </label>
+
+      <div class="actions">
+        <button id="saveBtn">Save</button>
+        <span id="saved" class="saved" hidden>Saved ✓</span>
+      </div>
+
+      <p class="foot">
+        Your shortcut is managed by Chrome at
+        <a href="#" id="shortcutLink">chrome://extensions/shortcuts</a>.
+        Settings are stored locally in your browser.
+      </p>
+    </div>
+    <script src="options.js"></script>
+  </body>
+</html>

@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Voice Typer</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header>
+      <span class="logo">🎙️</span>
+      <span class="title">Voice Typer</span>
+    </header>
+
+    <div class="status" id="statusRow">
+      <span class="dot" id="dot"></span>
+      <div class="status-text">
+        <strong id="statusTitle">Starting…</strong>
+        <span id="statusDetail">Loading.</span>
+      </div>
+    </div>
+
+    <button id="recordBtn" class="record">Start recording</button>
+    <p class="hint" id="shortcutHint">Shortcut: —</p>
+
+    <div class="notice" id="notice" hidden></div>
+
+    <div class="links">
+      <button id="micBtn" class="link">Enable microphone</button>
+      <button id="shortcutBtn" class="link">Change shortcut</button>
+      <button id="settingsBtn" class="link">Settings</button>
+    </div>
+
+    <script src="popup.js"></script>
+  </body>
+</html>

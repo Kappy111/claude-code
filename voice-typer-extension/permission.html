@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Voice Typer — Setup</title>
+    <link rel="stylesheet" href="page.css" />
+  </head>
+  <body class="page">
+    <div class="wrap">
+      <div class="hero">🎙️</div>
+      <h1>Welcome to Voice Typer</h1>
+      <p class="lead">
+        Dictate anywhere in Chrome. Press your shortcut, speak, press again — the
+        text is transcribed on your device and typed at your cursor. Nothing is
+        sent to the cloud.
+      </p>
+
+      <ol class="steps">
+        <li>
+          <strong>Enable your microphone</strong>
+          <p>Click the button and choose <em>Allow</em> when Chrome asks.</p>
+          <button id="enableBtn">Enable microphone</button>
+          <p id="micStatus" class="status"></p>
+        </li>
+        <li>
+          <strong>Your shortcut</strong>
+          <p>
+            Default is <kbd id="shortcut">Ctrl+Shift+Space</kbd>. Change it any
+            time here:
+          </p>
+          <button id="shortcutBtn" class="secondary">Change shortcut</button>
+        </li>
+        <li>
+          <strong>Try it</strong>
+          <p>
+            Click into any text box on a web page, press your shortcut, say a
+            sentence, then press it again. The first time, the speech model
+            downloads once (~145&nbsp;MB) and then works offline.
+          </p>
+        </li>
+      </ol>
+
+      <p class="foot">You can close this tab when you're done. Open the 🎙️ toolbar icon any time for settings.</p>
+    </div>
+    <script src="permission.js"></script>
+  </body>
+</html>
