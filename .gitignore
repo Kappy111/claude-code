@@ -2,3 +2,8 @@
 voice-typer-extension.zip
 *.crx
 *.pem
+
+# Store asset build artifacts
+voice-typer-webstore.zip
+voice-typer-store-assets/raw-*.png
+voice-typer-store-assets/log-*.txt
