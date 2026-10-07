@@ -1,0 +1,42 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html,body { width:1280px; height:800px; }
+  body { font-family:-apple-system,"Segoe UI",Roboto,sans-serif; background:#f5f5f7; color:#1a1a1a;
+         display:flex; align-items:center; justify-content:center; gap:70px; padding:80px; }
+  .left { max-width:460px; }
+  .left h1 { font-size:52px; font-weight:800; letter-spacing:-1.5px; margin-bottom:18px; line-height:1.05; }
+  .left h1 .accent { color:#4f46e5; }
+  .left p { font-size:22px; color:#6b6b6b; line-height:1.5; margin-bottom:26px; }
+  .chips { display:flex; flex-wrap:wrap; gap:10px; }
+  .chip { background:#eceafd; color:#4f46e5; font-weight:600; font-size:16px; padding:8px 16px; border-radius:999px; }
+  /* popup mock */
+  .popup { width:330px; background:#fff; border:1px solid #e3e3e3; border-radius:16px; box-shadow:0 20px 50px rgba(0,0,0,.14); padding:20px; }
+  .ph { display:flex; align-items:center; gap:10px; margin-bottom:16px; }
+  .ph .mi { width:34px; height:34px; border-radius:9px; background:#4f46e5; display:flex; align-items:center; justify-content:center; }
+  .ph .mi svg { width:20px; height:20px; }
+  .ph .nm { font-size:18px; font-weight:800; }
+  .status { display:flex; align-items:center; gap:12px; background:#f7f7f8; border:1px solid #e3e3e3; border-radius:11px; padding:13px 15px; margin-bottom:16px; }
+  .dot { width:12px; height:12px; border-radius:50%; background:#22a06b; flex:0 0 auto; }
+  .status .st { font-size:15px; font-weight:700; }
+  .status .sd { font-size:12px; color:#6b6b6b; }
+  .rec { width:100%; padding:13px; border-radius:11px; background:#4f46e5; color:#fff; font-size:16px; font-weight:700; text-align:center; }
+  .hint { text-align:center; color:#8a8a8a; font-size:12px; margin-top:10px; }
+</style></head><body>
+  <div class="left">
+    <h1>Right in your <span class="accent">toolbar</span></h1>
+    <p>One click shows status and settings. Pick your model, language, and shortcut — then forget it's there.</p>
+    <div class="chips"><span class="chip">Gmail</span><span class="chip">Slack</span><span class="chip">Notion</span><span class="chip">Forms</span><span class="chip">Chat boxes</span><span class="chip">& more</span></div>
+  </div>
+  <div class="popup">
+    <div class="ph"><div class="mi"><svg viewBox="0 0 22 22" xmlns="http://www.w3.org/2000/svg">
+      <rect x="9" y="3" width="4" height="9" rx="2" fill="#fff"/>
+      <path d="M6 10a5 5 0 0 0 10 0" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/>
+      <line x1="11" y1="15" x2="11" y2="18" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/>
+      <line x1="8" y1="18" x2="14" y2="18" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/>
+    </svg></div><div class="nm">Voice Typer</div></div>
+    <div class="status"><div class="dot"></div><div><div class="st">Ready</div><div class="sd">Press your shortcut on any page to dictate.</div></div></div>
+    <div class="rec">Start recording</div>
+    <div class="hint">Shortcut: Ctrl+Shift+Space</div>
+  </div>
+</body></html>
