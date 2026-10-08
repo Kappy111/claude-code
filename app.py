@@ -316,5 +316,12 @@ def api_job(job_id: str):
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", "5000"))
-    print(f"Scribe running at http://127.0.0.1:{port}")
-    app.run(host="127.0.0.1", port=port, threaded=True, debug=False)
+    # Bind to all interfaces by default so the page is reachable from the host
+    # browser in sandboxed Linux environments (e.g. ChromeOS / Crostini, WSL),
+    # where 127.0.0.1 inside the container isn't the browser's localhost.
+    # Override with HOST=127.0.0.1 to restrict to loopback only.
+    host = os.environ.get("HOST", "0.0.0.0")
+    print(f"Scribe running on port {port}")
+    print(f"  Local:      http://127.0.0.1:{port}")
+    print(f"  Chromebook: http://penguin.linux.test:{port}")
+    app.run(host=host, port=port, threaded=True, debug=False)
