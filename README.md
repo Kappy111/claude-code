@@ -3,8 +3,10 @@
 A small, self-hosted web app that converts video (or audio) into text. Paste a
 video URL or upload a file; Scribe downloads the audio with
 [`yt-dlp`](https://github.com/yt-dlp/yt-dlp) and transcribes it with a **local**
-[Whisper](https://github.com/openai/whisper) model. The transcript appears on
-the page, ready to read, copy, or download.
+Whisper model via
+[`faster-whisper`](https://github.com/SYSTRAN/faster-whisper) — a lightweight
+CTranslate2 runtime that's quick on CPU and needs no multi-gigabyte PyTorch
+install. The transcript appears on the page, ready to read, copy, or download.
 
 Everything runs on your own machine — no audio or transcript is ever sent to a
 third-party service.
@@ -40,8 +42,8 @@ source .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-The first transcription downloads the chosen Whisper model weights (cached in
-`~/.cache/whisper` thereafter).
+The first time you use a model, its weights download automatically from the
+Hugging Face Hub (cached in `~/.cache/huggingface` thereafter).
 
 ## Run
 
@@ -58,16 +60,25 @@ Whisper model with `SCRIBE_MODEL=small python app.py`.
 
 Pick a model in the UI. Larger = more accurate but slower and more memory-hungry.
 
-| Model    | Rough size | Speed      | Accuracy  |
-| -------- | ---------- | ---------- | --------- |
-| `tiny`   | ~75 MB     | fastest    | basic     |
-| `base`   | ~150 MB    | fast       | good ✅    |
-| `small`  | ~500 MB    | moderate   | better    |
-| `medium` | ~1.5 GB    | slow       | great     |
-| `large`  | ~3 GB      | slowest    | best      |
+| Model      | Rough download | Speed (CPU) | Accuracy  |
+| ---------- | -------------- | ----------- | --------- |
+| `tiny`     | ~75 MB         | fastest     | basic     |
+| `base`     | ~145 MB        | fast        | good ✅    |
+| `small`    | ~480 MB        | moderate    | better    |
+| `medium`   | ~1.5 GB        | slow        | great     |
+| `large-v3` | ~3 GB          | slowest     | best      |
 
-`base` is the default and a good starting point. A GPU is used automatically if
-PyTorch detects one, otherwise it runs on CPU.
+`base` is the default and a good starting point. On a modest machine (e.g. a
+Chromebook) stick to `tiny` or `base`.
+
+### Running on CPU vs GPU
+
+By default Scribe runs on CPU with 8-bit (`int8`) math — fast and light, no GPU
+needed. On a machine with an NVIDIA GPU, speed it up with:
+
+```bash
+SCRIBE_DEVICE=cuda SCRIBE_COMPUTE=float16 python app.py
+```
 
 ## Notes
 

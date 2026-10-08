@@ -31,8 +31,14 @@ from werkzeug.utils import secure_filename
 
 # Whisper model sizes, smallest/fastest first. "base" is a good default
 # balance of speed and accuracy for most machines.
-WHISPER_MODELS = ["tiny", "base", "small", "medium", "large"]
+WHISPER_MODELS = ["tiny", "base", "small", "medium", "large-v3"]
 DEFAULT_MODEL = os.environ.get("SCRIBE_MODEL", "base")
+
+# faster-whisper runtime settings. On a typical laptop or Chromebook CPU,
+# int8 is the fastest and lightest. On a CUDA GPU box, override with
+# SCRIBE_DEVICE=cuda and SCRIBE_COMPUTE=float16 for a big speed-up.
+DEVICE = os.environ.get("SCRIBE_DEVICE", "cpu")
+COMPUTE_TYPE = os.environ.get("SCRIBE_COMPUTE", "int8")
 
 # Where uploads and downloaded audio are temporarily staged.
 WORK_ROOT = os.path.join(tempfile.gettempdir(), "scribe-work")
@@ -99,12 +105,14 @@ _MODEL_LOCK = threading.Lock()
 
 
 def get_whisper_model(size: str):
-    """Load (and cache) a Whisper model by size."""
-    import whisper  # imported lazily so the web server starts without it
+    """Load (and cache) a faster-whisper model by size."""
+    from faster_whisper import WhisperModel  # lazy so the server starts fast
 
     with _MODEL_LOCK:
         if size not in _MODEL_CACHE:
-            _MODEL_CACHE[size] = whisper.load_model(size)
+            _MODEL_CACHE[size] = WhisperModel(
+                size, device=DEVICE, compute_type=COMPUTE_TYPE
+            )
         return _MODEL_CACHE[size]
 
 
@@ -167,13 +175,25 @@ def download_audio(job: Job, url: str) -> str:
 
 
 def transcribe_audio(job: Job, audio_path: str):
-    """Run local Whisper on `audio_path` and store the result on the job."""
+    """Run local faster-whisper on `audio_path` and store the result on the job."""
     job.status = "transcribing"
-    job.message = f"Transcribing with Whisper ({job.model})… this can take a while."
+    job.progress = 0.0
+    job.message = f"Transcribing with Whisper ({job.model})…"
     model = get_whisper_model(job.model)
-    result = model.transcribe(audio_path, fp16=False)
-    job.text = (result.get("text") or "").strip()
-    job.language = result.get("language", "") or ""
+
+    # faster-whisper streams segments lazily; iterating runs the transcription
+    # and lets us report real progress against the audio's total duration.
+    segments, info = model.transcribe(audio_path, beam_size=5)
+    job.language = (getattr(info, "language", "") or "") if info else ""
+    duration = getattr(info, "duration", 0) or 0
+
+    parts = []
+    for seg in segments:
+        parts.append(seg.text)
+        if duration:
+            job.progress = min(99.0, (seg.end / duration) * 100.0)
+            job.message = f"Transcribing… {job.progress:.0f}%"
+    job.text = "".join(parts).strip()
 
 
 def run_job(job: Job, url: str | None, upload_path: str | None):

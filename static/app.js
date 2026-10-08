@@ -92,11 +92,15 @@
     statusLabel.textContent = STATUS_LABELS[job.status] || job.status;
     statusSub.textContent = job.message || "";
 
-    if (job.status === "downloading" && job.progress > 0) {
+    if (
+      (job.status === "downloading" || job.status === "transcribing") &&
+      job.progress > 0
+    ) {
       show(progressWrap);
       progressBar.style.width = job.progress + "%";
     } else if (job.status === "transcribing") {
-      // Whisper gives no fine-grained progress; show an indeterminate feel.
+      // Before the first segment lands we have no percentage yet; fill the bar
+      // so it reads as "working" rather than stalled at zero.
       show(progressWrap);
       progressBar.style.width = "100%";
     } else {
