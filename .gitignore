@@ -1,0 +1,13 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+
+# Scribe runtime
+scribe-work/
+*.log
+
+# OS
+.DS_Store

@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Scribe — video to text</title>
+    <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  </head>
+  <body>
+    <main class="app">
+      <header class="hero">
+        <div class="logo">◗</div>
+        <h1>Scribe</h1>
+        <p class="tagline">Turn any video into text. Runs entirely on your machine.</p>
+      </header>
+
+      <section class="card">
+        <div class="tabs" role="tablist">
+          <button class="tab is-active" data-tab="url" role="tab">Paste a link</button>
+          <button class="tab" data-tab="file" role="tab">Upload a file</button>
+        </div>
+
+        <form id="transcribe-form">
+          <div class="panel is-active" data-panel="url">
+            <label class="field-label" for="url">Video or audio URL</label>
+            <input
+              type="url"
+              id="url"
+              name="url"
+              placeholder="https://www.youtube.com/watch?v=…"
+              autocomplete="off"
+            />
+            <p class="hint">YouTube, Vimeo, podcasts, direct media links — anything yt-dlp supports.</p>
+          </div>
+
+          <div class="panel" data-panel="file">
+            <label class="dropzone" id="dropzone" for="file">
+              <span class="dropzone-icon">⬆</span>
+              <span class="dropzone-text">Drop a video or audio file here, or click to choose</span>
+              <span class="dropzone-name" id="file-name"></span>
+            </label>
+            <input type="file" id="file" name="file" accept="audio/*,video/*" hidden />
+          </div>
+
+          <div class="controls">
+            <div class="model-select">
+              <label for="model">Whisper model</label>
+              <select id="model" name="model">
+                {% for m in models %}
+                <option value="{{ m }}" {% if m == default_model %}selected{% endif %}>
+                  {{ m }}{% if m == 'base' %} (recommended){% endif %}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+            <button type="submit" class="btn-primary" id="submit-btn">
+              Transcribe
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <section class="card status-card" id="status-card" hidden>
+        <div class="status-head">
+          <div class="spinner" id="spinner"></div>
+          <div class="status-text">
+            <div class="status-label" id="status-label">Working…</div>
+            <div class="status-sub" id="status-sub"></div>
+          </div>
+        </div>
+        <div class="progress" id="progress-wrap" hidden>
+          <div class="progress-bar" id="progress-bar"></div>
+        </div>
+      </section>
+
+      <section class="card result-card" id="result-card" hidden>
+        <div class="result-head">
+          <div>
+            <h2 id="result-title">Transcript</h2>
+            <div class="result-meta" id="result-meta"></div>
+          </div>
+          <div class="result-actions">
+            <button class="btn-ghost" id="copy-btn">Copy</button>
+            <button class="btn-ghost" id="download-btn">Download .txt</button>
+          </div>
+        </div>
+        <textarea id="transcript" class="transcript" readonly spellcheck="false"></textarea>
+      </section>
+
+      <section class="card error-card" id="error-card" hidden>
+        <strong>⚠ Error</strong>
+        <p id="error-text"></p>
+      </section>
+
+      <footer class="foot">
+        Audio is downloaded with <code>yt-dlp</code> and transcribed by local
+        <code>Whisper</code>. Nothing leaves this computer.
+      </footer>
+    </main>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+  </body>
+</html>
