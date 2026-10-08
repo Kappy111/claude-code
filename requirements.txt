@@ -1,3 +1,6 @@
 Flask>=3.0
 yt-dlp>=2024.1.0
 faster-whisper>=1.0.0
+# Pin PyAV below 14: faster-whisper calls av.open(..., metadata_errors=...),
+# an argument newer PyAV (14+) removed, which crashes audio decoding.
+av>=11,<14
