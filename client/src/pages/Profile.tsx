@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { BadgeCheck, Lock, Settings, Grid3x3, Type, Film, Video, Play, Heart, ImageOff, X } from 'lucide-react';
+import { BadgeCheck, Lock, Settings, Grid3x3, Type, Film, Video, Play, Heart, ImageOff, X, Mail } from 'lucide-react';
 import { users as usersApi, errMsg } from '../api';
 import { Avatar, Spinner, EmptyState, GridSkeleton } from '../components/ui';
 import { PostCard } from '../components/PostCard';
@@ -81,10 +81,13 @@ export function Profile() {
             {isSelf ? (
               <button onClick={() => navigate('/settings')} className="btn-ghost px-4 py-2 text-sm"><Settings size={16} /> Edit profile</button>
             ) : (
-              <button onClick={toggleFollow} disabled={followBusy}
-                className={`px-6 py-2 text-sm ${profile.isFollowing ? 'btn-ghost' : profile.followRequested ? 'btn-outline' : 'btn-brand'}`}>
-                {followBusy ? <Spinner className="!w-4 !h-4" /> : profile.isFollowing ? 'Following' : profile.followRequested ? 'Requested' : 'Follow'}
-              </button>
+              <>
+                <button onClick={() => navigate('/messages', { state: { to: profile.username } })} className="btn-ghost px-4 py-2 text-sm"><Mail size={16} /> Message</button>
+                <button onClick={toggleFollow} disabled={followBusy}
+                  className={`px-6 py-2 text-sm ${profile.isFollowing ? 'btn-ghost' : profile.followRequested ? 'btn-outline' : 'btn-brand'}`}>
+                  {followBusy ? <Spinner className="!w-4 !h-4" /> : profile.isFollowing ? 'Following' : profile.followRequested ? 'Requested' : 'Follow'}
+                </button>
+              </>
             )}
           </div>
         </div>

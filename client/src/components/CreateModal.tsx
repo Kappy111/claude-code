@@ -19,18 +19,39 @@ function MediaUploader({ accept, multiple, onUploaded, children }: {
   const ref = useRef<HTMLInputElement>(null);
   const { show } = useToast();
   const [uploading, setUploading] = useState(false);
-  const handle = async (files: FileList | null) => {
+  const [pct, setPct] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const kind = accept.startsWith('image') ? 'image' : accept.startsWith('video') ? 'video' : null;
+
+  const handle = async (files: FileList | File[] | null) => {
     if (!files || !files.length) return;
-    setUploading(true);
-    try { onUploaded(await uploadFiles(Array.from(files))); }
+    let arr = Array.from(files);
+    if (kind) arr = arr.filter((f) => f.type.startsWith(kind));
+    if (!arr.length) { show(`Please drop a ${kind} file.`, 'error'); return; }
+    setUploading(true); setPct(0);
+    try { onUploaded(await uploadFiles(arr, setPct)); }
     catch (e) { show(errMsg(e, 'Upload failed. Please try again.'), 'error'); }
-    finally { setUploading(false); if (ref.current) ref.current.value = ''; }
+    finally { setUploading(false); setPct(0); if (ref.current) ref.current.value = ''; }
   };
+
   return (
     <>
       <input ref={ref} type="file" accept={accept} multiple={multiple} hidden onChange={(e) => handle(e.target.files)} />
-      <button type="button" onClick={() => ref.current?.click()} disabled={uploading} className="w-full">
-        {uploading ? <span className="flex items-center justify-center gap-2 text-txt-secondary py-8"><Spinner /> Uploading…</span> : children}
+      <button
+        type="button"
+        onClick={() => ref.current?.click()}
+        disabled={uploading}
+        onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={(e) => { e.preventDefault(); setDragging(false); handle(e.dataTransfer.files); }}
+        className={`w-full rounded-xl transition ${dragging ? 'ring-2 ring-brand ring-offset-2 ring-offset-ink-850' : ''}`}
+      >
+        {uploading ? (
+          <div className="flex flex-col items-center justify-center gap-3 text-txt-secondary py-8 px-6">
+            <div className="flex items-center gap-2"><Spinner /> Uploading… {pct}%</div>
+            <div className="w-full max-w-xs h-1.5 bg-ink-700 rounded-full overflow-hidden"><div className="h-full bg-brand transition-all" style={{ width: `${pct}%` }} /></div>
+          </div>
+        ) : children}
       </button>
     </>
   );

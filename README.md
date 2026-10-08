@@ -69,6 +69,23 @@ or any Docker host; just set those two env vars and mount a volume at `/data`.
 | `PORT` | Port to listen on (most hosts inject this) | `4000` |
 | `OMNIFEED_DATA_DIR` | Where the SQLite DB + uploads live (point at the volume) | `server/data` |
 | `OMNIFEED_JWT_SECRET` | Signing secret for login tokens | dev-only fallback |
+| `OMNIFEED_SEED_MEDIA` | `svg` skips ffmpeg demo-video generation (set in production) | unset |
+
+### Point your own domain at it
+
+Once it's deployed on Railway:
+1. In the service, open **Settings → Networking → Custom Domain** and enter your
+   domain (e.g. `omnifeed.app`) or a subdomain (e.g. `app.omnifeed.app`).
+2. Railway shows a **CNAME target** (something like `xxxx.up.railway.app`).
+3. At your domain registrar / DNS provider, add a **CNAME record**:
+   - a subdomain → `CNAME  app  xxxx.up.railway.app`
+   - a root/apex domain → use your registrar's "ANAME/ALIAS/flattened CNAME"
+     option pointing at the same target (plain CNAME isn't allowed on an apex).
+4. Save, then wait a few minutes — Railway provisions the HTTPS certificate
+   automatically. Your app is then live on your own domain.
+
+Render and Fly have the same flow (add a custom domain in their dashboard, then
+add the CNAME/ALIAS record they give you).
 
 ## What's implemented
 
@@ -81,6 +98,8 @@ or any Docker host; just set those two env vars and mount a volume at `/data`.
 **YouTube-style video** — watch page with a full custom player (play/pause, scrubber, volume, speed, quality, fullscreen, chapters), channel row + Subscribe, like/dislike, Share, Save, expandable description, an **Up next** related-videos rail, duration badges, and watch history with resume progress.
 
 **Engagement** — likes (optimistic, de-duplicated), threaded comments with replies & likes, reposts, bookmarks, shares, follows, view counts. A reusable comments panel (modal on mobile, side panel on desktop).
+
+**Direct messages** — one-to-one conversations with a two-pane inbox (conversation list + chat thread), live polling for new messages, unread badges in the nav, and a **Message** button on every profile.
 
 **Discovery** — Explore page with debounced search across users / posts / hashtags, category filters, and a trending section (hashtags, creators, popular videos/shorts/snaps). Hashtag pages.
 
@@ -113,4 +132,4 @@ client/
 
 ## Data model
 
-`users`, `posts` (type = thought/snap/short/video), `comments` (self-referencing for replies), `likes` (unique per user+post / user+comment), `bookmarks`, `follows` (active/pending), `notifications`, `watch_history`. See `server/src/schema.sql`.
+`users`, `posts` (type = thought/snap/short/video), `comments` (self-referencing for replies), `likes` (unique per user+post / user+comment), `bookmarks`, `follows` (active/pending), `notifications`, `messages` (DMs), `watch_history`. See `server/src/schema.sql`.

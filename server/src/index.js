@@ -14,6 +14,7 @@ import commentRoutes from './routes/comments.js';
 import notificationRoutes from './routes/notifications.js';
 import searchRoutes from './routes/search.js';
 import uploadRoutes from './routes/upload.js';
+import messageRoutes from './routes/messages.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -34,6 +35,7 @@ app.use('/api/comments', commentRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/messages', messageRoutes);
 
 app.get('/api/health', (_req, res) => res.json({ ok: true, service: 'omnifeed' }));
 

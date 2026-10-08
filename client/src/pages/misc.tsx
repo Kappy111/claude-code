@@ -82,11 +82,3 @@ export function Hashtag() {
   );
 }
 
-export function Messages() {
-  return (
-    <div className="max-w-2xl mx-auto px-4 py-4">
-      <h1 className="text-2xl font-bold mb-4 flex items-center gap-2"><Mail className="text-brand-300" /> Messages</h1>
-      <EmptyState icon={Mail} title="Your inbox is empty" subtitle="Direct messaging is coming soon to OmniFeed. For now, interact through comments and follows." />
-    </div>
-  );
-}

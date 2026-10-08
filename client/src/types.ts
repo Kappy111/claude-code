@@ -66,6 +66,15 @@ export interface Comment {
   replies: Comment[];
 }
 
+export interface DMMessage { id: string; text: string; mine: boolean; createdAt: string; }
+export interface Conversation {
+  user: User;
+  lastMessage: string;
+  lastFromMe: boolean;
+  lastAt: string;
+  unread: number;
+}
+
 export interface NotificationGroup {
   id: string;
   type: 'follow' | 'follow_request' | 'like' | 'comment' | 'reply' | 'repost' | 'bookmark';

@@ -13,7 +13,8 @@ import { Notifications } from './pages/Notifications';
 import { Settings } from './pages/Settings';
 import { Videos } from './pages/Videos';
 import { Photos, Thoughts } from './pages/FormatFeed';
-import { Bookmarks, WatchHistory, Hashtag, Messages } from './pages/misc';
+import { Bookmarks, WatchHistory, Hashtag } from './pages/misc';
+import { Messages } from './pages/Messages';
 
 function Loading() {
   return <div className="min-h-screen grid place-items-center"><Spinner className="!w-8 !h-8" /></div>;

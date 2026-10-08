@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { Post, User, Comment, NotificationGroup, MediaItem } from './types';
+import type { Post, User, Comment, NotificationGroup, MediaItem, Conversation, DMMessage } from './types';
 
 const TOKEN_KEY = 'omnifeed_token';
 
@@ -104,10 +104,23 @@ export const search = {
   hashtag: (tag: string) => api.get(`/search/hashtag/${tag}`).then((r) => r.data as { tag: string; posts: Post[] }),
 };
 
+// ---- Messages (DMs) ----
+export const messages = {
+  conversations: () => api.get('/messages').then((r) => r.data.conversations as Conversation[]),
+  unreadCount: () => api.get('/messages/unread-count').then((r) => r.data.count as number),
+  thread: (username: string) =>
+    api.get(`/messages/thread/${username}`).then((r) => r.data as { user: User; messages: DMMessage[] }),
+  send: (username: string, text: string) =>
+    api.post(`/messages/${username}`, { text }).then((r) => r.data.message as DMMessage),
+};
+
 // ---- Upload ----
-export async function uploadFiles(files: File[]): Promise<MediaItem[]> {
+export async function uploadFiles(files: File[], onProgress?: (pct: number) => void): Promise<MediaItem[]> {
   const fd = new FormData();
   files.forEach((f) => fd.append('files', f));
-  const r = await api.post('/upload', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+  const r = await api.post('/upload', fd, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+    onUploadProgress: (e) => { if (onProgress && e.total) onProgress(Math.round((e.loaded / e.total) * 100)); },
+  });
   return r.data.files as MediaItem[];
 }

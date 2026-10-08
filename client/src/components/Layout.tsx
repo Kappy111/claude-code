@@ -5,7 +5,7 @@ import {
   Plus, User as UserIcon, Search, LogOut, Settings, Bookmark, History,
 } from 'lucide-react';
 import { useAuth } from '../store/auth';
-import { notifications as notifApi } from '../api';
+import { notifications as notifApi, messages as msgApi } from '../api';
 import { Avatar } from './ui';
 import { CreateModal } from './CreateModal';
 import type { PostType } from '../types';
@@ -38,6 +38,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const [createType, setCreateType] = useState<PostType | undefined>(undefined);
   const [showCreate, setShowCreate] = useState(false);
   const [unread, setUnread] = useState(0);
+  const [msgUnread, setMsgUnread] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
 
   const openCreate = useCallback((t?: PostType) => { setCreateType(t); setShowCreate(true); }, []);
@@ -45,6 +46,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const loadUnread = useCallback(() => {
     if (!user) return;
     notifApi.unreadCount().then(setUnread).catch(() => {});
+    msgApi.unreadCount().then(setMsgUnread).catch(() => {});
   }, [user]);
 
   useEffect(() => { loadUnread(); }, [loadUnread, location.pathname]);
@@ -68,7 +70,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 className={({ isActive }) => `relative flex items-center gap-4 px-3 py-2.5 rounded-xl font-medium transition-colors ${isActive ? 'bg-ink-800 text-txt-primary' : 'text-txt-secondary hover:bg-ink-850 hover:text-txt-primary'}`}>
                 <span className="relative">
                   <item.icon size={24} />
-                  {item.badge && unread > 0 && <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-accent-pink text-[10px] font-bold grid place-items-center text-white">{unread > 9 ? '9+' : unread}</span>}
+                  {(() => { const n = item.to === '/notifications' ? unread : item.to === '/messages' ? msgUnread : 0; return n > 0 ? <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-accent-pink text-[10px] font-bold grid place-items-center text-white">{n > 9 ? '9+' : n}</span> : null; })()}
                 </span>
                 <span className="hidden xl:block">{item.label}</span>
               </NavLink>
