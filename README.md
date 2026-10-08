@@ -45,7 +45,20 @@ pip install -r requirements.txt
 The first time you use a model, its weights download automatically from the
 Hugging Face Hub (cached in `~/.cache/huggingface` thereafter).
 
-## Run
+## Run (command line) — simplest, no browser needed
+
+If you just want the text in your terminal (handy on Chromebooks/WSL where
+reaching a local web server in the browser can be fiddly):
+
+```bash
+python transcribe.py "https://www.youtube.com/watch?v=..."   # a URL
+python transcribe.py ~/Downloads/recording.mp3               # or a local file
+```
+
+The transcript prints as it's recognized and is saved to `~/transcript.txt`.
+Pick a model with `--model tiny` (fastest) through `--model large-v3` (best).
+
+## Run (web app)
 
 ```bash
 python app.py
