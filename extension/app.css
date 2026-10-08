@@ -4,6 +4,9 @@
   --bad: #ff6b6b; --rec: #ff4d4d;
 }
 * { box-sizing: border-box; }
+/* The `hidden` attribute must win over author display rules (e.g. .recording
+   sets display:flex, which would otherwise keep a hidden panel visible). */
+[hidden] { display: none !important; }
 body {
   margin: 0; background: var(--bg); color: var(--text); min-height: 100vh;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
