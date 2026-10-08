@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <div class="head">
+      <div class="logo">◗</div>
+      <div>
+        <div class="title">Scribe</div>
+        <div class="sub">video &amp; audio → text</div>
+      </div>
+    </div>
+
+    <button id="tab-btn" class="btn primary">🎧 Transcribe this tab's audio</button>
+    <button id="file-btn" class="btn">📁 Transcribe a file</button>
+
+    <p class="hint">
+      "This tab" records what's playing in your current tab (e.g. a YouTube
+      video), then transcribes it. First run downloads the speech model once.
+    </p>
+    <p id="warn" class="warn" hidden></p>
+
+    <script src="popup.js"></script>
+  </body>
+</html>
