@@ -47,15 +47,24 @@ Hugging Face Hub (cached in `~/.cache/huggingface` thereafter).
 
 ## Run (command line) — simplest, no browser needed
 
-If you just want the text in your terminal (handy on Chromebooks/WSL where
-reaching a local web server in the browser can be fiddly):
+Handy on Chromebooks/WSL where reaching a local web server in the browser can
+be fiddly. **Interactive mode** just asks you for links:
+
+```bash
+python transcribe.py
+# then paste a link (or file path) at the prompt, press Enter, repeat.
+# type  q  to quit.
+```
+
+Or pass a link/file **directly**:
 
 ```bash
 python transcribe.py "https://www.youtube.com/watch?v=..."   # a URL
 python transcribe.py ~/Downloads/recording.mp3               # or a local file
 ```
 
-The transcript prints as it's recognized and is saved to `~/transcript.txt`.
+The transcript prints as it's recognized. Each one is saved in `~/transcripts/`
+with a timestamped name, and the latest is also at `~/transcript.txt`.
 Pick a model with `--model tiny` (fastest) through `--model large-v3` (best).
 
 ## Run (web app)
