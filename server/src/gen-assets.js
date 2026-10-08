@@ -59,7 +59,10 @@ export function svgAvatar(initials, idx) {
 }
 
 // ---- Video via ffmpeg (animated gradient + title + timer + tone) ----
-const ffmpeg = hasFfmpeg();
+// ffmpeg is used only to make playable demo videos for local dev. In production
+// we skip it (OMNIFEED_SEED_MEDIA=svg or no ffmpeg installed) so boot is instant;
+// real user-uploaded videos play natively and never need transcoding.
+const ffmpeg = hasFfmpeg() && process.env.OMNIFEED_SEED_MEDIA !== 'svg';
 export function makeVideo(label, idx, { vertical = false, seconds = 12 } = {}) {
   const w = vertical ? 720 : 1280;
   const h = vertical ? 1280 : 720;

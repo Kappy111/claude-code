@@ -35,9 +35,40 @@ Open **http://localhost:5173**.
 
 ```bash
 npm run build          # builds the client into client/dist
-npm run seed           # if not already seeded
-npm start              # Express serves the API + built client on :4000
+npm start              # Express serves API + built client; seeds demo data on first boot
 ```
+
+The server **auto-seeds demo content on first boot only** (it's a no-op once the
+database has users), so production never wipes real data. `npm run seed` is the
+destructive reset for local dev.
+
+## Deploy a public instance (anyone can sign up)
+
+OmniFeed ships a `Dockerfile` that runs the whole app (API + built client +
+SQLite + uploaded media) in one container. Mount a **persistent volume at
+`/data`** so accounts, posts and uploads survive restarts.
+
+**Railway (recommended — all in the browser):**
+1. Go to [railway.app](https://railway.app) and sign in with GitHub.
+2. **New Project → Deploy from GitHub repo** → pick this repo and branch. Railway
+   detects the `Dockerfile` and builds automatically.
+3. Open the service → **Variables** and add:
+   - `OMNIFEED_JWT_SECRET` = a long random string (keeps logins valid across restarts)
+   - `OMNIFEED_DATA_DIR` = `/data`
+4. Open **Settings → Volumes**, add a volume mounted at **`/data`**.
+5. **Settings → Networking → Generate Domain** to get a public URL.
+
+That's it — the first boot seeds demo content, then anyone who visits can sign up
+and everyone sees each other's posts. The same image also runs on Render, Fly.io
+or any Docker host; just set those two env vars and mount a volume at `/data`.
+
+**Environment variables:**
+
+| Variable | Purpose | Default |
+| --- | --- | --- |
+| `PORT` | Port to listen on (most hosts inject this) | `4000` |
+| `OMNIFEED_DATA_DIR` | Where the SQLite DB + uploads live (point at the volume) | `server/data` |
+| `OMNIFEED_JWT_SECRET` | Signing secret for login tokens | dev-only fallback |
 
 ## What's implemented
 
