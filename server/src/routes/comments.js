@@ -6,33 +6,32 @@ import { presentComment } from '../lib/present.js';
 import { notify } from '../lib/notify.js';
 
 const router = Router();
+const getPost = db.prepare('SELECT * FROM posts WHERE id=?');
 
 // List comments for a post (threaded: top-level with nested replies)
-router.get('/post/:postId', (req, res) => {
+router.get('/post/:postId', async (req, res) => {
   const viewerId = req.user?.id || null;
-  const all = db.prepare('SELECT * FROM comments WHERE post_id=? ORDER BY created_at ASC')
-    .all(req.params.postId);
+  const all = await db.prepare('SELECT * FROM comments WHERE post_id=? ORDER BY created_at ASC').all(req.params.postId);
   const byParent = {};
   for (const c of all) (byParent[c.parent_comment_id || 'root'] ||= []).push(c);
-  const build = (c) => ({
-    ...presentComment(c, viewerId),
-    replies: (byParent[c.id] || []).map(build),
+  const build = async (c) => ({
+    ...(await presentComment(c, viewerId)),
+    replies: await Promise.all((byParent[c.id] || []).map(build)),
   });
-  const tree = (byParent.root || []).map(build);
+  const tree = await Promise.all((byParent.root || []).map(build));
   res.json({ comments: tree, count: all.length });
 });
 
 // Add a comment or reply
-router.post('/post/:postId', requireAuth, (req, res) => {
-  const post = db.prepare('SELECT * FROM posts WHERE id=?').get(req.params.postId);
+router.post('/post/:postId', requireAuth, async (req, res) => {
+  const post = await getPost.get(req.params.postId);
   if (!post) return res.status(404).json({ error: 'Post not found.' });
 
-  // Respect who-can-comment setting of the post author
-  const author = db.prepare('SELECT who_can_comment, is_private FROM users WHERE id=?').get(post.user_id);
+  const author = await db.prepare('SELECT who_can_comment, is_private FROM users WHERE id=?').get(post.user_id);
   if (author?.who_can_comment === 'nobody' && post.user_id !== req.user.id)
     return res.status(403).json({ error: 'Comments are turned off for this post.' });
   if (author?.who_can_comment === 'following' && post.user_id !== req.user.id) {
-    const follows = db.prepare(
+    const follows = await db.prepare(
       `SELECT 1 FROM follows WHERE follower_id=? AND following_id=? AND status='active'`
     ).get(post.user_id, req.user.id);
     if (!follows) return res.status(403).json({ error: 'Only people the creator follows can comment.' });
@@ -43,42 +42,41 @@ router.post('/post/:postId', requireAuth, (req, res) => {
   const parentId = req.body?.parentCommentId || null;
 
   const id = nanoid();
-  db.prepare('INSERT INTO comments (id, post_id, user_id, parent_comment_id, text) VALUES (?,?,?,?,?)')
+  await db.prepare('INSERT INTO comments (id, post_id, user_id, parent_comment_id, text) VALUES (?,?,?,?,?)')
     .run(id, post.id, req.user.id, parentId, text);
 
-  // Notify post author (comment) and parent-comment author (reply)
-  notify({ recipientId: post.user_id, senderId: req.user.id, type: 'comment', postId: post.id, commentId: id });
+  await notify({ recipientId: post.user_id, senderId: req.user.id, type: 'comment', postId: post.id, commentId: id });
   if (parentId) {
-    const parent = db.prepare('SELECT user_id FROM comments WHERE id=?').get(parentId);
-    if (parent) notify({ recipientId: parent.user_id, senderId: req.user.id, type: 'reply', postId: post.id, commentId: id });
+    const parent = await db.prepare('SELECT user_id FROM comments WHERE id=?').get(parentId);
+    if (parent) await notify({ recipientId: parent.user_id, senderId: req.user.id, type: 'reply', postId: post.id, commentId: id });
   }
 
-  res.status(201).json({ comment: { ...presentComment(db.prepare('SELECT * FROM comments WHERE id=?').get(id), req.user.id), replies: [] } });
+  const row = await db.prepare('SELECT * FROM comments WHERE id=?').get(id);
+  res.status(201).json({ comment: { ...(await presentComment(row, req.user.id)), replies: [] } });
 });
 
 // Like / unlike a comment
-router.post('/:id/like', requireAuth, (req, res) => {
-  const c = db.prepare('SELECT * FROM comments WHERE id=?').get(req.params.id);
+router.post('/:id/like', requireAuth, async (req, res) => {
+  const c = await db.prepare('SELECT * FROM comments WHERE id=?').get(req.params.id);
   if (!c) return res.status(404).json({ error: 'Comment not found.' });
   try {
-    db.prepare('INSERT INTO likes (id, comment_id, user_id) VALUES (?,?,?)')
-      .run(nanoid(), c.id, req.user.id);
+    await db.prepare('INSERT INTO likes (id, comment_id, user_id) VALUES (?,?,?)').run(nanoid(), c.id, req.user.id);
   } catch { /* duplicate */ }
-  res.json({ comment: presentComment(c, req.user.id) });
+  res.json({ comment: await presentComment(c, req.user.id) });
 });
 
-router.delete('/:id/like', requireAuth, (req, res) => {
-  db.prepare('DELETE FROM likes WHERE comment_id=? AND user_id=?').run(req.params.id, req.user.id);
-  const c = db.prepare('SELECT * FROM comments WHERE id=?').get(req.params.id);
-  res.json({ comment: c ? presentComment(c, req.user.id) : null });
+router.delete('/:id/like', requireAuth, async (req, res) => {
+  await db.prepare('DELETE FROM likes WHERE comment_id=? AND user_id=?').run(req.params.id, req.user.id);
+  const c = await db.prepare('SELECT * FROM comments WHERE id=?').get(req.params.id);
+  res.json({ comment: c ? await presentComment(c, req.user.id) : null });
 });
 
 // Delete own comment
-router.delete('/:id', requireAuth, (req, res) => {
-  const c = db.prepare('SELECT * FROM comments WHERE id=?').get(req.params.id);
+router.delete('/:id', requireAuth, async (req, res) => {
+  const c = await db.prepare('SELECT * FROM comments WHERE id=?').get(req.params.id);
   if (!c) return res.status(404).json({ error: 'Comment not found.' });
   if (c.user_id !== req.user.id) return res.status(403).json({ error: 'You can only delete your own comments.' });
-  db.prepare('DELETE FROM comments WHERE id=?').run(c.id);
+  await db.prepare('DELETE FROM comments WHERE id=?').run(c.id);
   res.json({ ok: true });
 });
 

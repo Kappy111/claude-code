@@ -15,77 +15,69 @@ Dark-mode-first, responsive (phone → large monitor), and **fully functional** 
 
 ## Tech stack
 
-- **Backend:** Node + Express, SQLite (`better-sqlite3`), JWT auth (`bcryptjs`), local file uploads (`multer`)
+- **Backend:** Node + Express, **PostgreSQL** (via `pg`), JWT auth (`bcryptjs`), uploads via `multer`
+- **Database & storage:** **Supabase** — Postgres for data, Supabase Storage for uploaded media. Because state lives in Supabase, the web app is stateless and runs on any host (no disk/volume needed).
 - **Frontend:** React 18 + TypeScript + Vite, Tailwind CSS, React Router, Axios, lucide-react
-- **Media:** Demo media is generated locally (SVG posters + `ffmpeg` sample videos) so the app works with no external media hosts.
+- **Media:** Demo media is generated as SVG posters (and optional `ffmpeg` videos in local dev) and stored the same way real uploads are — Supabase Storage in production, local disk in dev.
 
-## Quick start
+## Quick start (local dev)
+
+Needs a Postgres database. Easiest: point `DATABASE_URL` at a free Supabase
+project; or run Postgres locally.
 
 ```bash
-npm install            # installs server + client (workspaces)
-npm run seed           # creates the SQLite DB + demo users/content (needs ffmpeg for sample videos)
-npm run dev            # starts API (:4000) and Vite dev server (:5173)
+npm install
+export DATABASE_URL="postgresql://USER:PASSWORD@HOST:5432/postgres"   # your Supabase/Postgres URL
+npm run seed           # creates tables + demo content (destructive reset)
+npm run dev            # API (:4000) + Vite dev server (:5173)
 ```
 
-Open **http://localhost:5173**.
+Open **http://localhost:5173**. **Demo login:** `aria` / `password`.
 
-**Demo login:** `aria` / `password` (or sign up / use the simulated Google / Apple buttons).
+Without `SUPABASE_URL` set, uploaded media falls back to local disk (served at `/media`).
 
 ### Production (single port)
 
 ```bash
 npm run build          # builds the client into client/dist
-npm start              # Express serves API + built client; seeds demo data on first boot
+npm start              # Express serves API + built client; creates tables + seeds on first boot
 ```
 
-The server **auto-seeds demo content on first boot only** (it's a no-op once the
-database has users), so production never wipes real data. `npm run seed` is the
-destructive reset for local dev.
+The server **auto-seeds demo content on first boot only** (a no-op once the
+database has users), so production never wipes real data.
 
 ## Deploy a public instance (anyone can sign up)
 
-OmniFeed ships a `Dockerfile` that runs the whole app (API + built client +
-SQLite + uploaded media) in one container. Mount a **persistent volume at
-`/data`** so accounts, posts and uploads survive restarts.
+Because data and media live in **Supabase**, the app itself is stateless — deploy
+the `Dockerfile` to any host (even a free tier), no volume needed.
 
-**Railway (recommended — all in the browser):**
-1. Go to [railway.app](https://railway.app) and sign in with GitHub.
-2. **New Project → Deploy from GitHub repo** → pick this repo and branch. Railway
-   detects the `Dockerfile` and builds automatically.
-3. Open the service → **Variables** and add:
-   - `OMNIFEED_JWT_SECRET` = a long random string (keeps logins valid across restarts)
-   - `OMNIFEED_DATA_DIR` = `/data`
-4. Open **Settings → Volumes**, add a volume mounted at **`/data`**.
-5. **Settings → Networking → Generate Domain** to get a public URL.
+### 1. Create the Supabase project (free)
+1. At [supabase.com](https://supabase.com) → **New project** (pick a region, set a DB password).
+2. **Project Settings → Database → Connection string → URI** — copy it; that's `DATABASE_URL` (put your DB password in it).
+3. **Project Settings → API** — copy the **Project URL** (`SUPABASE_URL`) and the **`service_role`** key (`SUPABASE_SERVICE_ROLE_KEY`). The app auto-creates a public **`media`** storage bucket on first boot.
 
-That's it — the first boot seeds demo content, then anyone who visits can sign up
-and everyone sees each other's posts. The same image also runs on Render, Fly.io
-or any Docker host; just set those two env vars and mount a volume at `/data`.
+### 2. Deploy the app (Render free, or Railway / Fly)
+1. Connect this repo to the host; it detects the `Dockerfile`.
+2. Set these environment variables:
 
-**Environment variables:**
+| Variable | Purpose |
+| --- | --- |
+| `DATABASE_URL` | Supabase Postgres connection string (URI, with password) |
+| `SUPABASE_URL` | Supabase Project URL (for Storage) |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service-role key (for Storage) |
+| `OMNIFEED_JWT_SECRET` | A long random string (keeps logins valid across restarts) |
+| `SUPABASE_BUCKET` | Storage bucket name (optional; default `media`) |
+| `OMNIFEED_SEED_MEDIA` | `svg` to skip ffmpeg demo videos (set in production) |
+| `PORT` | Usually injected by the host; defaults to `4000` |
 
-| Variable | Purpose | Default |
-| --- | --- | --- |
-| `PORT` | Port to listen on (most hosts inject this) | `4000` |
-| `OMNIFEED_DATA_DIR` | Where the SQLite DB + uploads live (point at the volume) | `server/data` |
-| `OMNIFEED_JWT_SECRET` | Signing secret for login tokens | dev-only fallback |
-| `OMNIFEED_SEED_MEDIA` | `svg` skips ffmpeg demo-video generation (set in production) | unset |
+3. Deploy, then open the host's generated URL. First boot creates the tables and
+   seeds demo content; after that **anyone can sign up and everyone shares the same
+   data**.
 
 ### Point your own domain at it
-
-Once it's deployed on Railway:
-1. In the service, open **Settings → Networking → Custom Domain** and enter your
-   domain (e.g. `omnifeed.app`) or a subdomain (e.g. `app.omnifeed.app`).
-2. Railway shows a **CNAME target** (something like `xxxx.up.railway.app`).
-3. At your domain registrar / DNS provider, add a **CNAME record**:
-   - a subdomain → `CNAME  app  xxxx.up.railway.app`
-   - a root/apex domain → use your registrar's "ANAME/ALIAS/flattened CNAME"
-     option pointing at the same target (plain CNAME isn't allowed on an apex).
-4. Save, then wait a few minutes — Railway provisions the HTTPS certificate
-   automatically. Your app is then live on your own domain.
-
-Render and Fly have the same flow (add a custom domain in their dashboard, then
-add the CNAME/ALIAS record they give you).
+Add a custom domain in your host's dashboard (Render/Railway/Fly all support this),
+then add the **CNAME** (or ALIAS/ANAME for a root domain) record they give you at
+your DNS provider. HTTPS is provisioned automatically.
 
 ## What's implemented
 
@@ -115,8 +107,8 @@ add the CNAME/ALIAS record they give you).
 server/
   src/
     index.js            # Express app (API + serves built client + /media)
-    db.js               # SQLite connection + migrations
-    schema.sql          # Database schema
+    db.js               # Postgres (pg) pool + query shim + Supabase Storage
+    schema.pg.sql       # Database schema (PostgreSQL)
     seed.js             # Demo data (+ local media generation)
     gen-assets.js       # SVG + ffmpeg media generators
     lib/                # presenters (row → API object), notifications
@@ -132,4 +124,4 @@ client/
 
 ## Data model
 
-`users`, `posts` (type = thought/snap/short/video), `comments` (self-referencing for replies), `likes` (unique per user+post / user+comment), `bookmarks`, `follows` (active/pending), `notifications`, `messages` (DMs), `watch_history`. See `server/src/schema.sql`.
+`users`, `posts` (type = thought/snap/short/video), `comments` (self-referencing for replies), `likes` (unique per user+post / user+comment), `bookmarks`, `follows` (active/pending), `notifications`, `messages` (DMs), `watch_history`. See `server/src/schema.pg.sql`.

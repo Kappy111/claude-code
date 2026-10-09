@@ -10,15 +10,15 @@ const router = Router();
 const USERNAME_RE = /^[a-zA-Z0-9_]{3,20}$/;
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
-const findByUsername = db.prepare('SELECT * FROM users WHERE username = ? COLLATE NOCASE');
-const findByEmail = db.prepare('SELECT * FROM users WHERE email = ? COLLATE NOCASE');
+const findByUsername = db.prepare('SELECT * FROM users WHERE LOWER(username) = LOWER(?)');
+const findByEmail = db.prepare('SELECT * FROM users WHERE LOWER(email) = LOWER(?)');
 
 const insertUser = db.prepare(`
   INSERT INTO users (id, username, display_name, email, password_hash, auth_provider, profile_image, bio)
   VALUES (@id, @username, @display_name, @email, @password_hash, @auth_provider, @profile_image, @bio)
 `);
 
-router.post('/signup', (req, res) => {
+router.post('/signup', async (req, res) => {
   const { email, password, username, displayName, profileImage, bio } = req.body || {};
 
   if (!username || !USERNAME_RE.test(username))
@@ -30,11 +30,11 @@ router.post('/signup', (req, res) => {
   if (!displayName || !displayName.trim())
     return res.status(400).json({ error: 'Display name is required.' });
 
-  if (findByUsername.get(username)) return res.status(409).json({ error: 'Username already taken.' });
-  if (findByEmail.get(email)) return res.status(409).json({ error: 'An account with that email already exists.' });
+  if (await findByUsername.get(username)) return res.status(409).json({ error: 'Username already taken.' });
+  if (await findByEmail.get(email)) return res.status(409).json({ error: 'An account with that email already exists.' });
 
   const id = nanoid();
-  insertUser.run({
+  await insertUser.run({
     id,
     username,
     display_name: displayName.trim(),
@@ -46,24 +46,23 @@ router.post('/signup', (req, res) => {
   });
 
   const token = signToken(id);
-  res.status(201).json({ token, user: presentUser(getUserById(id), id) });
+  res.status(201).json({ token, user: await presentUser(await getUserById(id), id) });
 });
 
-router.post('/login', (req, res) => {
+router.post('/login', async (req, res) => {
   const { identifier, email, username, password } = req.body || {};
   const id = identifier || email || username;
   if (!id || !password) return res.status(400).json({ error: 'Enter your username/email and password.' });
 
-  const row = id.includes('@') ? findByEmail.get(id) : findByUsername.get(id);
+  const row = id.includes('@') ? await findByEmail.get(id) : await findByUsername.get(id);
   if (!row || !row.password_hash || !bcrypt.compareSync(password, row.password_hash))
     return res.status(401).json({ error: 'Invalid login. Check your credentials and try again.' });
 
   const token = signToken(row.id);
-  res.json({ token, user: presentUser(row, row.id) });
+  res.json({ token, user: await presentUser(row, row.id) });
 });
 
-// Simulated OAuth: creates (or logs into) an account tied to a provider identity.
-router.post('/oauth/:provider', (req, res) => {
+router.post('/oauth/:provider', async (req, res) => {
   const provider = req.params.provider;
   if (!['google', 'apple'].includes(provider))
     return res.status(400).json({ error: 'Unsupported provider.' });
@@ -71,15 +70,14 @@ router.post('/oauth/:provider', (req, res) => {
   if (!email || !EMAIL_RE.test(email))
     return res.status(400).json({ error: 'A valid email is required for social login.' });
 
-  let row = findByEmail.get(email);
+  let row = await findByEmail.get(email);
   if (!row) {
-    // auto-provision a unique username from the email handle
     let base = (email.split('@')[0] || 'user').replace(/[^a-zA-Z0-9_]/g, '').slice(0, 16) || 'user';
     let candidate = base;
     let n = 0;
-    while (findByUsername.get(candidate)) { n += 1; candidate = `${base}${n}`.slice(0, 20); }
+    while (await findByUsername.get(candidate)) { n += 1; candidate = `${base}${n}`.slice(0, 20); }
     const id = nanoid();
-    insertUser.run({
+    await insertUser.run({
       id,
       username: candidate,
       display_name: (displayName || base).trim(),
@@ -89,21 +87,20 @@ router.post('/oauth/:provider', (req, res) => {
       profile_image: profileImage || null,
       bio: '',
     });
-    row = getUserById(id);
+    row = await getUserById(id);
   }
   const token = signToken(row.id);
-  res.json({ token, user: presentUser(row, row.id) });
+  res.json({ token, user: await presentUser(row, row.id) });
 });
 
-router.get('/me', requireAuth, (req, res) => {
-  res.json({ user: presentUser(req.user, req.user.id) });
+router.get('/me', requireAuth, async (req, res) => {
+  res.json({ user: await presentUser(req.user, req.user.id) });
 });
 
-// Username availability check (used during signup / settings)
-router.get('/check-username', (req, res) => {
+router.get('/check-username', async (req, res) => {
   const u = String(req.query.username || '');
   if (!USERNAME_RE.test(u)) return res.json({ available: false, reason: 'invalid' });
-  res.json({ available: !findByUsername.get(u) });
+  res.json({ available: !(await findByUsername.get(u)) });
 });
 
 export default router;

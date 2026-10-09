@@ -14,13 +14,13 @@ function readToken(req) {
 }
 
 // Attaches req.user (full row) if a valid token is present; otherwise null.
-export function withUser(req, _res, next) {
+export async function withUser(req, _res, next) {
   const token = readToken(req);
   req.user = null;
   if (token) {
     try {
       const { uid } = jwt.verify(token, JWT_SECRET);
-      const row = getUserById(uid);
+      const row = await getUserById(uid);
       if (row) req.user = row;
     } catch { /* ignore invalid token */ }
   }

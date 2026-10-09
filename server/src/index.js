@@ -3,7 +3,7 @@ import cors from 'cors';
 import path from 'node:path';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { UPLOAD_DIR } from './db.js';
+import { UPLOAD_DIR, initSchema } from './db.js';
 import { withUser } from './middleware/auth.js';
 import { runSeed } from './seed.js';
 
@@ -55,18 +55,20 @@ app.use((err, _req, res, _next) => {
   res.status(500).json({ error: 'Something went wrong on our end. Please try again.' });
 });
 
-// Seed demo content on first boot (no-op once the database has users).
-try {
-  const res = runSeed();
-  if (res.skipped) console.log(`Database already has ${res.users} users — skipping seed.`);
-} catch (e) {
-  console.error('Seed-on-boot failed (continuing with empty database):', e.message);
-}
-
 if (process.env.NODE_ENV === 'production' && !process.env.OMNIFEED_JWT_SECRET) {
   console.warn('⚠  OMNIFEED_JWT_SECRET is not set — set it so logins stay valid across restarts.');
 }
 
-app.listen(PORT, () => {
-  console.log(`OmniFeed running on http://localhost:${PORT}`);
-});
+// Create the schema, start serving, then seed demo content in the background
+// (no-op once the database already has users).
+(async () => {
+  try {
+    await initSchema();
+  } catch (e) {
+    console.error('Database schema init failed:', e.message);
+  }
+  app.listen(PORT, () => console.log(`OmniFeed running on http://localhost:${PORT}`));
+  runSeed()
+    .then((r) => { if (r.skipped) console.log(`Database already has ${r.users} users — skipping seed.`); })
+    .catch((e) => console.error('Seed-on-boot failed (continuing):', e.message));
+})();
