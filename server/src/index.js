@@ -5,7 +5,7 @@ import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { UPLOAD_DIR, initSchema } from './db.js';
 import { withUser } from './middleware/auth.js';
-import { runSeed, applyOwnerBadge } from './seed.js';
+import { runSeed, applyOwnerBadge, OWNER_USERNAME } from './seed.js';
 
 import authRoutes from './routes/auth.js';
 import userRoutes from './routes/users.js';
@@ -76,6 +76,6 @@ if (process.env.NODE_ENV === 'production' && !process.env.OMNIFEED_JWT_SECRET) {
   runSeed()
     .then((r) => { if (r.skipped) console.log(`Database already has ${r.users} users — skipping seed.`); })
     .then(() => applyOwnerBadge())
-    .then((n) => { if (n) console.log(`Verified badge applied to owner account "${process.env.OMNIFEED_OWNER_USERNAME}".`); })
+    .then((n) => { if (n) console.log(`Verified badge applied to owner account "${OWNER_USERNAME}".`); })
     .catch((e) => console.error('Seed-on-boot failed (continuing):', e.message));
 })();

@@ -46,8 +46,8 @@ router.post('/signup', async (req, res) => {
   });
 
   // Auto-verify the owner account the moment it's created.
-  const owner = process.env.OMNIFEED_OWNER_USERNAME;
-  if (owner && username.toLowerCase() === owner.toLowerCase())
+  const owner = process.env.OMNIFEED_OWNER_USERNAME || 'kappy';
+  if (username.toLowerCase() === owner.toLowerCase())
     await db.prepare('UPDATE users SET verified = 1 WHERE id = ?').run(id);
 
   const token = signToken(id);
