@@ -15,6 +15,7 @@ import { Videos } from './pages/Videos';
 import { Photos, Thoughts } from './pages/FormatFeed';
 import { Bookmarks, WatchHistory, Hashtag } from './pages/misc';
 import { Messages } from './pages/Messages';
+import { Contact } from './pages/Contact';
 
 function Loading() {
   return <div className="min-h-screen grid place-items-center"><Spinner className="!w-8 !h-8" /></div>;
@@ -49,6 +50,7 @@ function AppRoutes() {
       <Route path="/notifications" element={<Protected><Notifications /></Protected>} />
       <Route path="/messages" element={<Protected><Messages /></Protected>} />
       <Route path="/settings" element={<Protected><Settings /></Protected>} />
+      <Route path="/contact" element={<Protected><Contact /></Protected>} />
       <Route path="/bookmarks" element={<Protected><Bookmarks /></Protected>} />
       <Route path="/history" element={<Protected><WatchHistory /></Protected>} />
       <Route path="/u/:username" element={<Protected><Profile /></Protected>} />

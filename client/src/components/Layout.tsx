@@ -2,7 +2,7 @@ import { useState, useEffect, createContext, useContext, useCallback } from 'rea
 import { NavLink, useNavigate, useLocation, Link } from 'react-router-dom';
 import {
   Home, Compass, Film, Image as ImageIcon, Type, Video, Bell, Mail,
-  Plus, User as UserIcon, Search, LogOut, Settings, Bookmark, History,
+  Plus, User as UserIcon, Search, LogOut, Settings, Bookmark, History, Phone,
 } from 'lucide-react';
 import { useAuth } from '../store/auth';
 import { notifications as notifApi, messages as msgApi } from '../api';
@@ -106,6 +106,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     <MenuItem icon={Bookmark} label="Bookmarks" onClick={() => { navigate('/bookmarks'); setMenuOpen(false); }} />
                     <MenuItem icon={History} label="Watch history" onClick={() => { navigate('/history'); setMenuOpen(false); }} />
                     <MenuItem icon={Settings} label="Settings" onClick={() => { navigate('/settings'); setMenuOpen(false); }} />
+                    <MenuItem icon={Phone} label="Contact owner" onClick={() => { navigate('/contact'); setMenuOpen(false); }} />
                     <div className="h-px bg-line my-1" />
                     <MenuItem icon={LogOut} label="Log out" danger onClick={() => { logout(); navigate('/'); }} />
                   </div>

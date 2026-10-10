@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Camera, LogOut, Lock, Bell, UserCog, ShieldCheck } from 'lucide-react';
+import { Camera, LogOut, Lock, Bell, UserCog, ShieldCheck, Phone } from 'lucide-react';
 import { users as usersApi, uploadFiles, errMsg } from '../api';
 import { Avatar, Spinner } from '../components/ui';
 import { useAuth } from '../store/auth';
@@ -133,6 +133,11 @@ export function Settings() {
         <Field label="Current password"><input type="password" value={curPw} onChange={(e) => setCurPw(e.target.value)} className="input" /></Field>
         <Field label="New password"><input type="password" value={newPw} onChange={(e) => setNewPw(e.target.value)} className="input" /></Field>
         <button onClick={savePassword} disabled={savingPw || !newPw} className="btn-brand px-5 py-2.5">{savingPw ? <Spinner className="!border-white/40 !border-t-white" /> : 'Update password'}</button>
+      </Section>
+
+      <Section title="Contact" icon={Phone}>
+        <p className="text-sm text-txt-muted">Need to reach the owner of OmniFeed?</p>
+        <button onClick={() => navigate('/contact')} className="btn-ghost px-5 py-2.5"><Phone size={16} /> Contact the owner</button>
       </Section>
 
       <button onClick={() => { logout(); navigate('/'); }} className="btn-ghost w-full py-3 !text-accent-pink"><LogOut size={18} /> Log out</button>
