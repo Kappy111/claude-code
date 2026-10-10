@@ -32,13 +32,14 @@ export function FormatFeed({ mode, title, icon, createType }: { mode: string; ti
 
   const sentinel = useInfiniteScroll(loadMore, !loading && hasMore);
   const Icon = icon;
+  const noun = createType === 'snap' ? 'Snap' : 'Thought';
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-4">
       <h1 className="text-2xl font-bold mb-4 flex items-center gap-2"><Icon className="text-brand-300" /> {title}</h1>
       {loading ? <FeedSkeleton /> : list.length === 0 ? (
-        <EmptyState icon={Icon} title={`No ${title.toLowerCase()} yet`} subtitle="Be the first to post in this format."
-          action={<button onClick={() => openCreate(createType)} className="btn-brand px-5 py-2.5">Create</button>} />
+        <EmptyState icon={Icon} title={`Be the first to post a ${noun}`} subtitle={`No ${title.toLowerCase()} yet — share the first one and start the feed.`}
+          action={<button onClick={() => openCreate(createType)} className="btn-brand px-5 py-2.5">Post a {noun}</button>} />
       ) : (
         <div className="space-y-4">
           {list.map((p) => <PostCard key={p.id} post={p} onDelete={(id) => setList((l) => l.filter((x) => x.id !== id))} />)}

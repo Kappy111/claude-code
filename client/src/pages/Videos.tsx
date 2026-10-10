@@ -5,9 +5,11 @@ import { posts as postsApi } from '../api';
 import { Avatar, Spinner, EmptyState, Skeleton } from '../components/ui';
 import { formatCount, timeAgo, formatDuration } from '../lib/util';
 import { useInfiniteScroll } from '../hooks/useInfiniteScroll';
+import { useCreate } from '../components/Layout';
 import type { Post } from '../types';
 
 export function Videos() {
+  const openCreate = useCreate();
   const [list, setList] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [hasMore, setHasMore] = useState(true);
@@ -44,7 +46,8 @@ export function Videos() {
           {Array.from({ length: 6 }).map((_, i) => <div key={i}><Skeleton className="aspect-video rounded-xl mb-3" /><Skeleton className="h-4 w-3/4 mb-2" /><Skeleton className="h-3 w-1/2" /></div>)}
         </div>
       ) : list.length === 0 ? (
-        <EmptyState icon={VideoIcon} title="No videos yet" subtitle="Long-form videos will appear here." />
+        <EmptyState icon={VideoIcon} title="Be the first to post a Video" subtitle="No videos yet — upload the first one and start the Videos feed."
+          action={<button onClick={() => openCreate('video')} className="btn-brand px-5 py-2.5">Post a Video</button>} />
       ) : (
         <>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-6">

@@ -6,12 +6,27 @@ import { nanoid } from 'nanoid';
 import { db, initSchema, ensureBucket } from './db.js';
 import { svgImage, svgAvatar, makeVideo, FFMPEG_AVAILABLE } from './gen-assets.js';
 
+// Removes the built-in demo accounts (and, via ON DELETE CASCADE, all their
+// posts/comments/likes/etc.). Demo users are the only ones with @omnifeed.app
+// emails; real sign-ups use real emails, so this never touches them.
+export async function purgeDemoData() {
+  const { changes } = await db.prepare("DELETE FROM users WHERE email LIKE '%@omnifeed.app'").run();
+  return changes || 0;
+}
+
 export async function runSeed({ reset = false } = {}) {
   await initSchema();
   await ensureBucket();
 
+  // Keep the public app clean: always strip demo content on boot.
+  const purged = await purgeDemoData();
+  if (purged) console.log(`Removed ${purged} demo account(s) and their content.`);
+
   const existing = (await db.prepare('SELECT COUNT(*)::int n FROM users').get()).n;
   if (!reset && existing > 0) return { skipped: true, users: existing };
+  // Only seed demo content for local dev (CLI reset) or when explicitly opted in.
+  // The public app stays empty so real users post the first content.
+  if (!reset && process.env.OMNIFEED_SEED_DEMO !== '1') return { skipped: true, users: existing };
 
   const PASSWORD = bcrypt.hashSync('password', 10);
   let asset = 0;

@@ -4,6 +4,7 @@ import { Heart, MessageCircle, Share2, Music2, Play, Volume2, VolumeX, Plus, Che
 import { posts as postsApi, users as usersApi, errMsg } from '../api';
 import { Avatar } from '../components/ui';
 import { CommentsPanel } from '../components/CommentsPanel';
+import { useCreate } from '../components/Layout';
 import { useVisible } from '../hooks/useInfiniteScroll';
 import { formatCount } from '../lib/util';
 import { useAuth } from '../store/auth';
@@ -123,6 +124,7 @@ function ShortItem({ post: initial, muted, onToggleMute, onComment }: {
 export function Shorts() {
   const location = useLocation();
   const navigate = useNavigate();
+  const openCreate = useCreate();
   const [list, setList] = useState<Post[]>([]);
   const [muted, setMuted] = useState(true);
   const [commentFor, setCommentFor] = useState<string | null>(null);
@@ -166,7 +168,15 @@ export function Shorts() {
             <ShortItem post={p} muted={muted} onToggleMute={() => setMuted((m) => !m)} onComment={() => setCommentFor(p.id)} />
           </div>
         ))}
-        {list.length === 0 && <div className="h-full grid place-items-center text-white/60">No shorts yet.</div>}
+        {list.length === 0 && (
+          <div className="h-full grid place-items-center text-center px-8">
+            <div>
+              <p className="text-white text-lg font-semibold mb-1">Be the first to post a Short</p>
+              <p className="text-white/60 text-sm mb-5">Upload a vertical video to start the Shorts feed.</p>
+              <button onClick={() => openCreate('short')} className="btn-brand px-5 py-2.5 mx-auto">Post a Short</button>
+            </div>
+          </div>
+        )}
       </div>
       {commentFor && <CommentsPanel postId={commentFor} onClose={() => setCommentFor(null)} />}
     </div>
