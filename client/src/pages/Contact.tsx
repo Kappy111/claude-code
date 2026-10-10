@@ -2,8 +2,8 @@ import { Phone, Mail, Youtube, ExternalLink } from 'lucide-react';
 
 // Owner contact details for OmniFeed.
 const OWNER = {
-  name: 'Kappy',
-  blurb: 'Questions, feedback, or collabs? Reach the owner of OmniFeed directly.',
+  name: 'Kevin Page',
+  blurb: 'Questions, feedback, or collabs? Reach Kevin Page, the owner of OmniFeed, directly.',
   phone: '818 694 1959',
   phoneHref: 'tel:+18186941959',
   email: 'kappyteen@gmail.com',

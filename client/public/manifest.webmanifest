@@ -1,0 +1,14 @@
+{
+  "name": "OmniFeed",
+  "short_name": "OmniFeed",
+  "description": "One account, four formats — photos, thoughts, shorts, and videos.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#07070b",
+  "theme_color": "#07070b",
+  "icons": [
+    { "src": "/icon.svg", "type": "image/svg+xml", "sizes": "any", "purpose": "any maskable" }
+  ]
+}
