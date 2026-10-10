@@ -180,6 +180,9 @@ a, .link { color: var(--blue); cursor: pointer; }
 .btn-gradient:disabled { opacity: .5; cursor: not-allowed; }
 .btn-gradient.busy { opacity: .8; cursor: progress; }
 .fineprint { text-align: center; color: var(--muted-2); font-size: 12px; margin: 12px 0 0; }
+.server-opt { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; font-size: 12px; color: var(--muted); }
+.srv-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted-2); }
+.srv-dot.on { background: var(--green); box-shadow: 0 0 8px var(--green); }
 
 .progress { margin-top: 16px; }
 .progress-bar { height: 7px; background: var(--bg-2); border-radius: 99px; overflow: hidden; border: 1px solid var(--border); }

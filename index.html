@@ -122,7 +122,12 @@
           </div>
 
           <button id="transcribe-btn" class="btn-gradient" disabled>Transcribe</button>
-          <p class="fineprint">Audio is decoded and transcribed by Whisper inside your browser. Nothing is uploaded.</p>
+          <p class="fineprint" id="fineprint">Audio is decoded and transcribed by Whisper inside your browser. Nothing is uploaded.</p>
+          <div class="server-opt">
+            <span class="srv-dot" id="srv-dot"></span>
+            <span id="server-status">On-device</span>
+            <button id="server-config" class="link-btn">Use a faster server</button>
+          </div>
 
           <div id="progress" class="progress hidden">
             <div class="progress-bar"><div id="progress-fill" class="progress-fill"></div></div>

@@ -33,6 +33,7 @@ Open the URL, enter any email to create a local profile, and start transcribing.
 | **AI Summarize** | Chrome's on-device Summarizer API when available, otherwise a built-in extractive summarizer. Always works, never uploads. |
 | **Speaker Diarization** | Per-segment pitch + energy features clustered with k-means to label *Speaker 1…N*. Pure on-device signal processing. |
 | **Translate** | Chrome's on-device Translator API when available, otherwise Helsinki-NLP opus-mt models via transformers.js. 10 target languages. |
+| **Faster server (optional)** | On a low-powered device (e.g. a Chromebook), on-device Whisper can be slow for long videos. Click **"Use a faster server"** and paste the URL of the bundled transcription service (see `server/README.md` — free Hugging Face Space). The browser then uploads the audio and the server returns the transcript in seconds. |
 | **History** | Saved to IndexedDB in your browser (`This browser` + `Saved` tabs, search, clear). |
 | **Export** | Copy, Download `.txt`, or Save to the local database. |
 

@@ -2,6 +2,7 @@
 import * as DB from './db.js';
 import { fetchMedia, decodeToMono16k, isPageLike, isYouTube, formatTime, triggerDownload } from './media.js';
 import { fetchYouTubeAudio } from './youtube.js';
+import { getServerUrl, setServerUrl, transcribeOnServer } from './server.js';
 import { transcribe } from './transcribe.js';
 import { summarize } from './summarize.js';
 import { diarize, SPEAKER_COLORS } from './diarize.js';
@@ -169,25 +170,36 @@ async function runTranscribe() {
     state.objectUrl = URL.createObjectURL(blob);
     $('player').src = state.objectUrl;
 
-    // Decode audio
+    // Decode audio (used for the player + on-device diarization either way)
     setProgress(null, 'Decoding audio…');
     const { pcm, duration } = await decodeToMono16k(blob);
-    state.pcm = pcm.slice(); // keep a copy for diarization (worker transfers the other)
+    state.pcm = pcm.slice(); // keep a copy for diarization
 
-    // Transcribe
     const model = $('model-select').value;
-    const result = await transcribe(pcm, model, {
-      onStatus: (m) => {
-        if (/transcrib/i.test(m)) startElapsed('Transcribing locally');
-        else { stopElapsed(); setProgress(null, m); }
-      },
-      onProgress: (p) => {
-        stopElapsed();
-        if (p.phase === 'download' && p.pct != null) setProgress(p.pct, `Loading Whisper model… ${Math.round(p.pct * 100)}%`);
-        else if (p.phase === 'ready') setProgress(1, 'Model ready — transcribing…');
-      },
-    });
-    stopElapsed();
+    const serverUrl = getServerUrl();
+    let result;
+    if (serverUrl) {
+      // Server-side transcription — fast on any device.
+      startElapsed('Transcribing on server');
+      result = await transcribeOnServer(blob, model, serverUrl, {
+        onStatus: (m) => { if (!/transcrib/i.test(m)) { stopElapsed(); setProgress(null, m); } },
+      });
+      stopElapsed();
+    } else {
+      // On-device transcription in a Web Worker.
+      result = await transcribe(pcm, model, {
+        onStatus: (m) => {
+          if (/transcrib/i.test(m)) startElapsed('Transcribing locally');
+          else { stopElapsed(); setProgress(null, m); }
+        },
+        onProgress: (p) => {
+          stopElapsed();
+          if (p.phase === 'download' && p.pct != null) setProgress(p.pct, `Loading Whisper model… ${Math.round(p.pct * 100)}%`);
+          else if (p.phase === 'ready') setProgress(1, 'Model ready — transcribing…');
+        },
+      });
+      stopElapsed();
+    }
 
     if (!result.chunks.length && !result.text) throw new Error('No speech detected in this media.');
 
@@ -202,7 +214,7 @@ async function runTranscribe() {
       title: name.replace(/\.[^.]+$/, ''),
       createdAt: Date.now(),
       source: sourceLabel,
-      language: 'AUTO',
+      language: result.language || 'AUTO',
       duration,
       device: result.device,
       model,
@@ -216,7 +228,7 @@ async function runTranscribe() {
     await DB.putSession('browser', session);
     renderResult(session);
     refreshHistory();
-    toast(`Transcribed with Whisper (${result.device.toUpperCase()}).`, 'success');
+    toast(`Transcribed with Whisper (${(result.device || 'local').toUpperCase()}).`, 'success');
   } catch (err) {
     toast(err.message || 'Transcription failed.', 'error', 6000);
   } finally {
@@ -488,6 +500,45 @@ function initHistory() {
   });
 }
 
+// ---------------- server option ----------------
+function renderServerStatus() {
+  const url = getServerUrl();
+  const status = $('server-status'), dot = $('srv-dot'), cfg = $('server-config'), fine = $('fineprint');
+  if (url) {
+    let host = url;
+    try { host = new URL(url).host; } catch {}
+    status.textContent = `Server: ${host}`;
+    dot.classList.add('on');
+    cfg.textContent = 'Change / turn off';
+    fine.textContent = 'Audio is sent to your transcription server, then processed there. History stays in this browser.';
+  } else {
+    status.textContent = 'On-device';
+    dot.classList.remove('on');
+    cfg.textContent = 'Use a faster server';
+    fine.textContent = 'Audio is decoded and transcribed by Whisper inside your browser. Nothing is uploaded.';
+  }
+}
+
+function initServerOption() {
+  renderServerStatus();
+  $('server-config').addEventListener('click', () => {
+    const current = getServerUrl();
+    const next = prompt(
+      'Paste your transcription server URL (e.g. https://you-vidtotext-transcribe.hf.space).\n\nLeave blank and press OK to turn it off and transcribe on-device.',
+      current
+    );
+    if (next === null) return; // cancelled
+    const trimmed = next.trim();
+    if (trimmed && !/^https?:\/\//i.test(trimmed)) {
+      toast('Server URL must start with http:// or https://', 'error');
+      return;
+    }
+    setServerUrl(trimmed);
+    renderServerStatus();
+    toast(trimmed ? 'Faster server enabled.' : 'Back to on-device transcription.', 'success');
+  });
+}
+
 // ---------------- utils ----------------
 function escapeHtml(str) {
   return String(str ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -505,6 +556,7 @@ function init() {
   initHistory();
   $('transcribe-btn').addEventListener('click', runTranscribe);
   $('model-select').addEventListener('change', () => { $('foot-model').textContent = $('model-select').selectedOptions[0].text; });
+  initServerOption();
 
   // Adaptive default: without WebGPU (e.g. Chromebooks), base/small are slow in
   // WASM, so default to the fast "tiny" model. With WebGPU, keep "base".
