@@ -6,13 +6,13 @@ import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@huggingface/transfo
 env.allowLocalModels = false;
 env.useBrowserCache = true;
 
-// Use multi-threaded WASM when the page is cross-origin isolated (coi-serviceworker).
+// Single-threaded, no proxy worker. Multi-threading / proxy would make
+// onnxruntime spawn a Worker from the cross-origin CDN script, which browsers
+// block on a static host ("Failed to construct 'Worker' … cannot be accessed
+// from origin"). Single-threaded WASM instantiates without any worker.
 try {
-  if (self.crossOriginIsolated) {
-    env.backends.onnx.wasm.numThreads = Math.min(8, (self.navigator?.hardwareConcurrency || 4));
-  } else {
-    env.backends.onnx.wasm.numThreads = 1;
-  }
+  env.backends.onnx.wasm.numThreads = 1;
+  env.backends.onnx.wasm.proxy = false;
 } catch (_) {}
 
 let transcriber = null;

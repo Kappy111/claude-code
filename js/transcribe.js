@@ -9,9 +9,12 @@ function getWorker() {
 }
 
 async function detectDevice() {
-  try {
-    if (navigator.gpu && (await navigator.gpu.requestAdapter())) return 'webgpu';
-  } catch (_) {}
+  // WebGPU and multi-threaded WASM both need a helper Worker spawned from the
+  // transformers.js CDN script. Browsers forbid constructing a Worker from a
+  // cross-origin URL, so on a static host (GitHub Pages) that throws
+  // "Failed to construct 'Worker' … cannot be accessed from origin" and no
+  // backend initializes. Single-threaded WASM loads without any worker, so it
+  // is the reliable choice here.
   return 'wasm';
 }
 
