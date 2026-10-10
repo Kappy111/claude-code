@@ -111,7 +111,27 @@ function setProgress(pct, text) {
   if (pct != null) $('progress-fill').style.width = `${Math.round(pct * 100)}%`;
   if (text != null) $('progress-text').textContent = text;
 }
-function hideProgress() { $('progress').classList.add('hidden'); $('progress-fill').style.width = '0%'; }
+function hideProgress() { $('progress').classList.add('hidden'); $('progress-fill').style.width = '0%'; stopElapsed(); }
+
+// Live elapsed-time ticker so long transcriptions clearly look alive, not frozen.
+let elapsedTimer = null;
+function startElapsed(label) {
+  stopElapsed();
+  const t0 = Date.now();
+  const tick = () => {
+    const s = Math.floor((Date.now() - t0) / 1000);
+    const mm = Math.floor(s / 60), ss = s % 60;
+    const clock = mm ? `${mm}m ${ss}s` : `${ss}s`;
+    $('progress-text').textContent = `${label} — ${clock}`;
+  };
+  tick();
+  elapsedTimer = setInterval(tick, 1000);
+}
+function stopElapsed() { if (elapsedTimer) { clearInterval(elapsedTimer); elapsedTimer = null; } }
+
+async function hasWebGPU() {
+  try { return !!(navigator.gpu && await navigator.gpu.requestAdapter()); } catch { return false; }
+}
 
 // ---------------- transcription flow ----------------
 async function runTranscribe() {
@@ -157,12 +177,17 @@ async function runTranscribe() {
     // Transcribe
     const model = $('model-select').value;
     const result = await transcribe(pcm, model, {
-      onStatus: (m) => setProgress(null, m),
+      onStatus: (m) => {
+        if (/transcrib/i.test(m)) startElapsed('Transcribing locally');
+        else { stopElapsed(); setProgress(null, m); }
+      },
       onProgress: (p) => {
+        stopElapsed();
         if (p.phase === 'download' && p.pct != null) setProgress(p.pct, `Loading Whisper model… ${Math.round(p.pct * 100)}%`);
         else if (p.phase === 'ready') setProgress(1, 'Model ready — transcribing…');
       },
     });
+    stopElapsed();
 
     if (!result.chunks.length && !result.text) throw new Error('No speech detected in this media.');
 
@@ -480,5 +505,15 @@ function init() {
   initHistory();
   $('transcribe-btn').addEventListener('click', runTranscribe);
   $('model-select').addEventListener('change', () => { $('foot-model').textContent = $('model-select').selectedOptions[0].text; });
+
+  // Adaptive default: without WebGPU (e.g. Chromebooks), base/small are slow in
+  // WASM, so default to the fast "tiny" model. With WebGPU, keep "base".
+  hasWebGPU().then((gpu) => {
+    if (!gpu && !state.modelTouchedByUser) {
+      $('model-select').value = 'Xenova/whisper-tiny';
+      $('foot-model').textContent = 'TINY';
+    }
+  });
+  $('model-select').addEventListener('change', () => { state.modelTouchedByUser = true; });
 }
 init();

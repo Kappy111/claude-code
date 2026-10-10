@@ -6,6 +6,15 @@ import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@huggingface/transfo
 env.allowLocalModels = false;
 env.useBrowserCache = true;
 
+// Use multi-threaded WASM when the page is cross-origin isolated (coi-serviceworker).
+try {
+  if (self.crossOriginIsolated) {
+    env.backends.onnx.wasm.numThreads = Math.min(8, (self.navigator?.hardwareConcurrency || 4));
+  } else {
+    env.backends.onnx.wasm.numThreads = 1;
+  }
+} catch (_) {}
+
 let transcriber = null;
 let loadedModel = null;
 
