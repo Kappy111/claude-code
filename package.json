@@ -1,0 +1,11 @@
+{
+  "name": "vidtotext",
+  "version": "1.0.0",
+  "description": "On-device video/audio transcription with Whisper, plus summarize, speaker diarization and translation — all in the browser.",
+  "type": "module",
+  "scripts": {
+    "start": "node serve.mjs",
+    "dev": "node serve.mjs"
+  },
+  "license": "MIT"
+}

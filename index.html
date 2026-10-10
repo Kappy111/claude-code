@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>VidToText — on-device transcription</title>
+  <meta name="description" content="Drop in a video or audio file, or paste a direct media link. Transcribes locally with Whisper. Nothing is uploaded." />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%233b82f6'/%3E%3Ctext x='16' y='22' font-size='16' font-family='Arial' font-weight='bold' text-anchor='middle' fill='white'%3EV%3C/text%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <!-- ===================== SIGN IN ===================== -->
+  <div id="auth-screen" class="auth-screen">
+    <div class="auth-card">
+      <div class="auth-head">
+        <h1>Sign in</h1>
+        <p>to <strong>VidToText</strong></p>
+      </div>
+      <form id="auth-form" class="auth-form" autocomplete="off">
+        <label for="auth-email">Email</label>
+        <input id="auth-email" type="email" inputmode="email" placeholder="Enter your email address" required />
+        <button type="submit" class="btn-primary">Continue</button>
+      </form>
+      <div class="auth-divider"><span>or continue with</span></div>
+      <div class="auth-social">
+        <button class="social-btn" data-provider="Aha!">Aha!</button>
+        <button class="social-btn" data-provider="Google">Google</button>
+        <button class="social-btn" data-provider="Microsoft">Microsoft</button>
+        <button class="social-btn" data-provider="Github">Github</button>
+      </div>
+      <p class="auth-foot">Local demo &mdash; your profile is stored only in this browser.</p>
+    </div>
+  </div>
+
+  <!-- ===================== APP ===================== -->
+  <div id="app" class="app hidden">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-head">
+        <h2>History</h2>
+        <button id="clear-all" class="link-btn hidden">Clear all</button>
+      </div>
+      <div class="seg" role="tablist">
+        <button id="tab-browser" class="seg-btn active" role="tab">This browser</button>
+        <button id="tab-saved" class="seg-btn" role="tab">Saved</button>
+      </div>
+      <div class="search-wrap">
+        <svg class="search-ic" viewBox="0 0 24 24"><path d="M21 21l-4.3-4.3M11 19a8 8 0 1 1 0-16 8 8 0 0 1 0 16z"/></svg>
+        <input id="search" type="search" placeholder="Search sessions..." />
+      </div>
+      <div id="session-list" class="session-list">
+        <p class="empty-note">No sessions yet. Transcribe something to get started.</p>
+      </div>
+      <div class="sidebar-foot">
+        <span class="dot"></span>
+        <div>
+          <div class="foot-title">WHISPER: <span id="foot-model">BASE</span></div>
+          <div class="foot-sub">Stored only in this browser</div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="main">
+      <header class="topbar">
+        <button id="toggle-sidebar" class="icon-btn" title="Toggle history">&#x2715;</button>
+        <div class="brand"><span>vidto</span><strong>text</strong></div>
+        <div class="badges">
+          <span class="badge"><svg viewBox="0 0 24 24"><path d="M12 2l7 4v6c0 5-3.5 8-7 10-3.5-2-7-5-7-10V6z"/></svg> PRIVATE HISTORY</span>
+          <span class="badge"><svg viewBox="0 0 24 24"><path d="M13 2L3 14h7l-1 8 10-12h-7z"/></svg> ON-DEVICE WHISPER</span>
+        </div>
+        <div class="user">
+          <div class="avatar" id="avatar">K</div>
+          <div class="user-meta">
+            <div id="user-name" class="user-name">User</div>
+            <div id="user-email" class="user-email"></div>
+          </div>
+          <button id="sign-out" class="link-btn">&#x21AA; Sign out</button>
+        </div>
+      </header>
+
+      <div class="content">
+        <div class="intro">
+          <p class="lead">Drop in a video or audio file, or paste a direct media link. Transcribes locally with Whisper.</p>
+          <div class="model-pick">
+            <span>MODEL:</span>
+            <select id="model-select">
+              <option value="Xenova/whisper-tiny">TINY</option>
+              <option value="Xenova/whisper-base" selected>BASE</option>
+              <option value="Xenova/whisper-small">SMALL</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Input card -->
+        <section class="card input-card">
+          <div class="seg seg-wide">
+            <button id="src-url" class="seg-btn active">From URL</button>
+            <button id="src-file" class="seg-btn">Upload file</button>
+          </div>
+
+          <div id="pane-url" class="pane">
+            <label for="url-input">Direct video or audio URL</label>
+            <input id="url-input" type="url" placeholder="https://example.com/recording.mp4" />
+          </div>
+
+          <div id="pane-file" class="pane hidden">
+            <label class="dropzone" id="dropzone">
+              <input id="file-input" type="file" accept="audio/*,video/*" hidden />
+              <svg class="up-ic" viewBox="0 0 24 24"><path d="M12 16V4m0 0l-4 4m4-4l4 4M4 20h16"/></svg>
+              <div class="dz-text" id="dz-text">Drag &amp; drop a file here, or <span class="link">browse</span></div>
+              <div class="dz-sub" id="dz-sub">MP4, MOV, MP3, WAV, M4A &mdash; stays on your device</div>
+            </label>
+          </div>
+
+          <div class="opts">
+            <label class="chk"><input id="opt-audio" type="checkbox" checked /> <span>Download audio</span></label>
+            <label class="chk"><input id="opt-video" type="checkbox" /> <span>Download video</span></label>
+          </div>
+
+          <button id="transcribe-btn" class="btn-gradient" disabled>Transcribe</button>
+          <p class="fineprint">Audio is decoded and transcribed by Whisper inside your browser. Nothing is uploaded.</p>
+
+          <div id="progress" class="progress hidden">
+            <div class="progress-bar"><div id="progress-fill" class="progress-fill"></div></div>
+            <div id="progress-text" class="progress-text">Loading model&hellip;</div>
+          </div>
+        </section>
+
+        <!-- Result -->
+        <section id="result" class="result hidden">
+          <div class="card video-card">
+            <video id="player" controls playsinline></video>
+          </div>
+
+          <div class="card transcript-card">
+            <div class="tc-head">
+              <div class="tc-title">
+                <h3 id="result-title">Transcript</h3>
+                <div class="tc-meta">
+                  <span>LANGUAGE: <strong id="result-lang">AUTO</strong></span>
+                  <span>&bull; Source: <span id="result-source">Local file</span></span>
+                </div>
+              </div>
+              <div class="tc-actions">
+                <button id="save-db" class="pill"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6"/></svg> Save to database</button>
+                <button id="copy-btn" class="pill"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg> Copy</button>
+                <button id="download-btn" class="pill"><svg viewBox="0 0 24 24"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg> Download .txt</button>
+              </div>
+            </div>
+
+            <div class="toolbar">
+              <button id="summarize-btn" class="tool"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h10M4 18h7"/></svg> AI Summarize</button>
+              <button id="diarize-btn" class="tool"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c0-3 3-5 6-5s6 2 6 5M14 20c0-2 2-3.5 4-3.5s3.5 1.3 3.5 3"/></svg> Speaker Diarization</button>
+              <div class="tool-group">
+                <select id="lang-select" class="lang-select">
+                  <option value="es">Spanish</option>
+                  <option value="fr">French</option>
+                  <option value="de">German</option>
+                  <option value="pt">Portuguese</option>
+                  <option value="it">Italian</option>
+                  <option value="zh">Chinese</option>
+                  <option value="ja">Japanese</option>
+                  <option value="hi">Hindi</option>
+                  <option value="ar">Arabic</option>
+                  <option value="en">English</option>
+                </select>
+                <button id="translate-btn" class="tool"><svg viewBox="0 0 24 24"><path d="M4 5h7M7 4v1.5c0 3-2 6-5 7.5M5 8c0 2.5 2.5 4.5 5 5M12 20l4-9 4 9M13.5 17h5"/></svg> Translate</button>
+              </div>
+            </div>
+
+            <div class="result-tabs">
+              <button id="rt-transcript" class="rt active">Transcript</button>
+              <button id="rt-summary" class="rt" disabled>Summary</button>
+              <button id="rt-translation" class="rt" disabled>Translation</button>
+            </div>
+
+            <div id="view-transcript" class="rt-view">
+              <div id="segments" class="segments"></div>
+            </div>
+            <div id="view-summary" class="rt-view hidden">
+              <div id="summary-body" class="prose"></div>
+            </div>
+            <div id="view-translation" class="rt-view hidden">
+              <div id="translation-body" class="prose"></div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <!-- Toasts -->
+  <div id="toasts" class="toasts"></div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
