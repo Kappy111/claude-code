@@ -49,7 +49,12 @@ implemented to run entirely on-device, so they succeed without any server:
   with multiple restarts).
 - **Translate** uses the on-device Translator API or opus-mt models, with timeouts so a
   missing/stalled built-in model falls back instead of hanging.
-- URL input rejects YouTube/page links with a clear message (they aren't direct media).
+- URL input now accepts **YouTube links**: the audio is pulled in-browser through
+  public extractors (Invidious/Piped instances, tried with fallbacks) and transcribed
+  on-device. Other non-media web pages (Vimeo/TikTok/etc.) still get a clear message.
+  Note: for YouTube, the audio passes through a public extractor instance; the
+  transcription itself is still on-device. If every instance is down, download the
+  video and use Upload.
 
 ## Project layout
 

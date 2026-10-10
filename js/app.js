@@ -1,6 +1,7 @@
 // VidToText — main app controller.
 import * as DB from './db.js';
-import { fetchMedia, decodeToMono16k, isPageLike, isYouTube, YOUTUBE_MESSAGE, formatTime, triggerDownload } from './media.js';
+import { fetchMedia, decodeToMono16k, isPageLike, isYouTube, formatTime, triggerDownload } from './media.js';
+import { fetchYouTubeAudio } from './youtube.js';
 import { transcribe } from './transcribe.js';
 import { summarize } from './summarize.js';
 import { diarize, SPEAKER_COLORS } from './diarize.js';
@@ -124,13 +125,23 @@ async function runTranscribe() {
       blob = state.file; name = state.file.name; sourceLabel = 'Local file';
     } else {
       const url = $('url-input').value.trim();
-      if (isPageLike(url)) {
-        throw new Error(isYouTube(url) ? YOUTUBE_MESSAGE : 'That looks like a web page, not a direct media link. Paste a direct .mp3/.mp4/.wav URL or upload a file.');
+      if (isYouTube(url)) {
+        setProgress(0, 'Fetching YouTube audio…');
+        const yt = await fetchYouTubeAudio(url, {
+          onStatus: (m) => setProgress(null, m),
+          onProgress: (p) => setProgress(p, `Downloading audio… ${Math.round(p * 100)}%`),
+        });
+        blob = yt.blob;
+        name = (yt.title || 'youtube-video').replace(/[\\/:*?"<>|]+/g, ' ').trim() + '.m4a';
+        sourceLabel = url;
+      } else if (isPageLike(url)) {
+        throw new Error('That looks like a web page, not a direct media link. Paste a direct .mp3/.mp4/.wav URL, a YouTube link, or upload a file.');
+      } else {
+        setProgress(0, 'Downloading media…');
+        blob = await fetchMedia(url, (p) => setProgress(p, `Downloading media… ${Math.round(p * 100)}%`));
+        name = url.split('/').pop().split('?')[0] || 'remote-media';
+        sourceLabel = url;
       }
-      setProgress(0, 'Downloading media…');
-      blob = await fetchMedia(url, (p) => setProgress(p, `Downloading media… ${Math.round(p * 100)}%`));
-      name = url.split('/').pop().split('?')[0] || 'remote-media';
-      sourceLabel = url;
     }
 
     // Video preview
