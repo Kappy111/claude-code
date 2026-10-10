@@ -134,27 +134,61 @@ async function hasWebGPU() {
   try { return !!(navigator.gpu && await navigator.gpu.requestAdapter()); } catch { return false; }
 }
 
+// ---------------- diagnostics ----------------
+let diagT0 = 0;
+function diagReset() {
+  diagT0 = Date.now();
+  $('diag').innerHTML = '';
+  $('diag-wrap').classList.remove('hidden');
+}
+function diag(msg, kind = '') {
+  const t = ((Date.now() - diagT0) / 1000).toFixed(1).padStart(5, ' ');
+  const cls = kind ? ` class="${kind}"` : '';
+  const line = `<span${cls}>[${t}s] ${escapeHtml(msg)}</span>\n`;
+  const el = $('diag');
+  el.insertAdjacentHTML('beforeend', line);
+  el.scrollTop = el.scrollHeight;
+}
+
+// Check the model host is reachable (managed/school networks often block it).
+async function modelHostReachable() {
+  try {
+    const ctrl = new AbortController();
+    const to = setTimeout(() => ctrl.abort(), 8000);
+    const r = await fetch('https://huggingface.co/Xenova/whisper-tiny/resolve/main/config.json', { signal: ctrl.signal, cache: 'no-store' });
+    clearTimeout(to);
+    return r.ok;
+  } catch { return false; }
+}
+
 // ---------------- transcription flow ----------------
 async function runTranscribe() {
   const btn = $('transcribe-btn');
   btn.disabled = true; btn.classList.add('busy'); btn.textContent = 'Transcribing locally…';
   $('result').classList.add('hidden');
 
+  const serverUrl = getServerUrl();
+  diagReset();
+  diag(`Mode: ${serverUrl ? 'server (' + serverUrl + ')' : 'on-device'}`);
+
   try {
     let blob, name, sourceLabel;
     if (state.source === 'file') {
       blob = state.file; name = state.file.name; sourceLabel = 'Local file';
+      diag(`Source: file "${name}" (${(blob.size / 1024 / 1024).toFixed(1)} MB)`);
     } else {
       const url = $('url-input').value.trim();
       if (isYouTube(url)) {
+        diag('Source: YouTube link — fetching audio via public extractors…');
         setProgress(0, 'Fetching YouTube audio…');
         const yt = await fetchYouTubeAudio(url, {
-          onStatus: (m) => setProgress(null, m),
+          onStatus: (m) => { diag(m); setProgress(null, m); },
           onProgress: (p) => setProgress(p, `Downloading audio… ${Math.round(p * 100)}%`),
         });
         blob = yt.blob;
         name = (yt.title || 'youtube-video').replace(/[\\/:*?"<>|]+/g, ' ').trim() + '.m4a';
         sourceLabel = url;
+        diag(`YouTube audio fetched: ${(blob.size / 1024 / 1024).toFixed(1)} MB`, 'ok');
       } else if (isPageLike(url)) {
         throw new Error('That looks like a web page, not a direct media link. Paste a direct .mp3/.mp4/.wav URL, a YouTube link, or upload a file.');
       } else {
@@ -172,32 +206,46 @@ async function runTranscribe() {
 
     // Decode audio (used for the player + on-device diarization either way)
     setProgress(null, 'Decoding audio…');
+    diag('Decoding audio…');
     const { pcm, duration } = await decodeToMono16k(blob);
     state.pcm = pcm.slice(); // keep a copy for diarization
+    diag(`Decoded: ${Math.round(duration)}s of audio`, 'ok');
 
     const model = $('model-select').value;
-    const serverUrl = getServerUrl();
     let result;
     if (serverUrl) {
       // Server-side transcription — fast on any device.
+      diag('Uploading audio to server…');
       startElapsed('Transcribing on server');
       result = await transcribeOnServer(blob, model, serverUrl, {
-        onStatus: (m) => { if (!/transcrib/i.test(m)) { stopElapsed(); setProgress(null, m); } },
+        onStatus: (m) => { diag(m); if (!/transcrib/i.test(m)) { stopElapsed(); setProgress(null, m); } },
       });
       stopElapsed();
+      diag(`Server returned ${result.chunks.length} segments`, 'ok');
     } else {
       // On-device transcription in a Web Worker.
+      if (duration > 180) diag(`Heads up: ${Math.round(duration)}s is long for on-device on a low-power device — this can take a while.`, 'warn');
+      diag(`Checking model host (huggingface.co) is reachable…`);
+      const reachable = await modelHostReachable();
+      if (reachable) { diag('Model host reachable', 'ok'); }
+      else {
+        diag('Model host NOT reachable — your network may block huggingface.co. On-device transcription needs it.', 'err');
+        throw new Error('Can\'t reach huggingface.co to download the Whisper model. Your network (e.g. a school/work Chromebook) may be blocking it. Try a different network, or use the "faster server" option.');
+      }
+      diag(`Loading Whisper model (${model.split('/').pop()})…`);
       result = await transcribe(pcm, model, {
         onStatus: (m) => {
+          diag(m);
           if (/transcrib/i.test(m)) startElapsed('Transcribing locally');
           else { stopElapsed(); setProgress(null, m); }
         },
         onProgress: (p) => {
           stopElapsed();
           if (p.phase === 'download' && p.pct != null) setProgress(p.pct, `Loading Whisper model… ${Math.round(p.pct * 100)}%`);
-          else if (p.phase === 'ready') setProgress(1, 'Model ready — transcribing…');
+          else if (p.phase === 'ready') { setProgress(1, 'Model ready — transcribing…'); diag('Model ready', 'ok'); }
         },
       });
+      diag(`Transcription done: ${result.chunks.length} segments`, 'ok');
       stopElapsed();
     }
 
@@ -228,11 +276,16 @@ async function runTranscribe() {
     await DB.putSession('browser', session);
     renderResult(session);
     refreshHistory();
+    diag('All done ✓', 'ok');
     toast(`Transcribed with Whisper (${(result.device || 'local').toUpperCase()}).`, 'success');
   } catch (err) {
-    toast(err.message || 'Transcription failed.', 'error', 6000);
+    diag('ERROR: ' + (err?.message || String(err)), 'err');
+    toast(err.message || 'Transcription failed.', 'error', 7000);
   } finally {
-    hideProgress();
+    // Keep the diagnostics box visible (it's useful after an error); just stop the bar/timer.
+    $('progress').classList.add('hidden');
+    $('progress-fill').style.width = '0%';
+    stopElapsed();
     btn.disabled = false; btn.classList.remove('busy'); btn.textContent = 'Transcribe';
     updateTranscribeEnabled();
   }
@@ -557,6 +610,10 @@ function init() {
   $('transcribe-btn').addEventListener('click', runTranscribe);
   $('model-select').addEventListener('change', () => { $('foot-model').textContent = $('model-select').selectedOptions[0].text; });
   initServerOption();
+  $('diag-copy').addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText($('diag').textContent); toast('Diagnostics copied.', 'success'); }
+    catch { toast('Select the text and copy manually.', 'info'); }
+  });
 
   // Adaptive default: without WebGPU (e.g. Chromebooks), base/small are slow in
   // WASM, so default to the fast "tiny" model. With WebGPU, keep "base".
