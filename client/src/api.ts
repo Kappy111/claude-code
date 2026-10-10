@@ -17,6 +17,11 @@ export const setToken = (t: string | null) => {
 };
 export const getToken = () => localStorage.getItem(TOKEN_KEY);
 
+// Current deployed build id — used to auto-refresh open browsers after a deploy.
+export const system = {
+  version: () => api.get('/version').then((r) => r.data.version as string),
+};
+
 // Turn axios errors into readable messages for toasts / inline errors.
 export function errMsg(e: any, fallback = 'Something went wrong. Please try again.'): string {
   if (e?.response?.data?.error) return e.response.data.error;

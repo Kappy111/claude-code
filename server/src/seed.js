@@ -14,6 +14,15 @@ export async function purgeDemoData() {
   return changes || 0;
 }
 
+// Grants the verified badge to the owner account named by OMNIFEED_OWNER_USERNAME.
+// Idempotent and safe to run on every boot.
+export async function applyOwnerBadge() {
+  const owner = process.env.OMNIFEED_OWNER_USERNAME;
+  if (!owner) return 0;
+  const { changes } = await db.prepare('UPDATE users SET verified = 1 WHERE LOWER(username) = LOWER(?)').run(owner);
+  return changes || 0;
+}
+
 export async function runSeed({ reset = false } = {}) {
   await initSchema();
   await ensureBucket();

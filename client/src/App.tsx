@@ -16,6 +16,7 @@ import { Photos, Thoughts } from './pages/FormatFeed';
 import { Bookmarks, WatchHistory, Hashtag } from './pages/misc';
 import { Messages } from './pages/Messages';
 import { Contact } from './pages/Contact';
+import { VersionWatcher } from './components/VersionWatcher';
 
 function Loading() {
   return <div className="min-h-screen grid place-items-center"><Spinner className="!w-8 !h-8" /></div>;
@@ -65,6 +66,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <ToastProvider>
+        <VersionWatcher />
         <AuthProvider>
           <AppRoutes />
         </AuthProvider>

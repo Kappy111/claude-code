@@ -5,7 +5,7 @@ import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { UPLOAD_DIR, initSchema } from './db.js';
 import { withUser } from './middleware/auth.js';
-import { runSeed } from './seed.js';
+import { runSeed, applyOwnerBadge } from './seed.js';
 
 import authRoutes from './routes/auth.js';
 import userRoutes from './routes/users.js';
@@ -39,6 +39,11 @@ app.use('/api/messages', messageRoutes);
 
 app.get('/api/health', (_req, res) => res.json({ ok: true, service: 'omnifeed' }));
 
+// Current deployed build id. The client polls this and reloads when it changes,
+// so every new deploy refreshes all open browsers onto the latest version.
+const APP_VERSION = process.env.RENDER_GIT_COMMIT || process.env.OMNIFEED_VERSION || 'dev';
+app.get('/api/version', (_req, res) => res.json({ version: APP_VERSION }));
+
 // Serve the built client in production (single-port deploy)
 const clientDist = path.join(__dirname, '..', '..', 'client', 'dist');
 if (fs.existsSync(clientDist)) {
@@ -70,5 +75,7 @@ if (process.env.NODE_ENV === 'production' && !process.env.OMNIFEED_JWT_SECRET) {
   app.listen(PORT, () => console.log(`OmniFeed running on http://localhost:${PORT}`));
   runSeed()
     .then((r) => { if (r.skipped) console.log(`Database already has ${r.users} users — skipping seed.`); })
+    .then(() => applyOwnerBadge())
+    .then((n) => { if (n) console.log(`Verified badge applied to owner account "${process.env.OMNIFEED_OWNER_USERNAME}".`); })
     .catch((e) => console.error('Seed-on-boot failed (continuing):', e.message));
 })();
