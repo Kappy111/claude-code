@@ -31,37 +31,44 @@ function tx(store, mode, fn) {
   }));
 }
 
+// All operations are best-effort: if IndexedDB is unavailable (e.g. opening the
+// file directly from disk, private mode, or blocked storage), history simply
+// doesn't persist — it must never break transcription.
 export async function putSession(store, session) {
-  await tx(store, 'readwrite', os => os.put(session));
+  try { await tx(store, 'readwrite', os => os.put(session)); } catch (_) {}
   return session;
 }
 
 export async function getAll(store) {
-  const db = await open();
-  return new Promise((resolve, reject) => {
-    const req = db.transaction(store, 'readonly').objectStore(store).getAll();
-    req.onsuccess = () => {
-      const list = req.result || [];
-      list.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-      resolve(list);
-    };
-    req.onerror = () => reject(req.error);
-  });
+  try {
+    const db = await open();
+    return await new Promise((resolve, reject) => {
+      const req = db.transaction(store, 'readonly').objectStore(store).getAll();
+      req.onsuccess = () => {
+        const list = req.result || [];
+        list.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+        resolve(list);
+      };
+      req.onerror = () => reject(req.error);
+    });
+  } catch (_) { return []; }
 }
 
 export async function getSession(store, id) {
-  const db = await open();
-  return new Promise((resolve, reject) => {
-    const req = db.transaction(store, 'readonly').objectStore(store).get(id);
-    req.onsuccess = () => resolve(req.result || null);
-    req.onerror = () => reject(req.error);
-  });
+  try {
+    const db = await open();
+    return await new Promise((resolve, reject) => {
+      const req = db.transaction(store, 'readonly').objectStore(store).get(id);
+      req.onsuccess = () => resolve(req.result || null);
+      req.onerror = () => reject(req.error);
+    });
+  } catch (_) { return null; }
 }
 
 export async function deleteSession(store, id) {
-  await tx(store, 'readwrite', os => os.delete(id));
+  try { await tx(store, 'readwrite', os => os.delete(id)); } catch (_) {}
 }
 
 export async function clearStore(store) {
-  await tx(store, 'readwrite', os => os.clear());
+  try { await tx(store, 'readwrite', os => os.clear()); } catch (_) {}
 }
