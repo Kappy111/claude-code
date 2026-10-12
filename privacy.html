@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>VidToText — Privacy Policy</title>
+  <style>
+    :root { color-scheme: dark; }
+    body { margin:0; background:#0a0e1a; color:#e8edf7;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+      line-height:1.65; }
+    .wrap { max-width: 760px; margin: 0 auto; padding: 48px 22px 80px; }
+    h1 { font-size: 30px; letter-spacing:-.02em; margin:0 0 6px; }
+    h2 { font-size: 19px; margin: 32px 0 8px; color:#cdd8ee; }
+    .sub { color:#8491ab; margin:0 0 4px; }
+    .brand b { background:linear-gradient(90deg,#3b82f6,#22d3ee); -webkit-background-clip:text; background-clip:text; color:transparent; }
+    p, li { color:#c3cde0; }
+    a { color:#38bdf8; }
+    code { background:#121a2e; padding:1px 6px; border-radius:6px; }
+    .note { background:#0f1627; border:1px solid #1c2742; border-radius:12px; padding:14px 16px; margin-top:16px; }
+    hr { border:none; border-top:1px solid #1c2742; margin:28px 0; }
+    footer { color:#5e6b85; font-size:13px; margin-top:40px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1 class="brand">vidto<b>text</b> — Privacy Policy</h1>
+    <p class="sub">Last updated: October 12, 2026</p>
+
+    <p>VidToText is a tool that transcribes video or audio into text. This policy covers
+    both the VidToText web app and the VidToText Chrome extension (which simply opens the
+    web app). Our approach is simple: <strong>your media is processed on your own device,
+    and we do not collect, store, sell, or transmit your personal data.</strong></p>
+
+    <h2>What we collect</h2>
+    <p><strong>Nothing.</strong> VidToText has no accounts server, no analytics, no
+    trackers, and no advertising. We, the developers, do not receive any of your data.</p>
+
+    <h2>How your data is handled</h2>
+    <ul>
+      <li><strong>Audio &amp; video you provide</strong> is decoded and transcribed
+      locally in your browser using the Whisper speech-recognition model. The media itself
+      is not uploaded to us.</li>
+      <li><strong>Transcripts, summaries, translations, and history</strong> are stored
+      only in your browser (via local storage / IndexedDB) on your device. You can delete
+      them at any time from within the app.</li>
+      <li><strong>Sign-in</strong> is a local profile — you enter an email only to
+      personalize the app on your device. It is not sent to any server and is not a real
+      account.</li>
+    </ul>
+
+    <h2>Third-party services (only when you choose to use them)</h2>
+    <ul>
+      <li><strong>Model download:</strong> the first time you transcribe, the Whisper
+      model files are downloaded from the Hugging Face CDN (huggingface.co /
+      cdn.jsdelivr.net) and cached in your browser. This is a standard file download; no
+      personal data is sent.</li>
+      <li><strong>YouTube links:</strong> if you paste a YouTube URL, the audio is fetched
+      through public third-party extractor services (Invidious / Piped instances) so it can
+      be transcribed on your device. Those third-party services have their own policies.</li>
+      <li><strong>Optional transcription server:</strong> if you turn on the optional
+      "faster server" feature and enter a server address, the audio is sent to that server
+      (one you or we set up) solely to produce a transcript, then discarded. This is
+      off by default.</li>
+    </ul>
+
+    <div class="note">We do <strong>not</strong> sell or transfer your data to third
+    parties, do <strong>not</strong> use your data for anything unrelated to transcription,
+    and do <strong>not</strong> use your data to determine creditworthiness or for lending.</div>
+
+    <h2>Data retention &amp; deletion</h2>
+    <p>Because data stays on your device, you are in control. Clearing it is immediate:
+    use the app's "Clear all" button, or clear the site's data in your browser settings.</p>
+
+    <h2>Children's privacy</h2>
+    <p>VidToText is a general-purpose utility and does not knowingly collect any personal
+    information from anyone, including children.</p>
+
+    <h2>Changes to this policy</h2>
+    <p>If this policy changes, the updated version will be posted at this URL with a new
+    "Last updated" date.</p>
+
+    <h2>Contact</h2>
+    <p>Questions about this policy can be raised through the project's public repository at
+    <a href="https://github.com/Kappy111/claude-code">github.com/Kappy111/claude-code</a>.</p>
+
+    <hr />
+    <footer>VidToText processes media on-device. Nothing is uploaded unless you explicitly
+    enable the optional server feature.</footer>
+  </div>
+</body>
+</html>
