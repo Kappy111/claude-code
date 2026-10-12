@@ -80,15 +80,15 @@ async function builtinSummarize(text) {
   }
 }
 
-// Returns { summary, points, engine }.
+// Returns { text, points, engine } — `text` is the summary paragraph.
 export async function summarize(text) {
   const trimmed = (text || '').trim();
   if (!trimmed) throw new Error('Nothing to summarize yet.');
 
   const builtin = await builtinSummarize(trimmed);
   if (builtin) {
-    return { summary: builtin, points: keyPoints(trimmed, 5), engine: 'Chrome on-device AI' };
+    return { text: builtin, points: keyPoints(trimmed, 5), engine: 'Chrome on-device AI' };
   }
   const summary = extractiveSummary(trimmed, 5);
-  return { summary, points: keyPoints(trimmed, 6), engine: 'extractive (offline)' };
+  return { text: summary, points: keyPoints(trimmed, 6), engine: 'extractive (offline)' };
 }

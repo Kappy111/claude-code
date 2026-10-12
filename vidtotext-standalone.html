@@ -897,10 +897,10 @@ async function summarize(text) {
   if (!trimmed) throw new Error("Nothing to summarize yet.");
   const builtin = await builtinSummarize(trimmed);
   if (builtin) {
-    return { summary: builtin, points: keyPoints(trimmed, 5), engine: "Chrome on-device AI" };
+    return { text: builtin, points: keyPoints(trimmed, 5), engine: "Chrome on-device AI" };
   }
   const summary = extractiveSummary(trimmed, 5);
-  return { summary, points: keyPoints(trimmed, 6), engine: "extractive (offline)" };
+  return { text: summary, points: keyPoints(trimmed, 6), engine: "extractive (offline)" };
 }
 
 // ../../../tmp/claude-0/-home-user-claude-code/cf05cf4e-7d6e-5763-a970-7f390ed8ac60/scratchpad/sbuild_js/diarize.js
