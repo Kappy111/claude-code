@@ -3,6 +3,9 @@ import * as DB from './db.js';
 import { fetchMedia, decodeToMono16k, isPageLike, isYouTube, formatTime, triggerDownload } from './media.js';
 import { fetchYouTubeAudio } from './youtube.js';
 import { getServerUrl, setServerUrl, transcribeOnServer } from './server.js';
+import { cloudConfigured, getConfig as getDbConfig, setConfig as setDbConfig, saveToCloud, listCloud, deleteFromCloud, clearCloud } from './supabase.js';
+
+function currentEmail() { try { return (JSON.parse(localStorage.getItem('vidtotext.profile') || 'null') || {}).email || ''; } catch { return ''; } }
 import { transcribe } from './transcribe.js';
 import { summarize } from './summarize.js';
 import { diarize, SPEAKER_COLORS } from './diarize.js';
@@ -464,9 +467,21 @@ function initToolbar() {
   });
   $('save-db').addEventListener('click', async () => {
     const s = state.session; if (!s) return;
-    await DB.putSession('saved', s);
+    await DB.putSession('saved', s); // local copy as a fallback
     $('save-db').classList.add('ok');
-    toast('Saved to your database (this browser).', 'success');
+    if (cloudConfigured()) {
+      const btn = $('save-db'); const old = btn.innerHTML; btn.disabled = true;
+      try {
+        await saveToCloud(s, currentEmail());
+        toast('Saved to your Supabase database.', 'success');
+      } catch (err) {
+        toast('Saved locally, but Supabase failed: ' + (err.message || 'unknown error'), 'error', 6000);
+      } finally {
+        btn.disabled = false; btn.innerHTML = old; btn.classList.add('ok');
+      }
+    } else {
+      toast('Saved to your database (this browser).', 'success');
+    }
     if (state.activeStore === 'saved') refreshHistory();
   });
 }
@@ -492,7 +507,14 @@ function buildExport(s) {
 
 // ---------------- history ----------------
 async function refreshHistory() {
-  const list = await DB.getAll(state.activeStore);
+  const cloudMode = state.activeStore === 'saved' && cloudConfigured();
+  let list;
+  if (cloudMode) {
+    try { list = await listCloud(currentEmail()); }
+    catch (err) { list = await DB.getAll('saved'); toast('Could not reach Supabase; showing local saved copies.', 'error'); }
+  } else {
+    list = await DB.getAll(state.activeStore);
+  }
   const q = $('search').value.trim().toLowerCase();
   const filtered = q ? list.filter(s => (s.title + ' ' + (s.text || '')).toLowerCase().includes(q)) : list;
   const wrap = $('session-list');
@@ -519,6 +541,9 @@ async function refreshHistory() {
     });
     item.querySelector('.si-del').addEventListener('click', async (e) => {
       e.stopPropagation();
+      if (state.activeStore === 'saved' && cloudConfigured()) {
+        try { await deleteFromCloud(s.id); } catch (err) { toast('Could not delete from Supabase: ' + (err.message || ''), 'error'); }
+      }
       await DB.deleteSession(state.activeStore, s.id);
       if (state.session?.id === s.id) { state.session = null; $('result').classList.add('hidden'); }
       refreshHistory();
@@ -542,7 +567,12 @@ function initHistory() {
   $('tab-saved').addEventListener('click', () => { state.activeStore = 'saved'; $('tab-saved').classList.add('active'); $('tab-browser').classList.remove('active'); refreshHistory(); });
   $('search').addEventListener('input', refreshHistory);
   $('clear-all').addEventListener('click', async () => {
-    if (!confirm(`Clear all ${state.activeStore === 'saved' ? 'saved' : 'browser'} sessions?`)) return;
+    const cloudMode = state.activeStore === 'saved' && cloudConfigured();
+    const where = cloudMode ? 'your Supabase database' : (state.activeStore === 'saved' ? 'saved' : 'browser');
+    if (!confirm(`Clear all sessions from ${where}? This cannot be undone.`)) return;
+    if (cloudMode) {
+      try { await clearCloud(currentEmail()); } catch (err) { toast('Could not clear Supabase: ' + (err.message || ''), 'error'); }
+    }
     await DB.clearStore(state.activeStore);
     state.session = null; $('result').classList.add('hidden');
     refreshHistory();
@@ -570,6 +600,38 @@ function renderServerStatus() {
     cfg.textContent = 'Use a faster server';
     fine.textContent = 'Audio is decoded and transcribed by Whisper inside your browser. Nothing is uploaded.';
   }
+}
+
+function renderDbStatus() {
+  const { url } = getDbConfig();
+  const on = cloudConfigured();
+  $('db-dot').classList.toggle('on', on);
+  if (on) {
+    let host = url; try { host = new URL(url).host.replace('.supabase.co', ''); } catch {}
+    $('db-status').textContent = `Cloud save: ${host}`;
+    $('db-config').textContent = 'Change / disconnect';
+  } else {
+    $('db-status').textContent = 'Cloud save off';
+    $('db-config').textContent = 'Connect database';
+  }
+}
+
+function initDbOption() {
+  renderDbStatus();
+  $('db-config').addEventListener('click', () => {
+    const cur = getDbConfig();
+    const url = prompt('Supabase Project URL (e.g. https://xxxx.supabase.co).\nLeave blank to turn off cloud save.', cur.url);
+    if (url === null) return;
+    if (!url.trim()) { setDbConfig('', ''); renderDbStatus(); toast('Cloud save turned off.', 'info'); return; }
+    if (!/^https:\/\/.+\.supabase\.co/.test(url.trim())) { toast('That does not look like a Supabase URL.', 'error'); return; }
+    const key = prompt('Supabase anon public key (starts with eyJ...).', cur.key);
+    if (key === null) return;
+    if (!key.trim().startsWith('eyJ')) { toast('That does not look like an anon key.', 'error'); return; }
+    setDbConfig(url.trim(), key.trim());
+    renderDbStatus();
+    toast('Database connected. Saved transcripts will sync to Supabase.', 'success');
+    if (state.activeStore === 'saved') refreshHistory();
+  });
 }
 
 function initServerOption() {
@@ -610,6 +672,7 @@ function init() {
   $('transcribe-btn').addEventListener('click', runTranscribe);
   $('model-select').addEventListener('change', () => { $('foot-model').textContent = $('model-select').selectedOptions[0].text; });
   initServerOption();
+  initDbOption();
   $('diag-copy').addEventListener('click', async () => {
     try { await navigator.clipboard.writeText($('diag').textContent); toast('Diagnostics copied.', 'success'); }
     catch { toast('Select the text and copy manually.', 'info'); }

@@ -413,6 +413,11 @@ a, .link { color: var(--blue); cursor: pointer; }
             <span id="server-status">On-device</span>
             <button id="server-config" class="link-btn">Use a faster server</button>
           </div>
+          <div class="server-opt">
+            <span class="srv-dot" id="db-dot"></span>
+            <span id="db-status">Cloud save off</span>
+            <button id="db-config" class="link-btn">Connect database</button>
+          </div>
 
           <div id="progress" class="progress hidden">
             <div class="progress-bar"><div id="progress-fill" class="progress-fill"></div></div>
@@ -792,6 +797,106 @@ async function transcribeOnServer(blob, model, serverUrl, { onStatus } = {}) {
   };
 }
 
+// ../../../tmp/claude-0/-home-user-claude-code/cf05cf4e-7d6e-5763-a970-7f390ed8ac60/scratchpad/sbuild_js/supabase.js
+var TABLE = "vtt_transcripts";
+function getConfig() {
+  try {
+    return {
+      url: localStorage.getItem("vidtotext.supabaseUrl") || "",
+      key: localStorage.getItem("vidtotext.supabaseKey") || ""
+    };
+  } catch (_) {
+    return { url: "", key: "" };
+  }
+}
+function setConfig(url, key) {
+  try {
+    if (url) localStorage.setItem("vidtotext.supabaseUrl", url.replace(/\/+$/, ""));
+    else localStorage.removeItem("vidtotext.supabaseUrl");
+    if (key) localStorage.setItem("vidtotext.supabaseKey", key);
+    else localStorage.removeItem("vidtotext.supabaseKey");
+  } catch (_) {
+  }
+  _client = null;
+}
+function cloudConfigured() {
+  const { url, key } = getConfig();
+  return !!(url && key);
+}
+var _client = null;
+async function client() {
+  if (_client) return _client;
+  const { url, key } = getConfig();
+  if (!url || !key) throw new Error("Supabase is not configured.");
+  const { createClient } = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/+esm");
+  _client = createClient(url, key, { auth: { persistSession: false } });
+  return _client;
+}
+function sessionToRow(session, email) {
+  return {
+    id: session.id,
+    user_email: email || null,
+    title: session.title || "Untitled",
+    source: session.source || null,
+    language: session.language || null,
+    duration: session.duration ?? null,
+    model: session.model || null,
+    device: session.device || null,
+    transcript_text: session.text || null,
+    chunks: session.chunks || null,
+    speakers: session.speakers || null,
+    summary: session.summary || null,
+    translation: session.translation || null,
+    created_at: session.createdAt ? new Date(session.createdAt).toISOString() : (/* @__PURE__ */ new Date()).toISOString()
+  };
+}
+function rowToSession(row) {
+  return {
+    id: row.id,
+    title: row.title,
+    source: row.source,
+    language: row.language,
+    duration: row.duration,
+    model: row.model,
+    device: row.device,
+    text: row.transcript_text,
+    chunks: row.chunks || [],
+    speakers: row.speakers || null,
+    summary: row.summary || null,
+    translation: row.translation || null,
+    createdAt: row.created_at ? new Date(row.created_at).getTime() : Date.now(),
+    _cloud: true
+  };
+}
+async function saveToCloud(session, email) {
+  const c = await client();
+  const { error } = await c.from(TABLE).upsert(sessionToRow(session, email), { onConflict: "id" });
+  if (error) throw new Error(error.message || "Could not save to Supabase.");
+  return true;
+}
+async function listCloud(email) {
+  const c = await client();
+  let q = c.from(TABLE).select("*").order("created_at", { ascending: false }).limit(200);
+  if (email) q = q.eq("user_email", email);
+  const { data, error } = await q;
+  if (error) throw new Error(error.message || "Could not load from Supabase.");
+  return (data || []).map(rowToSession);
+}
+async function deleteFromCloud(id) {
+  const c = await client();
+  const { error } = await c.from(TABLE).delete().eq("id", id);
+  if (error) throw new Error(error.message || "Could not delete from Supabase.");
+  return true;
+}
+async function clearCloud(email) {
+  const c = await client();
+  let q = c.from(TABLE).delete();
+  q = email ? q.eq("user_email", email) : q.neq("id", "");
+  const { error } = await q;
+  if (error) throw new Error(error.message || "Could not clear Supabase.");
+  return true;
+}
+
 // ../../../tmp/claude-0/-home-user-claude-code/cf05cf4e-7d6e-5763-a970-7f390ed8ac60/scratchpad/sbuild_js/transcribe.js
 var transcriber = null;
 var loadedModel = null;
@@ -1169,6 +1274,13 @@ async function translate(text, target, { source = "en", onStatus } = {}) {
 }
 
 // ../../../tmp/claude-0/-home-user-claude-code/cf05cf4e-7d6e-5763-a970-7f390ed8ac60/scratchpad/sbuild_js/app.js
+function currentEmail() {
+  try {
+    return (JSON.parse(localStorage.getItem("vidtotext.profile") || "null") || {}).email || "";
+  } catch {
+    return "";
+  }
+}
 var $ = (id) => document.getElementById(id);
 var PROFILE_KEY = "vidtotext.profile";
 var state = {
@@ -1651,7 +1763,23 @@ function initToolbar() {
     if (!s) return;
     await putSession("saved", s);
     $("save-db").classList.add("ok");
-    toast("Saved to your database (this browser).", "success");
+    if (cloudConfigured()) {
+      const btn = $("save-db");
+      const old = btn.innerHTML;
+      btn.disabled = true;
+      try {
+        await saveToCloud(s, currentEmail());
+        toast("Saved to your Supabase database.", "success");
+      } catch (err) {
+        toast("Saved locally, but Supabase failed: " + (err.message || "unknown error"), "error", 6e3);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = old;
+        btn.classList.add("ok");
+      }
+    } else {
+      toast("Saved to your database (this browser).", "success");
+    }
     if (state.activeStore === "saved") refreshHistory();
   });
 }
@@ -1678,7 +1806,18 @@ function buildExport(s) {
   return lines.join("\n");
 }
 async function refreshHistory() {
-  const list = await getAll(state.activeStore);
+  const cloudMode = state.activeStore === "saved" && cloudConfigured();
+  let list;
+  if (cloudMode) {
+    try {
+      list = await listCloud(currentEmail());
+    } catch (err) {
+      list = await getAll("saved");
+      toast("Could not reach Supabase; showing local saved copies.", "error");
+    }
+  } else {
+    list = await getAll(state.activeStore);
+  }
   const q = $("search").value.trim().toLowerCase();
   const filtered = q ? list.filter((s) => (s.title + " " + (s.text || "")).toLowerCase().includes(q)) : list;
   const wrap = $("session-list");
@@ -1699,6 +1838,13 @@ async function refreshHistory() {
     });
     item.querySelector(".si-del").addEventListener("click", async (e) => {
       e.stopPropagation();
+      if (state.activeStore === "saved" && cloudConfigured()) {
+        try {
+          await deleteFromCloud(s.id);
+        } catch (err) {
+          toast("Could not delete from Supabase: " + (err.message || ""), "error");
+        }
+      }
       await deleteSession(state.activeStore, s.id);
       if (state.session?.id === s.id) {
         state.session = null;
@@ -1736,7 +1882,16 @@ function initHistory() {
   });
   $("search").addEventListener("input", refreshHistory);
   $("clear-all").addEventListener("click", async () => {
-    if (!confirm(`Clear all ${state.activeStore === "saved" ? "saved" : "browser"} sessions?`)) return;
+    const cloudMode = state.activeStore === "saved" && cloudConfigured();
+    const where = cloudMode ? "your Supabase database" : state.activeStore === "saved" ? "saved" : "browser";
+    if (!confirm(`Clear all sessions from ${where}? This cannot be undone.`)) return;
+    if (cloudMode) {
+      try {
+        await clearCloud(currentEmail());
+      } catch (err) {
+        toast("Could not clear Supabase: " + (err.message || ""), "error");
+      }
+    }
     await clearStore(state.activeStore);
     state.session = null;
     $("result").classList.add("hidden");
@@ -1766,6 +1921,51 @@ function renderServerStatus() {
     cfg.textContent = "Use a faster server";
     fine.textContent = "Audio is decoded and transcribed by Whisper inside your browser. Nothing is uploaded.";
   }
+}
+function renderDbStatus() {
+  const { url } = getConfig();
+  const on = cloudConfigured();
+  $("db-dot").classList.toggle("on", on);
+  if (on) {
+    let host = url;
+    try {
+      host = new URL(url).host.replace(".supabase.co", "");
+    } catch {
+    }
+    $("db-status").textContent = `Cloud save: ${host}`;
+    $("db-config").textContent = "Change / disconnect";
+  } else {
+    $("db-status").textContent = "Cloud save off";
+    $("db-config").textContent = "Connect database";
+  }
+}
+function initDbOption() {
+  renderDbStatus();
+  $("db-config").addEventListener("click", () => {
+    const cur = getConfig();
+    const url = prompt("Supabase Project URL (e.g. https://xxxx.supabase.co).\nLeave blank to turn off cloud save.", cur.url);
+    if (url === null) return;
+    if (!url.trim()) {
+      setConfig("", "");
+      renderDbStatus();
+      toast("Cloud save turned off.", "info");
+      return;
+    }
+    if (!/^https:\/\/.+\.supabase\.co/.test(url.trim())) {
+      toast("That does not look like a Supabase URL.", "error");
+      return;
+    }
+    const key = prompt("Supabase anon public key (starts with eyJ...).", cur.key);
+    if (key === null) return;
+    if (!key.trim().startsWith("eyJ")) {
+      toast("That does not look like an anon key.", "error");
+      return;
+    }
+    setConfig(url.trim(), key.trim());
+    renderDbStatus();
+    toast("Database connected. Saved transcripts will sync to Supabase.", "success");
+    if (state.activeStore === "saved") refreshHistory();
+  });
 }
 function initServerOption() {
   renderServerStatus();
@@ -1803,6 +2003,7 @@ function init() {
     $("foot-model").textContent = $("model-select").selectedOptions[0].text;
   });
   initServerOption();
+  initDbOption();
   $("diag-copy").addEventListener("click", async () => {
     try {
       await navigator.clipboard.writeText($("diag").textContent);
