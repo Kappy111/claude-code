@@ -225,6 +225,25 @@
     </main>
   </div>
 
+  <!-- Connect database modal -->
+  <div id="db-modal" class="modal hidden">
+    <div class="modal-card">
+      <h3>Connect to Supabase</h3>
+      <p class="modal-sub">Transcripts you save will sync to your database. Your keys are stored only in this browser.</p>
+      <label for="db-url">Project URL</label>
+      <input id="db-url" type="url" placeholder="https://xxxx.supabase.co" autocomplete="off" />
+      <label for="db-key">Anon public key</label>
+      <textarea id="db-key" rows="3" placeholder="eyJhbGciOi..." autocomplete="off"></textarea>
+      <div id="db-error" class="modal-err hidden"></div>
+      <div class="modal-actions">
+        <button id="db-disconnect" class="pill">Turn off</button>
+        <span style="flex:1"></span>
+        <button id="db-cancel" class="pill">Cancel</button>
+        <button id="db-save" class="btn-primary modal-save">Connect</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Toasts -->
   <div id="toasts" class="toasts"></div>
 

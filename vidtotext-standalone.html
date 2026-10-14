@@ -252,6 +252,19 @@ a, .link { color: var(--blue); cursor: pointer; }
 .prose li { margin: 6px 0; }
 .muted-block { color: var(--muted); }
 
+/* Modal */
+.modal { position: fixed; inset: 0; background: rgba(4,7,14,.66); display: grid; place-items: center; z-index: 60; padding: 20px; }
+.modal-card { width: 100%; max-width: 440px; background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 24px; box-shadow: var(--shadow); }
+.modal-card h3 { margin: 0 0 4px; font-size: 19px; }
+.modal-sub { margin: 0 0 16px; color: var(--muted); font-size: 13px; }
+.modal-card label { display: block; font-size: 13px; color: var(--muted); margin: 12px 0 6px; }
+.modal-card input, .modal-card textarea { width: 100%; padding: 11px 13px; font-size: 14px; background: var(--bg-2); color: var(--text); border: 1px solid var(--border); border-radius: 10px; outline: none; font-family: inherit; resize: vertical; }
+.modal-card input:focus, .modal-card textarea:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(59,130,246,.18); }
+.modal-card textarea { font-family: ui-monospace, Menlo, monospace; font-size: 12px; word-break: break-all; }
+.modal-err { color: var(--danger); font-size: 13px; margin-top: 12px; }
+.modal-actions { display: flex; align-items: center; gap: 8px; margin-top: 20px; }
+.modal-save { width: auto; margin-top: 0; padding: 10px 18px; }
+
 /* Toasts */
 .toasts { position: fixed; right: 20px; bottom: 20px; display: grid; gap: 10px; z-index: 50; }
 .toast {
@@ -493,6 +506,25 @@ a, .link { color: var(--blue); cursor: pointer; }
         </section>
       </div>
     </main>
+  </div>
+
+  <!-- Connect database modal -->
+  <div id="db-modal" class="modal hidden">
+    <div class="modal-card">
+      <h3>Connect to Supabase</h3>
+      <p class="modal-sub">Transcripts you save will sync to your database. Your keys are stored only in this browser.</p>
+      <label for="db-url">Project URL</label>
+      <input id="db-url" type="url" placeholder="https://xxxx.supabase.co" autocomplete="off" />
+      <label for="db-key">Anon public key</label>
+      <textarea id="db-key" rows="3" placeholder="eyJhbGciOi..." autocomplete="off"></textarea>
+      <div id="db-error" class="modal-err hidden"></div>
+      <div class="modal-actions">
+        <button id="db-disconnect" class="pill">Turn off</button>
+        <span style="flex:1"></span>
+        <button id="db-cancel" class="pill">Cancel</button>
+        <button id="db-save" class="btn-primary modal-save">Connect</button>
+      </div>
+    </div>
   </div>
 
   <!-- Toasts -->
@@ -1939,30 +1971,43 @@ function renderDbStatus() {
     $("db-config").textContent = "Connect database";
   }
 }
+function openDbModal() {
+  const { url, key } = getConfig();
+  $("db-url").value = url || "";
+  $("db-key").value = key || "";
+  $("db-error").classList.add("hidden");
+  $("db-modal").classList.remove("hidden");
+  $("db-url").focus();
+}
+function closeDbModal() {
+  $("db-modal").classList.add("hidden");
+}
 function initDbOption() {
   renderDbStatus();
-  $("db-config").addEventListener("click", () => {
-    const cur = getConfig();
-    const url = prompt("Supabase Project URL (e.g. https://xxxx.supabase.co).\nLeave blank to turn off cloud save.", cur.url);
-    if (url === null) return;
-    if (!url.trim()) {
-      setConfig("", "");
-      renderDbStatus();
-      toast("Cloud save turned off.", "info");
-      return;
-    }
-    if (!/^https:\/\/.+\.supabase\.co/.test(url.trim())) {
-      toast("That does not look like a Supabase URL.", "error");
-      return;
-    }
-    const key = prompt("Supabase anon public key (starts with eyJ...).", cur.key);
-    if (key === null) return;
-    if (!key.trim().startsWith("eyJ")) {
-      toast("That does not look like an anon key.", "error");
-      return;
-    }
-    setConfig(url.trim(), key.trim());
+  $("db-config").addEventListener("click", openDbModal);
+  $("db-cancel").addEventListener("click", closeDbModal);
+  $("db-modal").addEventListener("click", (e) => {
+    if (e.target.id === "db-modal") closeDbModal();
+  });
+  $("db-disconnect").addEventListener("click", () => {
+    setConfig("", "");
     renderDbStatus();
+    closeDbModal();
+    toast("Cloud save turned off.", "info");
+  });
+  $("db-save").addEventListener("click", () => {
+    const url = $("db-url").value.trim();
+    const key = $("db-key").value.trim();
+    const err = $("db-error");
+    const fail = (m) => {
+      err.textContent = m;
+      err.classList.remove("hidden");
+    };
+    if (!/^https:\/\/.+\.supabase\.co\/?$/.test(url)) return fail("Enter a valid Supabase URL like https://xxxx.supabase.co");
+    if (!key.startsWith("eyJ")) return fail('Enter the anon public key \u2014 it starts with "eyJ".');
+    setConfig(url, key);
+    renderDbStatus();
+    closeDbModal();
     toast("Database connected. Saved transcripts will sync to Supabase.", "success");
     if (state.activeStore === "saved") refreshHistory();
   });

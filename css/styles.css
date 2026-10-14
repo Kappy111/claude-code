@@ -242,6 +242,19 @@ a, .link { color: var(--blue); cursor: pointer; }
 .prose li { margin: 6px 0; }
 .muted-block { color: var(--muted); }
 
+/* Modal */
+.modal { position: fixed; inset: 0; background: rgba(4,7,14,.66); display: grid; place-items: center; z-index: 60; padding: 20px; }
+.modal-card { width: 100%; max-width: 440px; background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 24px; box-shadow: var(--shadow); }
+.modal-card h3 { margin: 0 0 4px; font-size: 19px; }
+.modal-sub { margin: 0 0 16px; color: var(--muted); font-size: 13px; }
+.modal-card label { display: block; font-size: 13px; color: var(--muted); margin: 12px 0 6px; }
+.modal-card input, .modal-card textarea { width: 100%; padding: 11px 13px; font-size: 14px; background: var(--bg-2); color: var(--text); border: 1px solid var(--border); border-radius: 10px; outline: none; font-family: inherit; resize: vertical; }
+.modal-card input:focus, .modal-card textarea:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(59,130,246,.18); }
+.modal-card textarea { font-family: ui-monospace, Menlo, monospace; font-size: 12px; word-break: break-all; }
+.modal-err { color: var(--danger); font-size: 13px; margin-top: 12px; }
+.modal-actions { display: flex; align-items: center; gap: 8px; margin-top: 20px; }
+.modal-save { width: auto; margin-top: 0; padding: 10px 18px; }
+
 /* Toasts */
 .toasts { position: fixed; right: 20px; bottom: 20px; display: grid; gap: 10px; z-index: 50; }
 .toast {

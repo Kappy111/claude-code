@@ -616,19 +616,35 @@ function renderDbStatus() {
   }
 }
 
+function openDbModal() {
+  const { url, key } = getDbConfig();
+  $('db-url').value = url || '';
+  $('db-key').value = key || '';
+  $('db-error').classList.add('hidden');
+  $('db-modal').classList.remove('hidden');
+  $('db-url').focus();
+}
+function closeDbModal() { $('db-modal').classList.add('hidden'); }
+
 function initDbOption() {
   renderDbStatus();
-  $('db-config').addEventListener('click', () => {
-    const cur = getDbConfig();
-    const url = prompt('Supabase Project URL (e.g. https://xxxx.supabase.co).\nLeave blank to turn off cloud save.', cur.url);
-    if (url === null) return;
-    if (!url.trim()) { setDbConfig('', ''); renderDbStatus(); toast('Cloud save turned off.', 'info'); return; }
-    if (!/^https:\/\/.+\.supabase\.co/.test(url.trim())) { toast('That does not look like a Supabase URL.', 'error'); return; }
-    const key = prompt('Supabase anon public key (starts with eyJ...).', cur.key);
-    if (key === null) return;
-    if (!key.trim().startsWith('eyJ')) { toast('That does not look like an anon key.', 'error'); return; }
-    setDbConfig(url.trim(), key.trim());
+  $('db-config').addEventListener('click', openDbModal);
+  $('db-cancel').addEventListener('click', closeDbModal);
+  $('db-modal').addEventListener('click', (e) => { if (e.target.id === 'db-modal') closeDbModal(); });
+  $('db-disconnect').addEventListener('click', () => {
+    setDbConfig('', ''); renderDbStatus(); closeDbModal();
+    toast('Cloud save turned off.', 'info');
+  });
+  $('db-save').addEventListener('click', () => {
+    const url = $('db-url').value.trim();
+    const key = $('db-key').value.trim();
+    const err = $('db-error');
+    const fail = (m) => { err.textContent = m; err.classList.remove('hidden'); };
+    if (!/^https:\/\/.+\.supabase\.co\/?$/.test(url)) return fail('Enter a valid Supabase URL like https://xxxx.supabase.co');
+    if (!key.startsWith('eyJ')) return fail('Enter the anon public key — it starts with "eyJ".');
+    setDbConfig(url, key);
     renderDbStatus();
+    closeDbModal();
     toast('Database connected. Saved transcripts will sync to Supabase.', 'success');
     if (state.activeStore === 'saved') refreshHistory();
   });
