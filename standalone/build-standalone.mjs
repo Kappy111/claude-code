@@ -27,8 +27,8 @@ let html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
 const css = fs.readFileSync(path.join(ROOT, 'css', 'styles.css'), 'utf8');
 const bundle = fs.readFileSync(bundlePath, 'utf8');
 
-html = html.replace(/<link rel="stylesheet" href="css\/styles.css" \/>/, '<style>\n' + css + '\n</style>');
-html = html.replace(/<script type="module" src="js\/app.js"><\/script>/, '<script type="module">\n' + bundle + '\n</script>');
+html = html.replace(/<link rel="stylesheet" href="css\/styles.css[^"]*" \/>/, '<style>\n' + css + '\n</style>');
+html = html.replace(/<script type="module" src="js\/app.js[^"]*"><\/script>/, '<script type="module">\n' + bundle + '\n</script>');
 html = html.replace('<title>VidToText',
   '<!-- VidToText single-file standalone. Open in Chrome/Edge; needs internet for the Whisper model on first run. -->\n  <title>VidToText');
 
