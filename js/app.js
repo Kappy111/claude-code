@@ -3,7 +3,7 @@ import * as DB from './db.js';
 import { fetchMedia, decodeToMono16k, isPageLike, isYouTube, formatTime, triggerDownload } from './media.js';
 import { fetchYouTubeAudio } from './youtube.js';
 import { getServerUrl, setServerUrl, transcribeOnServer } from './server.js';
-import { cloudConfigured, getConfig as getDbConfig, setConfig as setDbConfig, saveToCloud, listCloud, deleteFromCloud, clearCloud } from './supabase.js';
+import { cloudConfigured, getConfig as getDbConfig, setConfig as setDbConfig, applyConfigFromUrl, saveToCloud, listCloud, deleteFromCloud, clearCloud } from './supabase.js';
 
 function currentEmail() { try { return (JSON.parse(localStorage.getItem('vidtotext.profile') || 'null') || {}).email || ''; } catch { return ''; } }
 import { transcribe } from './transcribe.js';
@@ -681,6 +681,7 @@ function hexA(hex, a) {
 
 // ---------------- init ----------------
 function init() {
+  applyConfigFromUrl(); // honor a one-time connect link before anything else
   initAuth();
   initInputTabs();
   initToolbar();

@@ -3,9 +3,10 @@
 // same Supabase project. The anon key is public by design and protected by
 // Row-Level Security (see the SQL in supabase-setup.sql).
 
-// Credentials are stored per-browser in localStorage (entered via the app's
-// "Connect database" settings) — never committed to the repo. The anon key is
-// safe to keep in the browser; it is protected by Row-Level Security.
+// Credentials live only in the browser (localStorage). They can be set via the
+// "Connect database" form, or auto-applied from a one-time connect link that
+// carries ?sb_url=...&sb_key=... (see applyConfigFromUrl). The key is never
+// committed to the repo.
 const TABLE = 'vtt_transcripts';
 
 export function getConfig() {
@@ -15,6 +16,24 @@ export function getConfig() {
       key: localStorage.getItem('vidtotext.supabaseKey') || '',
     };
   } catch (_) { return { url: '', key: '' }; }
+}
+
+// If the page was opened with ?sb_url=...&sb_key=... (or in the #hash), store
+// those credentials and scrub them from the address bar. Lets a single link
+// connect the database with no typing.
+export function applyConfigFromUrl() {
+  try {
+    const q = new URLSearchParams(location.search);
+    const h = new URLSearchParams((location.hash || '').replace(/^#/, ''));
+    const url = q.get('sb_url') || h.get('sb_url');
+    const key = q.get('sb_key') || h.get('sb_key');
+    if (url && key) {
+      setConfig(url, key);
+      try { history.replaceState(null, '', location.origin + location.pathname); } catch (_) {}
+      return true;
+    }
+  } catch (_) {}
+  return false;
 }
 
 export function setConfig(url, key) {

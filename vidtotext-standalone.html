@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <!-- VidToText single-file standalone. Open in Chrome/Edge; needs internet for the Whisper model on first run. -->
+  <!-- VidToText single-file standalone. -->
   <title>VidToText — on-device transcription</title>
   <meta name="description" content="Drop in a video or audio file, or paste a direct media link. Transcribes locally with Whisper. Nothing is uploaded." />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%233b82f6'/%3E%3Ctext x='16' y='22' font-size='16' font-family='Arial' font-weight='bold' text-anchor='middle' fill='white'%3EV%3C/text%3E%3C/svg%3E" />
@@ -840,6 +840,24 @@ function getConfig() {
   } catch (_) {
     return { url: "", key: "" };
   }
+}
+function applyConfigFromUrl() {
+  try {
+    const q = new URLSearchParams(location.search);
+    const h = new URLSearchParams((location.hash || "").replace(/^#/, ""));
+    const url = q.get("sb_url") || h.get("sb_url");
+    const key = q.get("sb_key") || h.get("sb_key");
+    if (url && key) {
+      setConfig(url, key);
+      try {
+        history.replaceState(null, "", location.origin + location.pathname);
+      } catch (_) {
+      }
+      return true;
+    }
+  } catch (_) {
+  }
+  return false;
 }
 function setConfig(url, key) {
   try {
@@ -2039,6 +2057,7 @@ function hexA(hex, a) {
   return `rgba(${n >> 16 & 255},${n >> 8 & 255},${n & 255},${a})`;
 }
 function init() {
+  applyConfigFromUrl();
   initAuth();
   initInputTabs();
   initToolbar();
