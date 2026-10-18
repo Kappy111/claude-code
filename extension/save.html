@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Save screenshot</title>
+    <link rel="stylesheet" href="save.css" />
+  </head>
+  <body>
+    <main class="wrap">
+      <div class="preview">
+        <img id="preview-img" alt="Screenshot preview" />
+      </div>
+
+      <aside class="panel">
+        <h1>Save screenshot</h1>
+
+        <label class="field">
+          <span class="field-label">Save to folder</span>
+          <select id="folder-select"></select>
+        </label>
+
+        <label class="field">
+          <span class="field-label">Or create a new folder</span>
+          <div class="add-row">
+            <input id="new-folder-name" type="text" placeholder="Folder name" maxlength="60" />
+            <button id="add-folder" class="btn btn-ghost">Add</button>
+          </div>
+        </label>
+
+        <div id="meta" class="meta"></div>
+
+        <div class="actions">
+          <button id="save-btn" class="btn btn-primary">Save</button>
+          <button id="keep-btn" class="btn btn-secondary">Keep in Unsorted</button>
+        </div>
+      </aside>
+    </main>
+
+    <script type="module" src="save.js"></script>
+  </body>
+</html>

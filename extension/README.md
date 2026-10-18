@@ -7,10 +7,14 @@ next milestone (the code is already structured for it).
 
 ## Features
 
-- **Capture visible area** — one click (or `Alt+Shift+S` anywhere).
-- **Capture full page** — scrolls the page and stitches it into one image.
-- **Folders** — create, rename, and delete folders to organize captures.
-  Deleting a folder moves its screenshots to **Unsorted** (never lost).
+- **Capture area** — drag to select any region of the page (`Esc` cancels).
+- **Capture visible tab** — one click, or `Alt+Shift+S` anywhere.
+- **Capture full tab** — scrolls the page and stitches it into one image.
+- **Save dialog** — after each capture, a preview window lets you pick or
+  create a folder, or keep it where it is.
+- **Folders** — create, rename, and delete folders right in the popup, with
+  live counts. Deleting a folder moves its screenshots to **Unsorted**.
+- **Recent** — the latest captures show in the popup for quick access.
 - **Library view** — a full-page gallery with previews (lightbox),
   drag-and-drop to move screenshots between folders, and a "Move to…" menu.
 - **Download to disk** — saves into `Downloads/Snapfolder/<Folder name>/`.
@@ -31,14 +35,15 @@ next milestone (the code is already structured for it).
 | File | Role |
 | --- | --- |
 | `manifest.json` | MV3 manifest, permissions, keyboard command. |
-| `background.js` | Service worker: owns capture + writes to IndexedDB. |
-| `lib/capture.js` | `captureVisible` + `captureFullPage` (scroll & stitch). |
+| `background.js` | Service worker: owns capture, writes to IndexedDB, opens the save dialog. |
+| `lib/capture.js` | `captureVisible` / `captureArea` / `captureFullPage`. |
 | `lib/db.js` | IndexedDB layer (`folders` + `screenshots` stores). |
 | `lib/util.js` | Download, formatting, filename helpers. |
 | `lib/auth.js` | Auth facade — local stub today, Supabase-ready. |
 | `lib/config.js` | Supabase credentials + app config. |
-| `popup.html/.js/.css` | Toolbar popup: pick folder, capture, recents. |
-| `library.html/.js/.css` | Full gallery + folder management. |
+| `popup.html/.js/.css` | Toolbar popup: save-to, capture, folders, recents. |
+| `save.html/.js/.css` | Post-capture "Save screenshot" dialog window. |
+| `library.html/.js/.css` | Full gallery + folder management ("View all"). |
 
 Images are stored as PNG **Blobs** in IndexedDB (with a small JPEG thumbnail
 per item). `unlimitedStorage` is requested so large libraries aren't capped.

@@ -99,6 +99,19 @@ body {
   border-color: var(--border);
 }
 
+.topbar-hint {
+  color: var(--muted);
+  font-size: 12px;
+}
+.topbar-hint kbd {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0 4px;
+  font-size: 10px;
+  font-family: ui-monospace, monospace;
+}
+
 .auth-area {
   display: flex;
   align-items: center;

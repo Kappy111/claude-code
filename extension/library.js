@@ -14,8 +14,6 @@ import * as auth from "./lib/auth.js";
 import { downloadScreenshot, formatBytes, formatDate } from "./lib/util.js";
 
 const els = {
-  captureVisible: document.getElementById("capture-visible"),
-  captureFull: document.getElementById("capture-full"),
   status: document.getElementById("status"),
   folderList: document.getElementById("folder-list"),
   newFolder: document.getElementById("new-folder"),
@@ -229,28 +227,6 @@ function closeLightbox() {
   }
 }
 
-async function capture(mode) {
-  els.captureVisible.disabled = true;
-  els.captureFull.disabled = true;
-  setStatus(mode === "fullpage" ? "Capturing full page…" : "Capturing…", "busy");
-  try {
-    const res = await chrome.runtime.sendMessage({
-      type: "CAPTURE",
-      mode,
-      folderId: currentFolderId,
-    });
-    if (!res || !res.ok) throw new Error((res && res.error) || "Capture failed");
-    await refreshFolders();
-    await renderGrid();
-    setStatus("Saved ✓", "ok");
-  } catch (err) {
-    setStatus(String(err.message || err), "error");
-  } finally {
-    els.captureVisible.disabled = false;
-    els.captureFull.disabled = false;
-  }
-}
-
 function renderAuth(user) {
   if (user) {
     els.authArea.classList.add("online");
@@ -269,9 +245,6 @@ function renderAuth(user) {
 }
 
 /* ------------------------------- Events --------------------------------- */
-
-els.captureVisible.addEventListener("click", () => capture("visible"));
-els.captureFull.addEventListener("click", () => capture("fullpage"));
 
 els.newFolder.addEventListener("click", () => {
   dialogMode = "create";
@@ -349,6 +322,15 @@ els.authBtn.addEventListener("click", async () => {
 });
 
 window.addEventListener("unload", releaseObjectUrls);
+
+// Refresh when the tab regains focus — e.g. after the Save dialog moved a
+// screenshot into a different folder.
+document.addEventListener("visibilitychange", async () => {
+  if (document.visibilityState === "visible") {
+    await refreshFolders();
+    await renderGrid();
+  }
+});
 
 /* -------------------------------- Init ---------------------------------- */
 

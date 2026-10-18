@@ -2,10 +2,14 @@
 //
 // Owns screenshot capture (it needs tabs/scripting + OffscreenCanvas, which
 // a short-lived popup can't reliably finish) and writes results to the shared
-// IndexedDB. UI pages re-read from IndexedDB after a capture resolves, so we
-// never ship Blobs across the messaging boundary.
+// IndexedDB. After a capture it opens the "Save screenshot" window so the user
+// can confirm or change the folder.
 
-import { captureVisible, captureFullPage } from "./lib/capture.js";
+import {
+  captureVisible,
+  captureArea,
+  captureFullPage,
+} from "./lib/capture.js";
 import { addScreenshot, DEFAULT_FOLDER } from "./lib/db.js";
 
 const LAST_FOLDER_KEY = "lastFolderId";
@@ -42,6 +46,22 @@ function restrictedUrl(url = "") {
   );
 }
 
+async function openSaveDialog(recordId) {
+  const url = chrome.runtime.getURL(`save.html?id=${recordId}`);
+  try {
+    await chrome.windows.create({
+      url,
+      type: "popup",
+      width: 760,
+      height: 520,
+      focused: true,
+    });
+  } catch (_) {
+    // If a popup window can't be created, fall back to a tab.
+    chrome.tabs.create({ url });
+  }
+}
+
 async function doCapture({ mode = "visible", folderId } = {}) {
   const tab = await getActiveTab();
   if (!tab) throw new Error("No active tab to capture.");
@@ -52,10 +72,13 @@ async function doCapture({ mode = "visible", folderId } = {}) {
   }
 
   const targetFolder = folderId || (await getLastFolderId());
-  const shot =
-    mode === "fullpage"
-      ? await captureFullPage(tab)
-      : await captureVisible(tab);
+
+  let shot;
+  if (mode === "area") shot = await captureArea(tab);
+  else if (mode === "fullpage") shot = await captureFullPage(tab);
+  else shot = await captureVisible(tab);
+
+  if (!shot) return { cancelled: true }; // area selection was cancelled
 
   const record = await addScreenshot({
     folderId: targetFolder,
@@ -68,6 +91,7 @@ async function doCapture({ mode = "visible", folderId } = {}) {
   });
 
   await flashBadge("✓", "#16a34a");
+  await openSaveDialog(record.id);
   return { id: record.id, folderId: record.folderId };
 }
 
@@ -87,8 +111,6 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
 // folder the user picked in the popup.
 chrome.commands.onCommand.addListener((command) => {
   if (command === "capture-visible") {
-    doCapture({ mode: "visible" }).catch(() =>
-      flashBadge("!", "#dc2626")
-    );
+    doCapture({ mode: "visible" }).catch(() => flashBadge("!", "#dc2626"));
   }
 });

@@ -9,68 +9,52 @@
   <body>
     <header class="app-header">
       <div class="brand">
-        <img src="icons/icon32.png" alt="" width="22" height="22" />
-        <span>Snapfolder</span>
+        <img src="icons/icon32.png" alt="" width="20" height="20" />
+        <span>Screenshot Folders</span>
       </div>
-      <button id="open-library" class="link-btn" title="Open the full library">
-        Library ↗
-      </button>
+      <button id="open-library" class="link-btn">View all</button>
     </header>
 
     <section class="capture-bar">
       <label class="field">
         <span class="field-label">Save to</span>
-        <div class="folder-row">
-          <select id="folder-select" aria-label="Folder"></select>
-          <button id="new-folder" class="icon-btn" title="New folder">＋</button>
-        </div>
+        <select id="folder-select" aria-label="Save to folder"></select>
       </label>
 
       <div class="capture-actions">
-        <button id="capture-visible" class="btn btn-primary">
-          📷 Capture visible
-        </button>
-        <button id="capture-full" class="btn btn-secondary" title="Scroll and stitch the whole page">
-          🗎 Full page
-        </button>
+        <button id="capture-area" class="btn btn-primary">Capture area</button>
+        <button id="capture-full" class="btn btn-secondary">Full tab</button>
       </div>
+      <button id="capture-visible" class="btn btn-ghost btn-wide">
+        Visible tab
+      </button>
       <p class="hint">
-        Tip: press <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd> anywhere.
+        Drag to select an area. <kbd>Esc</kbd> cancels. Full tab:
+        <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd>
       </p>
     </section>
 
     <div id="status" class="status" role="status" aria-live="polite"></div>
 
-    <section class="gallery-section">
-      <div class="gallery-head">
-        <h2 id="gallery-title">Recent</h2>
-        <span id="gallery-count" class="count"></span>
+    <section class="panel">
+      <h2 class="panel-title">Folders</h2>
+      <div class="add-row">
+        <input id="new-folder-name" type="text" placeholder="New folder name" maxlength="60" />
+        <button id="add-folder" class="btn btn-add">Add</button>
       </div>
-      <div id="gallery" class="gallery"></div>
-      <p id="empty" class="empty hidden">
-        No screenshots in this folder yet. Capture one above.
-      </p>
+      <ul id="folder-list" class="folder-list"></ul>
+    </section>
+
+    <section class="panel">
+      <h2 class="panel-title">Recent</h2>
+      <ul id="recent-list" class="recent-list"></ul>
+      <p id="recent-empty" class="muted-line hidden">No screenshots yet.</p>
     </section>
 
     <footer class="app-footer">
-      <div id="auth-area" class="auth-area">
-        <span class="dot"></span>
-        <span id="auth-label">Local only</span>
-      </div>
-      <button id="auth-btn" class="link-btn" disabled>Sign in</button>
+      <span id="auth-label" class="muted-line">Not signed in</span>
+      <button id="auth-btn" class="link-btn" disabled>Sign in (soon)</button>
     </footer>
-
-    <!-- New folder dialog -->
-    <dialog id="folder-dialog">
-      <form method="dialog" class="dialog-form">
-        <h3>New folder</h3>
-        <input id="folder-name" type="text" placeholder="Folder name" maxlength="60" required />
-        <div class="dialog-actions">
-          <button value="cancel" class="btn btn-ghost">Cancel</button>
-          <button id="folder-create" value="create" class="btn btn-primary">Create</button>
-        </div>
-      </form>
-    </dialog>
 
     <script type="module" src="popup.js"></script>
   </body>
