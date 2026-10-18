@@ -23,8 +23,18 @@ const els = {
   recentList: document.getElementById("recent-list"),
   recentEmpty: document.getElementById("recent-empty"),
   openLibrary: document.getElementById("open-library"),
-  authLabel: document.getElementById("auth-label"),
-  authBtn: document.getElementById("auth-btn"),
+  authSignedOut: document.getElementById("auth-signedout"),
+  authForm: document.getElementById("auth-form"),
+  authEmail: document.getElementById("auth-email"),
+  authPassword: document.getElementById("auth-password"),
+  authError: document.getElementById("auth-error"),
+  authSignin: document.getElementById("auth-signin"),
+  authSignup: document.getElementById("auth-signup"),
+  authCancel: document.getElementById("auth-cancel"),
+  authShowForm: document.getElementById("auth-show-form"),
+  authSignedIn: document.getElementById("auth-signedin"),
+  authEmailLabel: document.getElementById("auth-email-label"),
+  authSignout: document.getElementById("auth-signout"),
 };
 
 const LAST_FOLDER_KEY = "lastFolderId";
@@ -268,16 +278,43 @@ async function capture(mode) {
 }
 
 function renderAuth(user) {
-  if (user) {
-    els.authLabel.textContent = user.email || "Signed in";
-    els.authBtn.textContent = "Sign out";
-    els.authBtn.disabled = false;
-  } else {
-    els.authLabel.textContent = auth.isConfigured()
-      ? "Not signed in"
-      : "Not signed in";
-    els.authBtn.textContent = auth.isConfigured() ? "Sign in" : "Sign in (soon)";
-    els.authBtn.disabled = !auth.isConfigured();
+  const signedIn = !!user;
+  els.authSignedIn.classList.toggle("hidden", !signedIn);
+  els.authSignedOut.classList.toggle("hidden", signedIn);
+  if (signedIn) {
+    els.authForm.classList.add("hidden");
+    els.authEmailLabel.textContent = user.email || "your account";
+  }
+}
+
+function showAuthError(msg) {
+  els.authError.textContent = msg;
+  els.authError.classList.toggle("hidden", !msg);
+}
+
+function setAuthBusy(busy) {
+  els.authSignin.disabled = busy;
+  els.authSignup.disabled = busy;
+  els.authSignin.textContent = busy ? "…" : "Sign in";
+}
+
+async function doAuth(mode) {
+  const email = els.authEmail.value.trim();
+  const password = els.authPassword.value;
+  if (!email || !password) {
+    showAuthError("Enter your email and password.");
+    return;
+  }
+  showAuthError("");
+  setAuthBusy(true);
+  try {
+    if (mode === "signup") await auth.signUp(email, password);
+    else await auth.signIn(email, password);
+    els.authPassword.value = "";
+  } catch (err) {
+    showAuthError(String(err.message || err));
+  } finally {
+    setAuthBusy(false);
   }
 }
 
@@ -301,13 +338,24 @@ els.openLibrary.addEventListener("click", () => {
   chrome.tabs.create({ url: chrome.runtime.getURL("library.html") });
 });
 
-els.authBtn.addEventListener("click", async () => {
-  try {
-    if (auth.getUser()) await auth.signOut();
-    else await auth.signIn();
-  } catch (err) {
-    setStatus(String(err.message || err), "error");
-  }
+els.authShowForm.addEventListener("click", () => {
+  els.authSignedOut.classList.add("hidden");
+  els.authForm.classList.remove("hidden");
+  els.authEmail.focus();
+});
+els.authCancel.addEventListener("click", () => {
+  els.authForm.classList.add("hidden");
+  els.authSignedOut.classList.remove("hidden");
+  showAuthError("");
+});
+els.authForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+  doAuth("signin");
+});
+els.authSignup.addEventListener("click", () => doAuth("signup"));
+els.authSignout.addEventListener("click", async () => {
+  await auth.signOut();
+  showAuthError("");
 });
 
 window.addEventListener("unload", releaseObjectUrls);

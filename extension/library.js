@@ -233,14 +233,13 @@ function renderAuth(user) {
     els.authLabel.textContent = user.email || "Signed in";
     els.authBtn.textContent = "Sign out";
     els.authBtn.disabled = false;
+    els.authBtn.title = "Sign out";
   } else {
     els.authArea.classList.remove("online");
-    els.authLabel.textContent = auth.isConfigured() ? "Signed out" : "Local only";
+    els.authLabel.textContent = "Not signed in";
     els.authBtn.textContent = "Sign in";
-    els.authBtn.disabled = !auth.isConfigured();
-    els.authBtn.title = auth.isConfigured()
-      ? "Sign in to sync"
-      : "Cloud sync coming soon";
+    els.authBtn.disabled = true;
+    els.authBtn.title = "Sign in from the Snapfolder toolbar popup";
   }
 }
 
@@ -313,11 +312,13 @@ document.addEventListener("keydown", (e) => {
 });
 
 els.authBtn.addEventListener("click", async () => {
-  try {
-    if (auth.getUser()) await auth.signOut();
-    else await auth.signIn();
-  } catch (err) {
-    setStatus(String(err.message || err), "error");
+  // Only sign-out is actionable here; sign-in is done in the popup.
+  if (auth.getUser()) {
+    try {
+      await auth.signOut();
+    } catch (err) {
+      setStatus(String(err.message || err), "error");
+    }
   }
 });
 

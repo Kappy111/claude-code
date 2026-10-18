@@ -52,8 +52,29 @@
     </section>
 
     <footer class="app-footer">
-      <span id="auth-label" class="muted-line">Not signed in</span>
-      <button id="auth-btn" class="link-btn" disabled>Sign in (soon)</button>
+      <!-- Signed-out: collapsed row -->
+      <div id="auth-signedout" class="auth-row">
+        <span class="muted-line">Not signed in</span>
+        <button id="auth-show-form" class="link-btn">Sign in</button>
+      </div>
+
+      <!-- Signed-out: expandable form -->
+      <form id="auth-form" class="auth-form hidden">
+        <input id="auth-email" type="email" placeholder="Email" autocomplete="username" required />
+        <input id="auth-password" type="password" placeholder="Password" autocomplete="current-password" required />
+        <div id="auth-error" class="auth-error hidden"></div>
+        <div class="auth-actions">
+          <button id="auth-signin" type="submit" class="btn btn-primary">Sign in</button>
+          <button id="auth-signup" type="button" class="btn btn-secondary">Create account</button>
+        </div>
+        <button id="auth-cancel" type="button" class="link-btn auth-cancel">Cancel</button>
+      </form>
+
+      <!-- Signed-in -->
+      <div id="auth-signedin" class="auth-row hidden">
+        <span class="auth-user">Signed in as <strong id="auth-email-label"></strong></span>
+        <button id="auth-signout" class="link-btn">Sign out</button>
+      </div>
     </footer>
 
     <script type="module" src="popup.js"></script>

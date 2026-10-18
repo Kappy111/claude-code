@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Snapfolder — Screenshots & Folders",
-  "version": "0.2.1",
-  "description": "Capture an area, the visible tab, or a full page and save it into folders. Sync with your account (coming soon).",
+  "version": "0.3.0",
+  "description": "Capture an area, the visible tab, or a full page, save it into folders, and sign in to your account.",
   "permissions": [
     "activeTab",
     "tabs",

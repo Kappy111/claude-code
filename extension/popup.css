@@ -293,11 +293,49 @@ kbd {
 }
 
 .app-footer {
+  padding: 10px 14px;
+}
+.auth-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 14px;
+  gap: 8px;
 }
+.auth-user {
+  font-size: 12px;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.auth-user strong {
+  color: var(--text);
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.auth-form input {
+  width: 100%;
+}
+.auth-actions {
+  display: flex;
+  gap: 8px;
+}
+.auth-actions .btn {
+  flex: 1;
+}
+.auth-error {
+  color: var(--danger);
+  font-size: 12px;
+  line-height: 1.4;
+}
+.auth-cancel {
+  align-self: flex-start;
+}
+
 .link-btn {
   background: none;
   border: none;

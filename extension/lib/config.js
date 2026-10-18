@@ -1,24 +1,27 @@
 // Central configuration for Snapfolder.
 //
-// Auth / cloud sync is the NEXT milestone. When we wire up Supabase, fill in
-// the project URL and anon (public) key below. These are safe to ship in a
-// client — row-level security on the Supabase side is what protects data.
+// Auth/cloud is backed by a Base44 app (the "Supabase Engine" project). The
+// extension talks to Base44's REST API directly:
 //
-//   1. Create a project at https://supabase.com
-//   2. Settings -> API -> copy "Project URL" and the "anon public" key
-//   3. Paste them here (or load them from a build-time env for CI)
+//   POST {server}/api/apps/{appId}/auth/login     {email,password} -> {access_token,user}
+//   POST {server}/api/apps/{appId}/auth/register  {email,password}
+//   GET  {server}/api/apps/{appId}/entities/User/me   (Bearer token)
 //
-// Until these are set, the extension runs fully locally (IndexedDB only) and
-// the UI shows auth as "coming soon".
+// The appId is public (it's in the Base44 editor URL). Requests are sent with
+// an "X-App-Id" header and, once signed in, "Authorization: Bearer <token>".
 
 export const CONFIG = {
-  supabase: {
-    url: "",      // e.g. "https://xxxxxxxx.supabase.co"
-    anonKey: "",  // e.g. "eyJhbGciOi..."
+  base44: {
+    appId: "6ad4e6ae268c0f00e89d6e05",
+    serverUrl: "https://base44.app",
   },
 
-  // Storage bucket we'll upload screenshot blobs into once sync lands.
-  storageBucket: "screenshots",
+  // Entity names in the Base44 app used for cloud sync (created in the Base44
+  // editor). Sync is wired up once these exist.
+  entities: {
+    folder: "Folder",
+    screenshot: "Screenshot",
+  },
 
   // Local IndexedDB names.
   db: {
@@ -27,7 +30,12 @@ export const CONFIG = {
   },
 };
 
-// True once real Supabase credentials have been provided.
+// True once a Base44 app is configured to talk to.
+export function isConfigured() {
+  return Boolean(CONFIG.base44.appId && CONFIG.base44.serverUrl);
+}
+
+// Back-compat alias used by older call sites.
 export function isSupabaseConfigured() {
-  return Boolean(CONFIG.supabase.url && CONFIG.supabase.anonKey);
+  return isConfigured();
 }
