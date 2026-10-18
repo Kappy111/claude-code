@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Snapfolder Library</title>
+    <link rel="stylesheet" href="library.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <img src="icons/icon48.png" alt="" width="26" height="26" />
+        <span>Snapfolder</span>
+      </div>
+      <div class="topbar-actions">
+        <button id="capture-visible" class="btn btn-primary">📷 Capture visible</button>
+        <button id="capture-full" class="btn btn-secondary">🗎 Full page</button>
+        <div class="auth-area" id="auth-area">
+          <span class="dot"></span>
+          <span id="auth-label">Local only</span>
+          <button id="auth-btn" class="link-btn" disabled>Sign in</button>
+        </div>
+      </div>
+    </header>
+
+    <div id="status" class="status" role="status" aria-live="polite"></div>
+
+    <main class="layout">
+      <aside class="sidebar">
+        <div class="sidebar-head">
+          <h2>Folders</h2>
+          <button id="new-folder" class="icon-btn" title="New folder">＋</button>
+        </div>
+        <ul id="folder-list" class="folder-list"></ul>
+      </aside>
+
+      <section class="content">
+        <div class="content-head">
+          <h1 id="folder-title">Unsorted</h1>
+          <div class="content-head-right">
+            <span id="folder-meta" class="meta"></span>
+            <button id="rename-folder" class="link-btn">Rename</button>
+            <button id="delete-folder" class="link-btn danger">Delete folder</button>
+          </div>
+        </div>
+        <div id="grid" class="grid"></div>
+        <p id="empty" class="empty hidden">
+          No screenshots here yet. Use the capture buttons above.
+        </p>
+      </section>
+    </main>
+
+    <!-- Lightbox preview -->
+    <div id="lightbox" class="lightbox hidden">
+      <button id="lightbox-close" class="lightbox-close" aria-label="Close">✕</button>
+      <img id="lightbox-img" alt="" />
+      <div id="lightbox-caption" class="lightbox-caption"></div>
+    </div>
+
+    <!-- Folder dialog (create / rename) -->
+    <dialog id="folder-dialog">
+      <form method="dialog" class="dialog-form">
+        <h3 id="folder-dialog-title">New folder</h3>
+        <input id="folder-name" type="text" placeholder="Folder name" maxlength="60" required />
+        <div class="dialog-actions">
+          <button value="cancel" class="btn btn-ghost">Cancel</button>
+          <button value="save" class="btn btn-primary">Save</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script type="module" src="library.js"></script>
+  </body>
+</html>
