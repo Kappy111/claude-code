@@ -1,0 +1,7 @@
+# Private! These are keys to your mailbox — never upload them.
+credentials.json
+token.json
+
+# Python build cache
+__pycache__/
+*.pyc
