@@ -162,9 +162,10 @@
     <!-- SETTINGS -->
     <section id="v-settings">
       <p class="lead center" style="font-size:1.2rem">Settings</p>
-      <label class="f" for="key">Anthropic API key</label>
-      <input id="key" type="password" placeholder="sk-ant-..." autocomplete="off" spellcheck="false">
-      <div class="hint">Get one at <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noreferrer">console.anthropic.com</a>. Stored only in this browser.</div>
+      <div class="note" style="margin-top:0">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l7 4v6c0 5-3.5 8-7 10-3.5-2-7-5-7-10V6z"/></svg>
+        <span>The API key is kept safely on the server — you never type it here.</span>
+      </div>
       <label class="f" for="model">Model</label>
       <select id="model">
         <option value="claude-opus-5-5">Claude Opus 5.5 — most capable</option>
@@ -214,7 +215,6 @@ const dctx=diffCanvas.getContext('2d', {willReadFrequently:true});
 const grabCanvas=document.createElement('canvas'); const gctx=grabCanvas.getContext('2d');
 
 async function startWatch(){
-  if(!apiKey()){ show('settings'); return; }
   try{
     stream = await navigator.mediaDevices.getDisplayMedia({ video:{ frameRate:4 }, audio:false });
   }catch(e){
@@ -289,18 +289,13 @@ Reply with ONLY a JSON object, no other text, shaped exactly like this:
 Use 2 to 4 steps. Keep every string short. If the screenshot is unclear, make your best guess and say so gently in "problem".`;
 }
 async function ask(b64, note){
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method:'POST',
-    headers:{ 'content-type':'application/json','x-api-key':apiKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true' },
-    body: JSON.stringify({ model:model(), max_tokens:1024, output_config:{effort:'low'},
-      messages:[{ role:'user', content:[
-        { type:'image', source:{ type:'base64', media_type:'image/png', data:b64 } },
-        { type:'text', text:instructions(note) } ] }] })
+  const res = await fetch('/.netlify/functions/ask', {
+    method:'POST', headers:{ 'content-type':'application/json' },
+    body: JSON.stringify({ image:b64, note:note||'', model:model() })
   });
-  if(!res.ok){ let m=''; try{ m=(await res.json()).error.message; }catch{} const e=new Error(m||('Request failed ('+res.status+')')); e.status=res.status; throw e; }
-  const data=await res.json();
-  const text=(data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('').trim();
-  return parse(text);
+  let data={}; try{ data=await res.json(); }catch{}
+  if(!res.ok || data.error){ const e=new Error((data.error&&data.error.message)||('Request failed ('+res.status+')')); e.status=res.status; throw e; }
+  return parse(data.text||'');
 }
 function parse(text){
   let o=null; try{ o=JSON.parse(text); }catch{ const m=text.match(/\{[\s\S]*\}/); if(m){ try{ o=JSON.parse(m[0]); }catch{} } }
@@ -339,7 +334,7 @@ function render(r){
 }
 function showError(e){
   let msg=(e&&e.message)||'Something went wrong.';
-  if(e&&e.status===401) msg='That API key didn’t work. Open Settings and paste it again.';
+  if(e&&e.status===401) msg='The site’s API key was rejected. Check ANTHROPIC_API_KEY in Netlify → Environment variables.';
   else if(e&&e.status===429) msg='Too many requests right now — wait a few seconds and try again.';
   else if(e&&e.name==='NotAllowedError') msg='I need permission to see your screen. Press start and choose a screen to share.';
   $('errMsg').textContent=msg; show('error');
@@ -352,9 +347,9 @@ $('unstuck').addEventListener('click', ()=>{ resetWatch(); });
 $('stop').addEventListener('click', stopWatch);
 $('keep').addEventListener('click', ()=>{ if(stream){ resetWatch(); show('watch'); tickTimer=setInterval(tick,STEP*1000); } else show('setup'); });
 $('deeper').addEventListener('click', ()=>trigger('deeper','That didn’t help — give a different angle.'));
-$('gear').addEventListener('click', ()=>{ $('key').value=apiKey(); $('model').value=model(); show('settings'); });
-$('save').addEventListener('click', ()=>{ setCfg({ apiKey:$('key').value.trim(), model:$('model').value }); show(stream?'watch':'setup'); });
-$('errSettings').addEventListener('click', ()=>{ $('key').value=apiKey(); $('model').value=model(); show('settings'); });
+$('gear').addEventListener('click', ()=>{ $('model').value=model(); show('settings'); });
+$('save').addEventListener('click', ()=>{ setCfg({ model:$('model').value }); show(stream?'watch':'setup'); });
+$('errSettings').addEventListener('click', ()=>{ $('model').value=model(); show('settings'); });
 $('errBack').addEventListener('click', ()=>show(stream?'watch':'setup'));
 $('copyBtn').addEventListener('click', function(){
   const txt=$('rPrompt').textContent, btn=this, done=()=>{ btn.textContent='Copied!'; setTimeout(()=>btn.textContent='Copy',1400); };
@@ -363,7 +358,7 @@ $('copyBtn').addEventListener('click', function(){
 });
 
 /* first paint */
-show(apiKey() ? 'setup' : 'settings');
+show('setup');
 if(!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia){
   show('error'); $('errMsg').textContent='This browser can’t share a screen. Open the site in Chrome on a computer (over its https link, not a local file).';
 }
