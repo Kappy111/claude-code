@@ -3,38 +3,27 @@
 // unlocked for this browser session, it redirects the tab to the Hawk Eye lock
 // screen before the page can load.
 
-const norm = (h) => String(h || "").replace(/^www\./, "").toLowerCase();
-
-// A navigated host matches a stored host if it's the same site or a subdomain.
-function hostMatch(navHost, storedHost) {
-  navHost = norm(navHost);
-  storedHost = norm(storedHost);
-  return navHost === storedHost || navHost.endsWith("." + storedHost);
-}
+importScripts("he-match.js"); // heNorm, heFindLock, heShouldLock
 
 async function getSites() {
   const { sites } = await chrome.storage.local.get("sites");
   return Array.isArray(sites) ? sites : [];
 }
 
-async function isUnlocked(host) {
+async function getUnlocked() {
   const { unlocked } = await chrome.storage.session.get("unlocked");
-  return !!(unlocked && unlocked[norm(host)]);
+  return unlocked || {};
 }
 
 chrome.webNavigation.onBeforeNavigate.addListener(async (details) => {
   if (details.frameId !== 0) return; // only the main page, not embedded frames
 
-  let url;
-  try { url = new URL(details.url); } catch (e) { return; }
-  if (url.protocol !== "http:" && url.protocol !== "https:") return;
-
-  const host = norm(url.hostname);
   const sites = await getSites();
-  const site = sites.find((s) => hostMatch(host, s.host));
-  if (!site) return;
+  if (!sites.length) return;
+  const unlocked = await getUnlocked();
 
-  if (await isUnlocked(site.host)) return; // already passed the lock this session
+  const site = heShouldLock(details.url, sites, unlocked);
+  if (!site) return;
 
   const lockUrl =
     chrome.runtime.getURL("lock.html") +
@@ -47,9 +36,8 @@ chrome.webNavigation.onBeforeNavigate.addListener(async (details) => {
 // Messages from the lock screen and the popup.
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg && msg.type === "unlock" && msg.host) {
-    chrome.storage.session.get("unlocked").then(({ unlocked }) => {
-      unlocked = unlocked || {};
-      unlocked[norm(msg.host)] = true;
+    getUnlocked().then((unlocked) => {
+      unlocked[heNorm(msg.host)] = true;
       chrome.storage.session.set({ unlocked }).then(() => sendResponse({ ok: true }));
     });
     return true; // keep the channel open for the async reply
@@ -59,9 +47,8 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     return true;
   }
   if (msg && msg.type === "lockOne" && msg.host) {
-    chrome.storage.session.get("unlocked").then(({ unlocked }) => {
-      unlocked = unlocked || {};
-      delete unlocked[norm(msg.host)];
+    getUnlocked().then((unlocked) => {
+      delete unlocked[heNorm(msg.host)];
       chrome.storage.session.set({ unlocked }).then(() => sendResponse({ ok: true }));
     });
     return true;
