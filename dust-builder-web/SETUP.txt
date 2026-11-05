@@ -1,0 +1,47 @@
+===========================================
+  DUST — put it online with Netlify
+===========================================
+
+This is the easy version. It really cleans your Gmail, and it needs:
+  * NO Chrome extension
+  * NO download or install
+  * NO Google Client ID
+  * NO login setup
+
+It works because YOU are already signed in to Gmail in your browser, and
+Dust just builds the right search and lets you press delete yourself.
+
+
+-------------------------------------------
+PUT IT ONLINE  (free, about 1 minute)
+-------------------------------------------
+1. Go to:  https://app.netlify.com/drop
+2. Drag this ZIP file onto that page.
+3. Netlify gives you a web address like:
+      https://happy-dust-1234.netlify.app
+   That is your live Dust site. Open it any time, or share it.
+
+
+-------------------------------------------
+USE IT
+-------------------------------------------
+1. Open your Netlify site.
+2. Answer the survey:
+      - From what dates?  (older than 1 year / 6 months / 1 month / any)
+      - From what companies?  (type like:  amazon, netflix, groupon)
+      - Also sweep the Promotions tab?  (ads & deals)
+3. Click "Build my cleanup search".
+4. Click "Open Gmail with this search" -- Gmail opens already searched.
+5. In Gmail:
+      - click the checkbox at the top-left to select the page,
+      - click "Select all conversations that match this search",
+      - click the trash can.
+   Done! Hundreds of old emails gone.
+
+
+-------------------------------------------
+Safe to know
+-------------------------------------------
+* Deleted mail goes to the TRASH, which Gmail keeps 30 days -- easy to undo.
+* Dust never selects your STARRED mail (it adds -is:starred for you).
+* To free the storage for real, empty the Trash in Gmail when you're sure.
