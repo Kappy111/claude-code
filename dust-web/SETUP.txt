@@ -1,0 +1,67 @@
+===========================================
+  DUST — put it on the web with Netlify
+===========================================
+
+This is the website version of Dust. No Python, no terminal.
+Two short jobs: (1) put the site online, (2) get a Google Client ID.
+
+Everything runs in YOUR browser. Your emails never go to anyone but Google.
+
+
+-------------------------------------------
+PART 1 — Put Dust online (free, ~2 minutes)
+-------------------------------------------
+1. Go to:  https://app.netlify.com/drop
+2. Drag the ZIP file (or this whole folder) onto that page.
+3. Netlify gives you a web address like:
+      https://sparkly-dust-1234.netlify.app
+   That's your live Dust site! Copy that address — you need it in Part 2.
+
+
+-------------------------------------------
+PART 2 — Get your Google Client ID (adult helps)
+-------------------------------------------
+Dust needs Google's permission to tidy your mailbox. Google gives you a
+"Client ID" for that. It is FREE — no credit card, no billing.
+
+NOTE: a kid's Google account can't make one, so an ADULT signs in with
+their Google account for these steps. You still clean YOUR mail, because
+YOU log in at the very end.
+
+1. Go to:  https://console.cloud.google.com/
+2. Top bar -> project menu -> New Project -> name it "Dust" -> Create.
+   Make sure "Dust" is the selected project.
+3. Search bar -> "Gmail API" -> open it -> Enable.
+4. Left menu -> APIs & Services -> OAuth consent screen:
+      - Choose External -> Create
+      - App name: Dust, and fill in an email -> Save and continue
+      - Test users -> Add users -> add YOUR Gmail address -> Save
+5. Left menu -> Credentials -> Create Credentials -> OAuth client ID:
+      - Application type: Web application
+      - Under "Authorized JavaScript origins" click ADD URI and paste your
+        Netlify address from Part 1 (for example:
+        https://sparkly-dust-1234.netlify.app ) -- no slash at the end.
+      - Create.
+6. A box pops up with your Client ID. It ends in
+   .apps.googleusercontent.com  -- copy it.
+
+
+-------------------------------------------
+PART 3 — Use Dust!
+-------------------------------------------
+1. Open your Netlify address in a browser.
+2. Paste the Client ID and click "Save & connect Gmail".
+3. Click "Connect my Gmail", log in as YOURSELF, click Allow.
+   (You may see a "Google hasn't verified this app" screen because it's
+    your own private app -> click Advanced -> Go to Dust. That's fine; it's
+    your app.)
+4. Answer the survey (dates, senders, promotions) and sweep!
+
+
+-------------------------------------------
+Safe to know
+-------------------------------------------
+* Dust moves mail to the TRASH, which Gmail keeps 30 days. Undo any time.
+* Dust NEVER touches Starred mail.
+* To actually free the space, empty the Trash in Gmail when you're sure.
+* Your Client ID is not a password. It just names your app to Google.

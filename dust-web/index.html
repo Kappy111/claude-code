@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dust — Gmail cleaner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap">
+<!-- Google sign-in / permission library -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+  :root{
+    --bg:#eef4f6; --panel:#fff; --panel-2:#f4f8fa; --ink:#182b33; --ink-soft:#5a7079;
+    --line:#dde8ec; --accent:#0ea5b7; --accent-deep:#0b7f8d; --dust:#e0a84b;
+    --good:#16a06a; --danger:#e0603d; --shadow:0 10px 30px rgba(20,60,70,.10);
+    color-scheme:light;
+  }
+  @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+    --bg:#0c1518; --panel:#13232a; --panel-2:#0f1d22; --ink:#e7f1f4; --ink-soft:#8fa8b0;
+    --line:#20343c; --accent:#2cc4d6; --accent-deep:#5ad6e6; --dust:#f0bd66;
+    --good:#39c88a; --danger:#ef7f5f; --shadow:0 10px 30px rgba(0,0,0,.35); color-scheme:dark;
+  }}
+  :root[data-theme="dark"]{
+    --bg:#0c1518; --panel:#13232a; --panel-2:#0f1d22; --ink:#e7f1f4; --ink-soft:#8fa8b0;
+    --line:#20343c; --accent:#2cc4d6; --accent-deep:#5ad6e6; --dust:#f0bd66;
+    --good:#39c88a; --danger:#ef7f5f; --shadow:0 10px 30px rgba(0,0,0,.35); color-scheme:dark;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:radial-gradient(1100px 500px at 50% -10%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 60%), var(--bg);
+    color:var(--ink); font-family:"Nunito",system-ui,sans-serif; min-height:100vh;
+  }
+  .wrap{max-width:680px;margin:0 auto;padding:22px max(16px,env(safe-area-inset-left,0px)) 48px;}
+  .top{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+  .logo{width:46px;height:46px;border-radius:14px;flex:none;background:linear-gradient(150deg,var(--accent),var(--accent-deep));display:grid;place-items:center;box-shadow:var(--shadow)}
+  .logo svg{width:28px;height:28px}
+  .brand h1{font-family:"Fredoka",sans-serif;font-weight:700;font-size:28px;margin:0;line-height:1;letter-spacing:.5px}
+  .brand p{margin:3px 0 0;color:var(--ink-soft);font-size:13px;font-weight:700}
+  .theme-btn{margin-left:auto;border:1px solid var(--line);background:var(--panel);color:var(--ink-soft);width:40px;height:40px;border-radius:12px;cursor:pointer;font-size:18px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);padding:22px}
+  h2.q-title{font-family:"Fredoka",sans-serif;font-weight:600;font-size:23px;margin:0 0 4px;text-wrap:balance}
+  .kicker{font-weight:800;letter-spacing:1.5px;text-transform:uppercase;font-size:12px;color:var(--accent-deep);margin:0 0 4px}
+  .help{color:var(--ink-soft);font-weight:600;font-size:14px;margin:0 0 16px;line-height:1.5}
+  .btn{font-family:"Fredoka",sans-serif;font-weight:600;font-size:17px;border:none;border-radius:16px;padding:15px 22px;cursor:pointer;background:linear-gradient(150deg,var(--accent),var(--accent-deep));color:#fff;box-shadow:0 8px 20px color-mix(in srgb,var(--accent) 40%, transparent);width:100%;display:flex;align-items:center;justify-content:center;gap:10px}
+  .btn:hover{filter:brightness(1.06)} .btn:active{transform:translateY(2px)}
+  .btn.ghost{background:var(--panel);color:var(--ink);border:1px solid var(--line);box-shadow:none}
+  .btn.danger{background:linear-gradient(150deg,var(--danger),#c24a2c);box-shadow:0 8px 20px color-mix(in srgb,var(--danger) 40%, transparent)}
+  .btn:disabled{opacity:.5;cursor:default}
+  .btn-row{display:flex;gap:12px;margin-top:20px}.btn-row .btn{flex:1}
+  input[type=text]{width:100%;font-family:inherit;font-size:15px;font-weight:700;padding:13px 14px;border-radius:12px;border:2px solid var(--line);background:var(--panel-2);color:var(--ink);margin-bottom:6px}
+  input[type=text]:focus{outline:none;border-color:var(--accent)}
+  label.fld{display:block;font-weight:800;font-size:13px;margin:14px 0 6px}
+  .opts{display:grid;gap:10px;margin-top:4px}
+  .opt{display:flex;align-items:center;gap:13px;padding:14px 16px;border-radius:14px;border:2px solid var(--line);background:var(--panel-2);cursor:pointer;font-weight:700;font-size:15px;color:var(--ink);text-align:left}
+  .opt.sel{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 12%, var(--panel))}
+  .opt .tick{margin-left:auto;width:22px;height:22px;border-radius:7px;border:2px solid var(--line);flex:none}
+  .opt.sel .tick{background:var(--accent);border-color:var(--accent)}
+  .opt small{display:block;color:var(--ink-soft);font-weight:700;font-size:12px;margin-top:2px}
+  .found-top{text-align:center;padding:4px 0}
+  .found-top .num{font-family:"Fredoka",sans-serif;font-size:50px;font-weight:700;color:var(--accent);line-height:1}
+  .found-top .lbl{font-weight:800;color:var(--ink-soft);font-size:15px}
+  .found-top .size{display:inline-block;margin-top:12px;background:color-mix(in srgb,var(--dust) 22%, var(--panel));color:color-mix(in srgb,var(--dust) 75%, var(--ink));border:1px solid color-mix(in srgb,var(--dust) 45%, var(--line));padding:7px 15px;border-radius:999px;font-weight:800}
+  .list{margin-top:16px;max-height:280px;overflow-y:auto;display:flex;flex-direction:column;gap:8px}
+  .row{display:flex;align-items:center;gap:12px;background:var(--panel-2);border:1px solid var(--line);border-radius:12px;padding:11px 13px}
+  .row .meta{min-width:0;flex:1}
+  .row .meta b{display:block;font-weight:800;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .row .meta span{color:var(--ink-soft);font-weight:700;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+  .done{text-align:center}
+  .done .freed{font-family:"Fredoka",sans-serif;font-size:42px;font-weight:700;color:var(--good);margin:10px 0}
+  .done h2{font-family:"Fredoka",sans-serif;font-weight:600;font-size:26px;margin:0}
+  .done p{color:var(--ink-soft);font-weight:700;max-width:40ch;margin:8px auto 0;line-height:1.5}
+  .note{font-size:13px;color:var(--ink-soft);font-weight:700;line-height:1.5;background:var(--panel-2);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-top:14px}
+  .footnote{text-align:center;color:var(--ink-soft);font-size:12px;font-weight:700;margin-top:20px}
+  a{color:var(--accent-deep);font-weight:800}
+  .spin{display:inline-block;width:16px;height:16px;border:3px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:sp .8s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .err{color:var(--danger);font-weight:800;font-size:14px;margin-top:10px;min-height:1px}
+  [hidden]{display:none!important}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19.4 4.6 13 11"/><path d="M10.5 8.5 4 15c-1 1-1 3 0 4s3 1 4 0l6.5-6.5"/><path d="M14.5 12.5 7 20"/><path d="M11 16l-3 3"/></svg></div>
+    <div class="brand"><h1>Dust</h1><p>Sweep away the clutter.</p></div>
+    <button class="theme-btn" id="themeBtn" title="Light / dark">◐</button>
+  </div>
+
+  <!-- SETUP: paste client id -->
+  <section id="s-setup" class="card">
+    <div class="kicker">One-time setup</div>
+    <h2 class="q-title">Connect Dust to Gmail</h2>
+    <p class="help">Paste the <b>Client ID</b> an adult made for you (it ends in <code>.apps.googleusercontent.com</code>). See <b>SETUP.txt</b> for how to get one. Dust saves it in this browser so you only do this once.</p>
+    <label class="fld" for="cid">Google Client ID</label>
+    <input type="text" id="cid" placeholder="1234567890-abc...apps.googleusercontent.com" autocomplete="off" spellcheck="false">
+    <div class="btn-row"><button class="btn" id="saveCid">Save &amp; connect Gmail</button></div>
+    <div class="err" id="setupErr"></div>
+    <div class="note">🔒 Dust runs entirely in your browser. Your emails and your login never go to anyone but Google. Nothing is sent to us.</div>
+  </section>
+
+  <!-- CONNECT -->
+  <section id="s-connect" class="card" hidden>
+    <h2 class="q-title">Ready to clean 🧹</h2>
+    <p class="help">Click below and a Google window will ask you to log in and say <b>Allow</b>. That's you giving Dust permission to tidy your own inbox.</p>
+    <div class="btn-row"><button class="btn" id="connectBtn">Connect my Gmail</button></div>
+    <div class="btn-row"><button class="btn ghost" id="changeCid">Use a different Client ID</button></div>
+    <div class="err" id="connectErr"></div>
+  </section>
+
+  <!-- SURVEY -->
+  <section id="s-survey" class="card" hidden>
+    <div class="kicker">The survey</div>
+    <h2 class="q-title">What should Dust sweep?</h2>
+    <p class="help">Signed in as <b id="who">you</b>. Answer the questions, then Dust finds the matching mail.</p>
+
+    <label class="fld">1. From what dates?</label>
+    <div class="opts" id="dateOpts">
+      <button class="opt" data-op="older_than:1y">Really old <small>older than 1 year</small><span class="tick"></span></button>
+      <button class="opt" data-op="older_than:6m">Pretty old <small>older than 6 months</small><span class="tick"></span></button>
+      <button class="opt" data-op="older_than:30d">Getting old <small>older than 1 month</small><span class="tick"></span></button>
+      <button class="opt" data-op="">Any date <small>any time</small><span class="tick"></span></button>
+    </div>
+
+    <label class="fld" for="senders">2. From what companies or senders?</label>
+    <input type="text" id="senders" placeholder="amazon, netflix, groupon" autocomplete="off">
+    <p class="help" style="margin:4px 0 0">Separate names with commas. Leave blank to skip.</p>
+
+    <div class="opts" style="margin-top:14px">
+      <button class="opt" id="promoOpt" data-on="0">📣 Also sweep the Promotions tab <small>all those ads &amp; deals</small><span class="tick"></span></button>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn ghost" id="surveyBack">Sign out</button>
+      <button class="btn" id="findBtn">Find the dust</button>
+    </div>
+    <div class="err" id="surveyErr"></div>
+  </section>
+
+  <!-- FOUND -->
+  <section id="s-found" class="card" hidden>
+    <div class="found-top">
+      <div class="num" id="foundNum">0</div>
+      <div class="lbl">emails match your answers</div>
+      <div class="size" id="foundNote"></div>
+    </div>
+    <div class="list" id="foundList"></div>
+    <div class="note">These move to your <b>Trash</b>, which Gmail keeps for <b>30 days</b> — you can undo any time. Starred mail is never touched.</div>
+    <div class="btn-row">
+      <button class="btn ghost" id="refineBtn">Change answers</button>
+      <button class="btn danger" id="sweepBtn">Sweep it away!</button>
+    </div>
+    <div class="err" id="foundErr"></div>
+  </section>
+
+  <!-- DONE -->
+  <section id="s-done" class="card done" hidden>
+    <h2>All swept! 🎉</h2>
+    <div class="freed" id="doneNum">0</div>
+    <p id="doneMsg">emails moved to the Trash.</p>
+    <div class="note" style="text-align:left">To get the storage back for real, open Gmail → <b>Trash</b> → <b>Empty Trash now</b> (only when you're sure). Changed your mind? Trash → select → <b>Move to Inbox</b>.</div>
+    <div class="btn-row"><button class="btn" id="againBtn">Clean some more</button></div>
+  </section>
+
+  <p class="footnote">Dust · a safe Gmail cleaner that runs in your browser.</p>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  const $=s=>document.querySelector(s);
+  const GMAIL="https://gmail.googleapis.com/gmail/v1/users/me";
+  const SCOPE="https://www.googleapis.com/auth/gmail.modify";
+  let tokenClient=null, accessToken=null, matchedIds=[];
+  const answers={date:null, promo:false};
+
+  /* theme */
+  const root=document.documentElement;
+  function sysDark(){return matchMedia("(prefers-color-scheme:dark)").matches}
+  $("#themeBtn").onclick=()=>{const c=root.getAttribute("data-theme");let n=!c?(sysDark()?"light":"dark"):(c==="dark"?"light":"dark");root.setAttribute("data-theme",n);try{localStorage.setItem("dust-theme",n)}catch(e){}};
+  try{const t=localStorage.getItem("dust-theme");if(t)root.setAttribute("data-theme",t)}catch(e){}
+
+  function show(id){["setup","connect","survey","found","done"].forEach(s=>$("#s-"+s).hidden=(s!==id));window.scrollTo({top:0,behavior:"smooth"})}
+
+  /* ---- setup: client id ---- */
+  function savedCid(){try{return localStorage.getItem("dust-cid")||""}catch(e){return""}}
+  function start(){
+    const cid=savedCid();
+    if(cid){ initToken(cid); show("connect"); }
+    else show("setup");
+  }
+  $("#saveCid").onclick=()=>{
+    const v=$("#cid").value.trim();
+    if(!v.endsWith(".apps.googleusercontent.com")){ $("#setupErr").textContent="That doesn't look right — it should end in .apps.googleusercontent.com"; return; }
+    try{localStorage.setItem("dust-cid",v)}catch(e){}
+    initToken(v); show("connect");
+  };
+  $("#changeCid").onclick=()=>{ $("#cid").value=savedCid(); show("setup"); };
+
+  function initToken(cid){
+    if(!window.google||!google.accounts){ $("#connectErr").textContent="Google library still loading — wait a moment and try again."; return; }
+    tokenClient=google.accounts.oauth2.initTokenClient({
+      client_id:cid, scope:SCOPE,
+      callback:(resp)=>{
+        if(resp.error){ $("#connectErr").textContent="Could not connect: "+resp.error; return; }
+        accessToken=resp.access_token;
+        loadProfile();
+        show("survey");
+      }
+    });
+  }
+
+  $("#connectBtn").onclick=()=>{
+    if(!tokenClient){ initToken(savedCid()); }
+    if(!tokenClient){ return; }
+    $("#connectErr").textContent="";
+    tokenClient.requestAccessToken();
+  };
+
+  async function api(path,opts){
+    const r=await fetch(GMAIL+path,Object.assign({headers:{Authorization:"Bearer "+accessToken,"Content-Type":"application/json"}},opts||{}));
+    if(r.status===401){ accessToken=null; throw new Error("Login expired — please connect again."); }
+    if(!r.ok){ throw new Error("Gmail error "+r.status); }
+    return r.json();
+  }
+  async function loadProfile(){
+    try{const p=await api("/profile");$("#who").textContent=p.emailAddress||"you";}catch(e){}
+  }
+
+  /* ---- survey ---- */
+  document.querySelectorAll("#dateOpts .opt").forEach(b=>{
+    b.onclick=()=>{answers.date=b.dataset.op;document.querySelectorAll("#dateOpts .opt").forEach(o=>o.classList.toggle("sel",o===b));};
+  });
+  const promo=$("#promoOpt");
+  promo.onclick=()=>{answers.promo=!answers.promo;promo.classList.toggle("sel",answers.promo);};
+
+  $("#surveyBack").onclick=()=>{ if(accessToken){google.accounts.oauth2.revoke(accessToken,()=>{});} accessToken=null; show("connect"); };
+
+  function buildQuery(){
+    const parts=[];
+    const senders=$("#senders").value.split(",").map(s=>s.trim()).filter(Boolean);
+    if(answers.date) parts.push(answers.date);
+    if(senders.length) parts.push("from:("+senders.join(" OR ")+")");
+    if(answers.promo) parts.push("category:promotions");
+    const meaningful = answers.date || senders.length || answers.promo;
+    parts.push("-is:starred"); // never sweep starred mail
+    return {q:parts.join(" "), meaningful};
+  }
+
+  $("#findBtn").onclick=async()=>{
+    $("#surveyErr").textContent="";
+    if(answers.date===null){ $("#surveyErr").textContent="Pick a date option first."; return; }
+    const {q,meaningful}=buildQuery();
+    if(!meaningful){ $("#surveyErr").textContent="That would match your whole inbox. Pick senders or the Promotions tab too."; return; }
+    const btn=$("#findBtn"); btn.disabled=true; btn.innerHTML='<span class="spin"></span> Searching...';
+    try{
+      matchedIds=await listAll(q);
+      renderFound();
+      show("found");
+    }catch(e){ $("#surveyErr").textContent=e.message; }
+    finally{ btn.disabled=false; btn.textContent="Find the dust"; }
+  };
+
+  async function listAll(q){
+    let ids=[],token=null;
+    do{
+      const u="/messages?maxResults=500&q="+encodeURIComponent(q)+(token?"&pageToken="+token:"");
+      const d=await api(u);
+      (d.messages||[]).forEach(m=>ids.push(m.id));
+      token=d.nextPageToken;
+    }while(token && ids.length<5000);
+    return ids;
+  }
+
+  async function renderFound(){
+    $("#foundNum").textContent=matchedIds.length;
+    $("#foundNote").textContent=matchedIds.length?"ready to sweep":"nothing matched";
+    $("#sweepBtn").disabled=matchedIds.length===0;
+    const list=$("#foundList"); list.innerHTML="";
+    const sample=matchedIds.slice(0,8);
+    for(const id of sample){
+      try{
+        const m=await api("/messages/"+id+"?format=metadata&metadataHeaders=From&metadataHeaders=Subject");
+        const h={}; (m.payload.headers||[]).forEach(x=>h[x.name]=x.value);
+        const r=document.createElement("div"); r.className="row";
+        r.innerHTML='<div class="meta"><b></b><span></span></div>';
+        r.querySelector("b").textContent=h.Subject||"(no subject)";
+        r.querySelector("span").textContent=h.From||"(unknown)";
+        list.appendChild(r);
+      }catch(e){}
+    }
+    if(matchedIds.length>8){const d=document.createElement("div");d.style.cssText="text-align:center;color:var(--ink-soft);font-weight:700;padding:6px";d.textContent="+ "+(matchedIds.length-8)+" more";list.appendChild(d);}
+    if(matchedIds.length===0){list.innerHTML='<div style="text-align:center;color:var(--ink-soft);font-weight:700;padding:24px">Nothing matched. Try a wider date or different senders.</div>';}
+  }
+
+  $("#refineBtn").onclick=()=>show("survey");
+
+  /* ---- sweep (move to Trash in bulk) ---- */
+  $("#sweepBtn").onclick=async()=>{
+    if(!matchedIds.length) return;
+    const btn=$("#sweepBtn"); btn.disabled=true; btn.innerHTML='<span class="spin"></span> Sweeping...';
+    $("#foundErr").textContent="";
+    try{
+      let done=0;
+      for(let i=0;i<matchedIds.length;i+=1000){
+        const ids=matchedIds.slice(i,i+1000);
+        await api("/messages/batchModify",{method:"POST",body:JSON.stringify({ids,addLabelIds:["TRASH"]})});
+        done+=ids.length;
+        btn.innerHTML='<span class="spin"></span> Swept '+done+' / '+matchedIds.length;
+      }
+      $("#doneNum").textContent=done;
+      $("#doneMsg").textContent="emails moved to the Trash. Nice sweep!";
+      show("done");
+    }catch(e){ $("#foundErr").textContent=e.message; }
+    finally{ btn.disabled=false; btn.textContent="Sweep it away!"; }
+  };
+
+  $("#againBtn").onclick=()=>{
+    answers.date=null; answers.promo=false;
+    document.querySelectorAll("#dateOpts .opt").forEach(o=>o.classList.remove("sel"));
+    promo.classList.remove("sel"); $("#senders").value="";
+    show("survey");
+  };
+
+  /* boot */
+  window.addEventListener("load",()=>setTimeout(start,400));
+})();
+</script>
+</body>
+</html>
