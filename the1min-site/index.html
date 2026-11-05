@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The1Min</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Figtree:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap">
+<style>
+  /* Layout: one centered buddy-card. Share your screen, it watches for a stuck minute, then helps. */
+  :root{
+    --bg:#eceaf2; --surface:#ffffff; --surface-2:#f4f2f9;
+    --ink:#1b1a27; --muted:#6a6782; --line:#ddd9e8;
+    --amber:#e2832a; --amber-soft:#f7d6a8; --mint:#0a9d75; --mint-soft:#c7ece0; --coral:#dc4747;
+    --shadow:0 18px 40px -24px rgba(32,26,60,.45); --r:22px;
+    --f-display:"Bricolage Grotesque",system-ui,sans-serif;
+    --f-body:"Figtree",system-ui,sans-serif;
+    --f-mono:"Space Mono",ui-monospace,monospace;
+  }
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+    --bg:#131320; --surface:#1d1c2b; --surface-2:#262539;
+    --ink:#f0eef8; --muted:#9d99b6; --line:#302f45;
+    --amber:#f4a73f; --amber-soft:#6a4a22; --mint:#2dd6a4; --mint-soft:#1d4b40; --coral:#ff6b6f;
+    --shadow:0 22px 46px -22px rgba(0,0,0,.7); color-scheme:dark;
+  }}
+  :root[data-theme="dark"]{
+    --bg:#131320; --surface:#1d1c2b; --surface-2:#262539;
+    --ink:#f0eef8; --muted:#9d99b6; --line:#302f45;
+    --amber:#f4a73f; --amber-soft:#6a4a22; --mint:#2dd6a4; --mint-soft:#1d4b40; --coral:#ff6b6f;
+    --shadow:0 22px 46px -22px rgba(0,0,0,.7); color-scheme:dark;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;min-height:100%}
+  body{
+    background:radial-gradient(1100px 520px at 50% -8%, color-mix(in srgb,var(--amber) 13%, transparent), transparent 60%), var(--bg);
+    color:var(--ink); font-family:var(--f-body); line-height:1.5; -webkit-font-smoothing:antialiased;
+    display:flex; flex-direction:column; align-items:center;
+    padding:28px max(16px,env(safe-area-inset-left,0px)) 24px max(16px,env(safe-area-inset-right,0px)); gap:16px;
+  }
+  .brand{display:flex;align-items:center;gap:10px}
+  .brand .mark{font-family:var(--f-mono);font-weight:700;font-size:.72rem;letter-spacing:.14em;color:var(--amber);border:1.5px solid var(--amber);border-radius:999px;padding:4px 10px;text-transform:uppercase}
+  .brand h1{font-family:var(--f-display);font-weight:800;font-size:1.32rem;margin:0;letter-spacing:-.01em}
+  .brand h1 b{color:var(--amber)}
+  .card{width:100%;max-width:520px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:24px 22px 22px;position:relative}
+  .gear{position:absolute;top:14px;right:14px;border:none;background:transparent;color:var(--muted);font-size:17px;cursor:pointer;width:30px;height:30px;border-radius:8px}
+  .gear:hover{background:var(--surface-2);color:var(--ink)}
+  .hidden{display:none !important}
+  .center{text-align:center}
+
+  .buddy{display:flex;justify-content:center;margin-bottom:6px}
+  .buddy svg{width:88px;height:88px;overflow:visible}
+  .head{fill:var(--surface-2);stroke:var(--ink);stroke-width:3}
+  .eye{fill:var(--ink)} .mouth{fill:none;stroke:var(--ink);stroke-width:3.4;stroke-linecap:round}
+  .bulb{fill:var(--amber)} .ant{stroke:var(--ink);stroke-width:3;stroke-linecap:round}
+  .pulse .bulb{animation:blip 1s ease-in-out infinite}
+  @keyframes blip{0%,100%{opacity:.35}50%{opacity:1}}
+  .dots::after{content:"";animation:dots 1.4s steps(4,end) infinite}
+  @keyframes dots{0%{content:""}25%{content:"."}50%{content:".."}75%{content:"..."}}
+
+  .eyebrow{font-family:var(--f-mono);font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+  .lead{font-family:var(--f-display);font-weight:700;font-size:1.44rem;line-height:1.15;text-wrap:balance;margin:.3rem 0 .1rem}
+  .sub{color:var(--muted);max-width:40ch;margin:0 auto}
+
+  .btn{font-family:var(--f-display);font-weight:700;font-size:1.02rem;cursor:pointer;border:none;border-radius:14px;padding:14px 18px;width:100%;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:transform .08s,filter .15s}
+  .btn:active{transform:translateY(1px)}
+  .btn:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+  .btn-primary{background:var(--amber);color:#2a1603}
+  .btn-primary:hover{filter:brightness(1.05)}
+  .btn-go{background:var(--mint);color:#04261c}
+  .btn-ghost{background:transparent;color:var(--muted);border:1.5px solid var(--line);font-size:.95rem}
+  .btn-ghost:hover{color:var(--ink)}
+  .row{display:flex;gap:9px;margin-top:12px}.row .btn{width:auto;flex:1}
+  .mt{margin-top:12px}
+
+  .note{display:flex;gap:9px;align-items:flex-start;margin-top:16px;color:var(--muted);font-size:.82rem;background:var(--surface-2);border-radius:12px;padding:10px 12px}
+  .note svg{flex:none;margin-top:1px}
+
+  /* watching */
+  .preview{width:100%;border-radius:14px;border:1px solid var(--line);background:#000;aspect-ratio:16/9;object-fit:contain;margin-bottom:12px}
+  .meter{height:12px;border-radius:999px;background:var(--surface-2);overflow:hidden;margin:4px 0 6px}
+  .meter i{display:block;height:100%;width:0;background:var(--amber);transition:width .4s,background .4s}
+  .statusline{display:flex;align-items:center;justify-content:space-between;font-size:.9rem}
+  .statusline .big{font-family:var(--f-mono);font-weight:700;font-variant-numeric:tabular-nums}
+  .muted{color:var(--muted)}
+
+  /* result */
+  .problem{background:color-mix(in srgb,var(--amber) 13%,var(--surface));border:1px solid var(--amber-soft);border-radius:14px;padding:13px 15px;font-weight:600;margin:14px 0}
+  .cap{font-family:var(--f-mono);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--amber);margin:16px 0 8px}
+  ol.steps{margin:0;padding:0;list-style:none;counter-reset:s;display:flex;flex-direction:column;gap:9px}
+  ol.steps li{counter-increment:s;display:flex;gap:11px}
+  ol.steps li::before{content:counter(s);flex:none;width:25px;height:25px;border-radius:999px;background:var(--mint);color:#04261c;font-family:var(--f-mono);font-weight:700;font-size:.85rem;display:flex;align-items:center;justify-content:center}
+  .resource{background:var(--surface-2);border:1px solid var(--line);border-radius:13px;padding:12px 14px}
+  .promptbox{position:relative;background:var(--surface-2);border:1px dashed var(--muted);border-radius:13px;padding:13px 14px;font-family:var(--f-mono);font-size:.85rem;white-space:pre-wrap;overflow-wrap:anywhere}
+  .copy{position:absolute;top:9px;right:9px;border:none;background:var(--ink);color:var(--surface);border-radius:8px;padding:5px 9px;font-size:.74rem;font-weight:600;cursor:pointer}
+  .cheer{text-align:center;color:var(--mint);font-family:var(--f-display);font-weight:700;margin-top:16px}
+
+  label.f{display:block;font-weight:600;margin:16px 0 6px}
+  input,select{width:100%;font-family:var(--f-body);font-size:1rem;color:var(--ink);background:var(--surface-2);border:1.5px solid var(--line);border-radius:12px;padding:11px 13px}
+  input:focus,select:focus{outline:none;border-color:var(--amber)}
+  .hint{color:var(--muted);font-size:.82rem;margin-top:6px}
+  a{color:var(--amber)}
+  code{font-family:var(--f-mono);background:var(--surface-2);padding:1px 5px;border-radius:5px}
+  .foot{color:var(--muted);font-size:.74rem;text-align:center;max-width:40ch}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+  <div class="brand"><span class="mark">0:60</span><h1>The<b>1Min</b></h1></div>
+
+  <div class="card" id="card">
+    <button class="gear" id="gear" title="Settings">⚙</button>
+
+    <!-- SETUP -->
+    <section id="v-setup" class="center">
+      <div class="buddy"></div>
+      <p class="eyebrow">your one-minute watcher</p>
+      <p class="lead">Stuck more than a minute? I jump in.</p>
+      <p class="sub">Share your screen once. I'll watch quietly, and the moment you've been stuck for a minute, I read what's there and show the best way forward.</p>
+      <button class="btn btn-primary mt" id="start">Share my screen &amp; start ▸</button>
+      <div class="note">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg>
+        <span>Your browser will ask which screen, window, or tab to share. Pick the one with your work. You can stop sharing anytime.</span>
+      </div>
+    </section>
+
+    <!-- WATCHING -->
+    <section id="v-watch">
+      <video class="preview" id="preview" muted playsinline></video>
+      <div class="meter"><i id="meter"></i></div>
+      <div class="statusline"><span class="muted" id="watchMsg">Watching…</span><span class="big" id="stillNum">0s</span></div>
+      <div class="row">
+        <button class="btn btn-go" id="unstuck">I'm unstuck</button>
+        <button class="btn btn-primary" id="stuck">I'm stuck — help</button>
+      </div>
+      <button class="btn btn-ghost mt" id="stop">Stop watching</button>
+    </section>
+
+    <!-- THINKING -->
+    <section id="v-think" class="center">
+      <div class="buddy pulse"></div>
+      <p class="lead" style="font-size:1.2rem">Reading your screen<span class="dots"></span></p>
+      <p class="sub" id="thinkNote">Working out the clearest next step.</p>
+    </section>
+
+    <!-- RESULT -->
+    <section id="v-result">
+      <div class="problem" id="rProblem"></div>
+      <div class="cap">▸ try this, in order</div>
+      <ol class="steps" id="rSteps"></ol>
+      <div class="cap">◆ a resource that helps</div>
+      <div class="resource" id="rResource"></div>
+      <div class="cap">✦ a better prompt to ask</div>
+      <div class="promptbox"><button class="copy" id="copyBtn">Copy</button><span id="rPrompt"></span></div>
+      <p class="cheer" id="rCheer"></p>
+      <div class="row">
+        <button class="btn btn-ghost" id="deeper">Dig deeper</button>
+        <button class="btn btn-primary" id="keep">Keep watching</button>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section id="v-settings">
+      <p class="lead center" style="font-size:1.2rem">Settings</p>
+      <label class="f" for="key">Anthropic API key</label>
+      <input id="key" type="password" placeholder="sk-ant-..." autocomplete="off" spellcheck="false">
+      <div class="hint">Get one at <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noreferrer">console.anthropic.com</a>. Stored only in this browser.</div>
+      <label class="f" for="model">Model</label>
+      <select id="model">
+        <option value="claude-opus-5-5">Claude Opus 5.5 — most capable</option>
+        <option value="claude-sonnet-5-5">Claude Sonnet 5.5 — balanced</option>
+        <option value="claude-haiku-5-5">Claude Haiku 5.5 — fastest &amp; cheapest</option>
+      </select>
+      <div class="hint">Testing a lot? <b>Haiku 5.5</b> costs the least per peek.</div>
+      <button class="btn btn-primary mt" id="save">Save</button>
+    </section>
+
+    <!-- ERROR -->
+    <section id="v-error" class="center">
+      <div class="buddy"></div>
+      <p class="lead" style="font-size:1.2rem">That didn't work</p>
+      <p class="sub" id="errMsg"></p>
+      <div class="row"><button class="btn btn-ghost" id="errSettings">Settings</button><button class="btn btn-primary" id="errBack">Back</button></div>
+    </section>
+  </div>
+
+  <p class="foot">The1Min — built real from a kid's notebook of apps for the future.</p>
+
+<script>
+"use strict";
+const BUDDY = `<svg viewBox="0 0 100 100" aria-hidden="true">
+  <line class="ant" x1="50" y1="24" x2="50" y2="13"/><circle class="bulb" cx="50" cy="10" r="4.5"/>
+  <rect class="head" x="18" y="22" width="64" height="62" rx="16"/>
+  <circle class="eye" cx="39" cy="50" r="5"/><circle class="eye" cx="61" cy="50" r="5"/>
+  <path class="mouth" d="M 40 68 Q 50 77 60 68"/></svg>`;
+document.querySelectorAll('.buddy').forEach(b => b.innerHTML = BUDDY);
+
+const $ = id => document.getElementById(id);
+const screens = ['setup','watch','think','result','settings','error'];
+let backTo = 'setup';
+function show(name){ screens.forEach(s => $('v-'+s).classList.toggle('hidden', s !== name)); if(name!=='settings'&&name!=='error') backTo=name; }
+
+/* ---------- settings ---------- */
+const DEFAULT_MODEL='claude-opus-5-5';
+function cfg(){ try{ return JSON.parse(localStorage.getItem('the1min')||'{}'); }catch{ return {}; } }
+function setCfg(p){ const c=cfg(); Object.assign(c,p); try{ localStorage.setItem('the1min', JSON.stringify(c)); }catch{} }
+function apiKey(){ return (cfg().apiKey||'').trim(); }
+function model(){ return cfg().model||DEFAULT_MODEL; }
+
+/* ---------- screen sharing + watch ---------- */
+let stream=null, video=$('preview'), tickTimer=null, stillSeconds=0, lastSample=null, triggered=false, STILL_GOAL=60, STEP=3;
+const diffCanvas=document.createElement('canvas'); diffCanvas.width=80; diffCanvas.height=50;
+const dctx=diffCanvas.getContext('2d', {willReadFrequently:true});
+const grabCanvas=document.createElement('canvas'); const gctx=grabCanvas.getContext('2d');
+
+async function startWatch(){
+  if(!apiKey()){ show('settings'); return; }
+  try{
+    stream = await navigator.mediaDevices.getDisplayMedia({ video:{ frameRate:4 }, audio:false });
+  }catch(e){
+    if(e && e.name==='NotAllowedError'){ show('setup'); return; } // user cancelled the picker
+    return showError(e);
+  }
+  video.srcObject = stream;
+  await video.play().catch(()=>{});
+  stream.getVideoTracks()[0].addEventListener('ended', stopWatch); // user clicked "Stop sharing"
+  resetWatch();
+  show('watch');
+  tickTimer = setInterval(tick, STEP*1000);
+}
+
+function resetWatch(){ stillSeconds=0; lastSample=null; triggered=false; paintMeter(); $('watchMsg').textContent='Watching…'; }
+
+function sample(){
+  if(!video.videoWidth) return null;
+  dctx.drawImage(video, 0, 0, 80, 50);
+  return dctx.getImageData(0, 0, 80, 50).data;
+}
+function diff(a, b){
+  if(!a||!b) return 999;
+  let sum=0; for(let i=0;i<a.length;i+=4){ sum += Math.abs(a[i]-b[i])+Math.abs(a[i+1]-b[i+1])+Math.abs(a[i+2]-b[i+2]); }
+  return sum / (a.length/4) / 3;   // mean per-pixel difference, 0..255
+}
+function tick(){
+  const cur = sample();
+  if(!cur) return;
+  const d = diff(lastSample, cur);
+  lastSample = cur;
+  if(d > 7){ stillSeconds = 0; if(triggered) triggered=false; }   // screen changed -> you're active, re-arm
+  else stillSeconds += STEP;                                      // screen still -> stuck time grows
+  paintMeter();
+  if(!triggered && stillSeconds >= STILL_GOAL){ triggered=true; trigger('idle'); }
+}
+function paintMeter(){
+  const pct = Math.min(100, stillSeconds/STILL_GOAL*100);
+  const m=$('meter'); m.style.width = pct+'%';
+  m.style.background = pct<60 ? 'var(--mint)' : pct<100 ? 'var(--amber)' : 'var(--coral)';
+  $('stillNum').textContent = Math.min(stillSeconds,STILL_GOAL)+'s';
+  if(stillSeconds>0 && stillSeconds<STILL_GOAL) $('watchMsg').textContent='Still on the same thing…';
+  else if(stillSeconds===0) $('watchMsg').textContent='Watching…';
+}
+function stopWatch(){
+  if(tickTimer){ clearInterval(tickTimer); tickTimer=null; }
+  if(stream){ stream.getTracks().forEach(t=>t.stop()); stream=null; }
+  video.srcObject=null;
+  show('setup');
+}
+
+/* ---------- capture a full frame ---------- */
+function grabFrame(maxW=1400){
+  const vw=video.videoWidth, vh=video.videoHeight;
+  const scale=Math.min(1, maxW/vw);
+  grabCanvas.width=Math.round(vw*scale); grabCanvas.height=Math.round(vh*scale);
+  gctx.drawImage(video, 0, 0, grabCanvas.width, grabCanvas.height);
+  return grabCanvas.toDataURL('image/png').split(',')[1];   // base64, no prefix
+}
+
+/* ---------- ask Claude ---------- */
+let lastB64=null;
+function instructions(note){
+  return `You are The1Min, a calm, friendly helper. The person has been stuck on their computer for more than a minute. Below is a screenshot of their screen.
+
+Look at it and work out what they're most likely trying to do and where they appear to be stuck — an error, a blank result, a confusing screen, or a task that isn't responding.
+${note ? `The person also said: "${note}"` : ''}
+Explain simply and kindly, the way you'd help a clever kid. Short, plain words.
+
+Reply with ONLY a JSON object, no other text, shaped exactly like this:
+{"problem":"<one friendly sentence naming what they seem stuck on>","steps":["<small concrete thing to try>","<next>","<next>"],"resource":"<the single best thing to look up or place to check, in plain words>","prompt":"<a short ready-to-paste prompt they can give an AI or a search box>","cheer":"<one short encouraging line, max 12 words>"}
+Use 2 to 4 steps. Keep every string short. If the screenshot is unclear, make your best guess and say so gently in "problem".`;
+}
+async function ask(b64, note){
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method:'POST',
+    headers:{ 'content-type':'application/json','x-api-key':apiKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true' },
+    body: JSON.stringify({ model:model(), max_tokens:1024, output_config:{effort:'low'},
+      messages:[{ role:'user', content:[
+        { type:'image', source:{ type:'base64', media_type:'image/png', data:b64 } },
+        { type:'text', text:instructions(note) } ] }] })
+  });
+  if(!res.ok){ let m=''; try{ m=(await res.json()).error.message; }catch{} const e=new Error(m||('Request failed ('+res.status+')')); e.status=res.status; throw e; }
+  const data=await res.json();
+  const text=(data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('').trim();
+  return parse(text);
+}
+function parse(text){
+  let o=null; try{ o=JSON.parse(text); }catch{ const m=text.match(/\{[\s\S]*\}/); if(m){ try{ o=JSON.parse(m[0]); }catch{} } }
+  if(!o||typeof o!=='object') return { problem:text||'I had trouble reading the screen, but let’s keep going.',
+    steps:['Tell me in a word or two what you were doing.','Then tap “dig deeper” and I’ll try again.'],
+    resource:'Search the exact words of what’s going wrong, plus the app or site you’re using.',
+    prompt:'I’m stuck. Here’s what I was doing: ___. What should I try first?', cheer:'Still here with you.' };
+  return {
+    problem:String(o.problem||'Here’s what I think you’re stuck on.'),
+    steps:Array.isArray(o.steps)&&o.steps.length?o.steps.map(String).slice(0,4):['Break it into the smallest piece that still goes wrong.','Try that one piece on its own.'],
+    resource:String(o.resource||'Look up the exact wording of the problem plus the site’s help pages.'),
+    prompt:String(o.prompt||'I’m trying to ___ but ___ happens. What’s the simplest fix?'),
+    cheer:String(o.cheer||'You’ve got this.')
+  };
+}
+
+/* ---------- trigger ---------- */
+async function trigger(reason, note){
+  if(tickTimer){ clearInterval(tickTimer); tickTimer=null; }   // pause watching while we help
+  $('thinkNote').textContent = reason==='deeper' ? 'Trying a different angle this time.' : reason==='manual' ? 'You tapped for help — on it.' : 'You went still for a minute, so here I am.';
+  show('think');
+  try{
+    if(!(reason==='deeper' && lastB64)) lastB64 = grabFrame();
+    const data = await ask(lastB64, note);
+    render(data);
+  }catch(e){ showError(e); }
+}
+function render(r){
+  $('rProblem').textContent=r.problem;
+  const ol=$('rSteps'); ol.innerHTML='';
+  r.steps.forEach(s=>{ const li=document.createElement('li'); const sp=document.createElement('span'); sp.textContent=s; li.appendChild(sp); ol.appendChild(li); });
+  $('rResource').textContent=r.resource;
+  $('rPrompt').textContent=r.prompt;
+  $('rCheer').textContent='“'+r.cheer+'”';
+  show('result');
+}
+function showError(e){
+  let msg=(e&&e.message)||'Something went wrong.';
+  if(e&&e.status===401) msg='That API key didn’t work. Open Settings and paste it again.';
+  else if(e&&e.status===429) msg='Too many requests right now — wait a few seconds and try again.';
+  else if(e&&e.name==='NotAllowedError') msg='I need permission to see your screen. Press start and choose a screen to share.';
+  $('errMsg').textContent=msg; show('error');
+}
+
+/* ---------- wiring ---------- */
+$('start').addEventListener('click', startWatch);
+$('stuck').addEventListener('click', ()=>trigger('manual'));
+$('unstuck').addEventListener('click', ()=>{ resetWatch(); });
+$('stop').addEventListener('click', stopWatch);
+$('keep').addEventListener('click', ()=>{ if(stream){ resetWatch(); show('watch'); tickTimer=setInterval(tick,STEP*1000); } else show('setup'); });
+$('deeper').addEventListener('click', ()=>trigger('deeper','That didn’t help — give a different angle.'));
+$('gear').addEventListener('click', ()=>{ $('key').value=apiKey(); $('model').value=model(); show('settings'); });
+$('save').addEventListener('click', ()=>{ setCfg({ apiKey:$('key').value.trim(), model:$('model').value }); show(stream?'watch':'setup'); });
+$('errSettings').addEventListener('click', ()=>{ $('key').value=apiKey(); $('model').value=model(); show('settings'); });
+$('errBack').addEventListener('click', ()=>show(stream?'watch':'setup'));
+$('copyBtn').addEventListener('click', function(){
+  const txt=$('rPrompt').textContent, btn=this, done=()=>{ btn.textContent='Copied!'; setTimeout(()=>btn.textContent='Copy',1400); };
+  if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(done).catch(sel); else sel();
+  function sel(){ const r=document.createRange(); r.selectNodeContents($('rPrompt')); const s=getSelection(); s.removeAllRanges(); s.addRange(r); btn.textContent='Select + copy'; setTimeout(()=>btn.textContent='Copy',1800); }
+});
+
+/* first paint */
+show(apiKey() ? 'setup' : 'settings');
+if(!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia){
+  show('error'); $('errMsg').textContent='This browser can’t share a screen. Open the site in Chrome on a computer (over its https link, not a local file).';
+}
+</script>
+</body>
+</html>
