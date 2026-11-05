@@ -3,281 +3,752 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Hawk Eye — Lock any website</title>
-<meta name="description" content="Hawk Eye is a Chrome extension that locks any website behind a PIN, a secret phrase, or a drawn pattern. An invention by The I Min.">
+<meta name="description" content="Hawk Eye — lock any website behind a PIN, a secret phrase, or a drawn pattern. An invention by The I Min.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Ccircle cx='24' cy='24' r='10' fill='%23e4b23e'/%3E%3Ccircle cx='24' cy='24' r='4.4' fill='%2317120a'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Hanken+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@700&display=swap">
+<style>html,body{margin:0}body{font-size:14px}[hidden]{display:none!important}img{max-width:100%}</style>
+<title>Hawk Eye</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Hanken+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap">
 <style>
-  /* Layout: a dark tactical landing page — one gold hawk-eye accent, a hero, a live demo, a download wall. */
+  /* Layout concept: a tactical "security console" — a dark-capable vault wall of locked-site cards, one gold hawk-eye accent, challenge pop-ups for each lock. */
   :root{
-    --bg:#0d0f15; --surface:#161a23; --surface-2:#1d222e; --fg:#e8ebf3;
-    --muted:#9aa2b6; --line:#272d3b; --line-strong:#38404f;
-    --accent:#e4b23e; --accent-soft:#3a2f14; --accent-ink:#f2d58a;
-    --ok:#3ccf8a; --ok-soft:#13291f; --danger:#e5604c; --danger-soft:#2d1613;
-    --r:16px; --r-sm:10px;
-    color-scheme:dark;
-  }
-  :root[data-theme="light"]{
     --bg:#eff1f6; --surface:#ffffff; --surface-2:#f6f7fb; --fg:#191c25;
     --muted:#5c6273; --line:#e1e4ee; --line-strong:#cdd2e0;
     --accent:#b7861f; --accent-soft:#f3e4bf; --accent-ink:#6e5110;
     --ok:#1f9d63; --ok-soft:#d8f1e4; --danger:#c43c2c; --danger-soft:#f7ddd7;
+    --shadow:0 10px 30px rgba(24,28,40,.10); --shadow-sm:0 2px 8px rgba(24,28,40,.07);
+    --r:16px; --r-sm:10px;
     color-scheme:light;
   }
-  *{box-sizing:border-box}
-  html,body{margin:0}
-  body{
-    background:var(--bg); color:var(--fg); overflow-x:hidden;
-    font-family:"Hanken Grotesk",system-ui,-apple-system,Segoe UI,Roboto,sans-serif; line-height:1.6;
-    -webkit-font-smoothing:antialiased;
+  @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+    --bg:#0d0f15; --surface:#161a23; --surface-2:#1d222e; --fg:#e8ebf3;
+    --muted:#9aa2b6; --line:#272d3b; --line-strong:#38404f;
+    --accent:#e4b23e; --accent-soft:#3a2f14; --accent-ink:#f2d58a;
+    --ok:#3ccf8a; --ok-soft:#13291f; --danger:#e5604c; --danger-soft:#2d1613;
+    --shadow:0 14px 40px rgba(0,0,0,.45); --shadow-sm:0 2px 10px rgba(0,0,0,.35);
+    color-scheme:dark;
+  }}
+  :root[data-theme="dark"]{
+    --bg:#0d0f15; --surface:#161a23; --surface-2:#1d222e; --fg:#e8ebf3;
+    --muted:#9aa2b6; --line:#272d3b; --line-strong:#38404f;
+    --accent:#e4b23e; --accent-soft:#3a2f14; --accent-ink:#f2d58a;
+    --ok:#3ccf8a; --ok-soft:#13291f; --danger:#e5604c; --danger-soft:#2d1613;
+    --shadow:0 14px 40px rgba(0,0,0,.45); --shadow-sm:0 2px 10px rgba(0,0,0,.35);
+    color-scheme:dark;
   }
-  .wrap{max-width:980px; margin:0 auto; padding-left:max(18px,env(safe-area-inset-left,0px)); padding-right:max(18px,env(safe-area-inset-right,0px))}
-  h1,h2,h3{font-family:"Chakra Petch",system-ui,sans-serif; margin:0; text-wrap:balance; letter-spacing:.02em}
-  .mono{font-family:"Space Mono",ui-monospace,monospace}
-  a{color:var(--accent-ink)}
 
-  /* top bar */
-  .bar{display:flex; align-items:center; gap:12px; padding-block:16px}
-  .bar .eye{width:40px; height:40px; flex:none}
-  .bar .nm{font-family:"Chakra Petch",sans-serif; font-weight:700; letter-spacing:.16em; font-size:1.1rem}
-  .bar .sp{flex:1}
-  .theme-btn{border:1px solid var(--line-strong); background:var(--surface); color:var(--fg);
-    border-radius:999px; width:38px; height:38px; cursor:pointer; font-size:1rem}
+  *{box-sizing:border-box}
+  body{
+    background:var(--bg); color:var(--fg);
+    font-family:"Hanken Grotesk",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+    line-height:1.5; -webkit-font-smoothing:antialiased; overflow-x:hidden;
+  }
+  .wrap{
+    max-width:1060px; margin:0 auto;
+    padding-left:max(16px,env(safe-area-inset-left,0px));
+    padding-right:max(16px,env(safe-area-inset-right,0px));
+    padding-block:0;
+  }
+  h1,h2,h3{font-family:"Chakra Petch",system-ui,sans-serif; margin:0; text-wrap:balance}
+  .mono{font-family:"Space Mono",ui-monospace,monospace}
+
+  /* Header */
+  header{border-bottom:1px solid var(--line); background:linear-gradient(180deg,var(--surface),var(--bg))}
+  .hd{display:flex; align-items:center; gap:14px; padding-block:18px; flex-wrap:wrap}
+  .logo{display:flex; align-items:center; gap:12px; min-width:0}
+  .eye{width:46px; height:46px; flex:none; filter:drop-shadow(0 2px 5px rgba(0,0,0,.2))}
+  .brand{min-width:0}
+  .brand h1{font-size:1.5rem; letter-spacing:.14em; font-weight:700}
+  .brand p{margin:1px 0 0; color:var(--muted); font-size:.82rem; letter-spacing:.02em}
+  .brand b{color:var(--accent)}
+  .hd .spacer{flex:1}
+  .theme-btn{
+    flex:none; border:1px solid var(--line-strong); background:var(--surface);
+    color:var(--fg); border-radius:999px; width:40px; height:40px; cursor:pointer;
+    font-size:1.05rem; display:grid; place-items:center;
+  }
   .theme-btn:hover{border-color:var(--accent)}
 
-  /* hero */
-  .hero{padding-block:30px 10px; text-align:center}
-  .hero .bigeye{width:96px; height:96px; margin:0 auto 14px; display:block; filter:drop-shadow(0 6px 18px rgba(0,0,0,.4))}
-  .hero h1{font-size:clamp(2.1rem,7vw,3.4rem); letter-spacing:.12em; line-height:1}
-  .hero .tagline{font-size:clamp(1.05rem,3.2vw,1.35rem); color:var(--fg); margin-top:14px; font-weight:600}
-  .hero .sub{color:var(--muted); max-width:34em; margin:10px auto 0}
-  .hero .credit{display:inline-block; margin-top:14px; font-size:.78rem; letter-spacing:.14em; text-transform:uppercase;
-    color:var(--accent-ink); background:var(--accent-soft); border:1px solid color-mix(in srgb,var(--accent) 35%,transparent);
-    padding:5px 12px; border-radius:999px}
-  .cta{display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-top:24px}
+  /* Intro strip */
+  .intro{display:flex; gap:10px; align-items:center; flex-wrap:wrap; padding-block:18px 6px; color:var(--muted); font-size:.92rem}
+  .intro .tag{
+    font-family:"Chakra Petch",sans-serif; font-size:.72rem; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--accent-ink); background:var(--accent-soft);
+    border:1px solid color-mix(in srgb,var(--accent) 35%,transparent);
+    padding:4px 10px; border-radius:999px;
+  }
 
-  .btn{font-family:"Hanken Grotesk",sans-serif; font-weight:700; font-size:1rem; cursor:pointer; text-decoration:none;
-    border-radius:12px; border:1px solid transparent; padding:13px 20px; transition:.15s;
-    display:inline-flex; align-items:center; justify-content:center; gap:9px; color:var(--fg)}
+  /* Grid of sites */
+  .vault{display:grid; grid-template-columns:repeat(auto-fill,minmax(248px,1fr)); gap:16px; padding-block:18px 36px}
+  .card{
+    background:var(--surface); border:1px solid var(--line); border-radius:var(--r);
+    padding:18px; box-shadow:var(--shadow-sm); display:flex; flex-direction:column; gap:14px;
+    position:relative; overflow:hidden; min-width:0;
+  }
+  .card .lockbar{position:absolute; inset:0 0 auto 0; height:4px; background:var(--danger); opacity:.85}
+  .card.open .lockbar{background:var(--ok)}
+  .card .top{display:flex; gap:12px; align-items:center; min-width:0}
+  .favic{
+    width:44px; height:44px; flex:none; border-radius:11px; display:grid; place-items:center;
+    font-family:"Chakra Petch",sans-serif; font-weight:700; font-size:1.2rem; color:#fff;
+  }
+  .card .name{font-family:"Chakra Petch",sans-serif; font-weight:600; font-size:1.02rem; line-height:1.2; word-break:break-word}
+  .card .url{color:var(--muted); font-size:.8rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .badges{display:flex; gap:6px; flex-wrap:wrap}
+  .badge{
+    display:inline-flex; align-items:center; gap:5px; font-size:.74rem; font-weight:600;
+    padding:4px 9px; border-radius:999px; border:1px solid var(--line-strong);
+    background:var(--surface-2); color:var(--muted);
+  }
+  .badge.lk{color:var(--accent-ink); background:var(--accent-soft); border-color:color-mix(in srgb,var(--accent) 30%,transparent)}
+  .card .foot{display:flex; align-items:center; gap:8px; margin-top:auto}
+  .status{display:flex; align-items:center; gap:6px; font-size:.82rem; font-weight:600; color:var(--danger)}
+  .card.open .status{color:var(--ok)}
+  .btn{
+    font-family:"Hanken Grotesk",sans-serif; font-weight:600; font-size:.9rem; cursor:pointer;
+    border-radius:var(--r-sm); border:1px solid transparent; padding:9px 14px; transition:.15s;
+    display:inline-flex; align-items:center; justify-content:center; gap:7px;
+  }
   .btn-primary{background:var(--accent); color:#1b1402; border-color:var(--accent)}
-  .btn-primary:hover{filter:brightness(1.07); transform:translateY(-1px)}
+  .btn-primary:hover{filter:brightness(1.06)}
   .btn-ghost{background:var(--surface-2); color:var(--fg); border-color:var(--line-strong)}
   .btn-ghost:hover{border-color:var(--accent)}
   .btn-ok{background:var(--ok); color:#06160e; border-color:var(--ok)}
-  .btn.small{padding:9px 14px; font-size:.88rem}
+  .btn.small{padding:7px 11px; font-size:.82rem}
   .btn.block{width:100%}
+  .icon-x{
+    flex:none; width:30px; height:30px; border-radius:8px; border:1px solid var(--line);
+    background:transparent; color:var(--muted); cursor:pointer; font-size:.95rem;
+  }
+  .icon-x:hover{color:var(--danger); border-color:var(--danger)}
 
-  section{padding-block:34px}
-  .eyebrow{font-family:"Chakra Petch",sans-serif; font-size:.74rem; letter-spacing:.18em; text-transform:uppercase; color:var(--accent); text-align:center}
-  h2.sec{font-size:clamp(1.4rem,4vw,1.9rem); text-align:center; margin-top:8px}
+  /* Add-new card */
+  .add-card{
+    border:2px dashed var(--line-strong); background:transparent; border-radius:var(--r);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
+    min-height:150px; cursor:pointer; color:var(--muted); font-weight:600;
+  }
+  .add-card:hover{border-color:var(--accent); color:var(--accent)}
+  .add-card .plus{
+    width:46px; height:46px; border-radius:12px; display:grid; place-items:center;
+    background:var(--accent-soft); color:var(--accent-ink); font-size:1.6rem; font-family:"Chakra Petch",sans-serif;
+  }
 
-  .steps{display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-top:24px}
-  .step{background:var(--surface); border:1px solid var(--line); border-radius:var(--r); padding:20px; min-width:0}
-  .step .n{font-family:"Chakra Petch",sans-serif; font-weight:700; color:var(--accent); font-size:.85rem; letter-spacing:.1em}
-  .step h3{font-size:1.1rem; margin:8px 0 6px}
-  .step p{color:var(--muted); font-size:.92rem; margin:0}
+  /* Modal */
+  .overlay{
+    position:fixed; inset:0; background:rgba(8,10,16,.62); backdrop-filter:blur(3px);
+    display:grid; place-items:center; padding:18px; z-index:50;
+  }
+  .overlay[hidden]{display:none}
+  .modal{
+    width:100%; max-width:430px; background:var(--surface); border:1px solid var(--line);
+    border-radius:20px; box-shadow:var(--shadow); max-height:92vh; overflow:auto;
+    animation:pop .22s ease;
+  }
+  @keyframes pop{from{transform:scale(.94); opacity:0}to{transform:scale(1); opacity:1}}
+  @media (prefers-reduced-motion:reduce){.modal,.overlay *{animation:none!important}}
+  .m-head{display:flex; align-items:center; gap:12px; padding:18px 20px 12px}
+  .m-head .favic{width:40px;height:40px;font-size:1.05rem;border-radius:10px}
+  .m-head h3{font-size:1.1rem; line-height:1.15}
+  .m-head .sub{color:var(--muted); font-size:.8rem}
+  .m-head .close{margin-left:auto}
+  .m-body{padding:6px 20px 22px}
 
-  /* demo */
-  .demo{background:var(--surface); border:1px solid var(--line); border-radius:20px; padding:22px; margin-top:22px}
-  .demo-note{font-size:.82rem; color:var(--muted); text-align:center; margin-bottom:16px}
-  .demo-note b{color:var(--accent)}
-  .demo-grid{display:grid; grid-template-columns:1fr 1fr; gap:18px; align-items:start}
-  .field label{display:block; font-size:.76rem; font-weight:600; color:var(--muted); margin:10px 0 5px}
-  .inp{width:100%; font-family:inherit; font-size:.96rem; color:var(--fg); background:var(--surface-2);
-    border:1px solid var(--line-strong); border-radius:var(--r-sm); padding:11px 12px; outline:none}
-  .inp:focus{border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft)}
-  .vault{min-height:160px; display:grid; gap:10px; align-content:start}
-  .lockcard{background:var(--surface-2); border:1px solid var(--line); border-radius:12px; padding:13px; display:flex; align-items:center; gap:11px}
-  .lockcard .favic{width:38px;height:38px;flex:none;border-radius:9px;display:grid;place-items:center;color:#fff;font-family:"Chakra Petch",sans-serif;font-weight:700}
-  .lockcard .nm{font-weight:600; font-size:.92rem; word-break:break-word}
-  .lockcard .st{font-size:.76rem; color:var(--danger); font-weight:600}
-  .lockcard.open .st{color:var(--ok)}
-  .lockcard .sp{flex:1}
-  .empty{color:var(--muted); font-size:.88rem; text-align:center; padding:26px 10px; border:1.5px dashed var(--line-strong); border-radius:12px}
-  .pin-dots{display:flex; gap:10px; justify-content:center; margin:8px 0 12px}
-  .pin-dots i{width:12px;height:12px;border-radius:50%;border:2px solid var(--line-strong)}
-  .pin-dots i.on{background:var(--accent);border-color:var(--accent)}
-  .keypad{display:grid; grid-template-columns:repeat(3,1fr); gap:8px}
-  .key{font-family:"Space Mono",monospace; font-size:1.15rem; font-weight:700; padding:12px 0; background:var(--surface-2);
-    border:1px solid var(--line-strong); border-radius:10px; cursor:pointer; color:var(--fg)}
-  .key:hover{border-color:var(--accent)} .key.fn{font-size:.85rem; font-family:inherit; color:var(--muted)}
-  .err{color:var(--danger); font-size:.82rem; font-weight:600; min-height:1.1em; text-align:center}
-  .granted{text-align:center; display:grid; gap:8px; place-items:center; padding:10px 0}
-  .granted .seal{width:58px;height:58px;border-radius:50%;background:var(--ok-soft);border:2px solid var(--ok);display:grid;place-items:center;color:var(--ok);font-size:1.5rem}
+  label.fld{display:block; font-size:.8rem; font-weight:600; color:var(--muted); margin:12px 0 5px; letter-spacing:.01em}
+  input.inp, select.inp{
+    width:100%; font-family:inherit; font-size:.98rem; color:var(--fg);
+    background:var(--surface-2); border:1px solid var(--line-strong); border-radius:var(--r-sm);
+    padding:11px 12px; outline:none;
+  }
+  input.inp:focus, select.inp:focus{border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft)}
+  .hint{font-size:.78rem; color:var(--muted); margin-top:6px}
+  .err{color:var(--danger); font-size:.82rem; font-weight:600; margin-top:10px; min-height:1.1em}
 
-  /* download */
-  .download{background:linear-gradient(180deg,var(--surface),var(--bg)); border:1px solid var(--line); border-radius:20px; padding:26px; text-align:center; margin-top:8px}
-  .download h2{font-size:1.5rem}
-  .install{counter-reset:step; display:grid; gap:10px; max-width:560px; margin:20px auto 0; text-align:left}
-  .install li{list-style:none; background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:12px 14px 12px 48px; position:relative; color:var(--fg)}
-  .install li::before{counter-increment:step; content:counter(step); position:absolute; left:12px; top:50%; transform:translateY(-50%);
-    width:26px; height:26px; border-radius:50%; background:var(--accent-soft); color:var(--accent-ink);
-    font-family:"Chakra Petch",sans-serif; font-weight:700; display:grid; place-items:center; font-size:.85rem}
-  .install code{background:var(--surface-2); border:1px solid var(--line-strong); border-radius:6px; padding:1px 6px; font-family:"Space Mono",monospace; font-size:.85em}
+  /* lock type chooser */
+  .lock-types{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:6px}
+  .lt{
+    border:1px solid var(--line-strong); background:var(--surface-2); border-radius:12px;
+    padding:11px 10px; cursor:pointer; display:flex; align-items:center; gap:9px; font-weight:600; font-size:.9rem;
+    color:var(--fg);
+  }
+  .lt .ic{font-size:1.15rem}
+  .lt[aria-pressed="true"]{border-color:var(--accent); background:var(--accent-soft); color:var(--accent-ink)}
+  .lt small{display:block; font-weight:400; font-size:.72rem; color:var(--muted)}
+  .lt[aria-pressed="true"] small{color:var(--accent-ink)}
 
-  .limits{max-width:40em; margin:22px auto 0; font-size:.9rem; color:var(--muted); background:var(--surface-2); border:1px solid var(--line); border-radius:12px; padding:14px 16px}
+  /* PIN pad */
+  .pin-dots{display:flex; gap:12px; justify-content:center; margin:16px 0}
+  .pin-dots i{width:14px; height:14px; border-radius:50%; border:2px solid var(--line-strong); display:block}
+  .pin-dots i.on{background:var(--accent); border-color:var(--accent)}
+  .keypad{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; max-width:270px; margin:0 auto}
+  .key{
+    font-family:"Space Mono",monospace; font-size:1.3rem; font-weight:700; padding:15px 0;
+    background:var(--surface-2); border:1px solid var(--line-strong); border-radius:12px; cursor:pointer; color:var(--fg);
+  }
+  .key:hover{border-color:var(--accent)} .key:active{background:var(--accent-soft)}
+  .key.fn{font-size:1rem; font-family:inherit; font-weight:600; color:var(--muted)}
 
-  footer{border-top:1px solid var(--line); text-align:center; color:var(--muted); font-size:.84rem; padding-block:24px 34px; margin-top:24px}
+  /* Pattern grid */
+  .pattern-wrap{position:relative; width:230px; height:230px; margin:14px auto 4px; touch-action:none}
+  .pattern-wrap svg{position:absolute; inset:0; width:100%; height:100%; pointer-events:none}
+  .pat-grid{position:absolute; inset:0; display:grid; grid-template-columns:repeat(3,1fr); grid-template-rows:repeat(3,1fr)}
+  .dot{display:grid; place-items:center}
+  .dot b{width:20px; height:20px; border-radius:50%; background:var(--line-strong); transition:.12s; display:block}
+  .dot.on b{background:var(--accent); transform:scale(1.35); box-shadow:0 0 0 6px var(--accent-soft)}
+
+  /* Biometric scanner */
+  .scan-stage{display:grid; place-items:center; gap:14px; padding:10px 0 4px}
+  .finger{
+    width:120px; height:120px; border-radius:50%; display:grid; place-items:center; position:relative;
+    background:var(--surface-2); border:2px solid var(--line-strong); cursor:pointer; user-select:none; touch-action:none;
+  }
+  .finger svg{width:66px; height:66px}
+  .finger .ring{position:absolute; inset:-2px; border-radius:50%; }
+  .finger.go{border-color:var(--accent)}
+  .finger.done{border-color:var(--ok); background:var(--ok-soft)}
+  .fpath{stroke:var(--muted); fill:none; stroke-width:2.4; stroke-linecap:round}
+  .finger.go .fpath{stroke:var(--accent)} .finger.done .fpath{stroke:var(--ok)}
+  .face-stage{width:170px; height:170px; border-radius:18px; position:relative; overflow:hidden;
+    background:var(--surface-2); border:1px solid var(--line-strong); display:grid; place-items:center}
+  .face-stage svg.silh{width:120px; height:120px; opacity:.5}
+  .scanline{position:absolute; left:8%; right:8%; height:3px; border-radius:3px;
+    background:linear-gradient(90deg,transparent,var(--accent),transparent); top:0; opacity:0}
+  .face-stage.go .scanline{animation:scan 1.3s ease-in-out infinite; opacity:1}
+  @keyframes scan{0%{top:10%}50%{top:86%}100%{top:10%}}
+  .face-stage.done{border-color:var(--ok)}
+  .reticle{position:absolute; width:62%; height:72%; border:2px solid color-mix(in srgb,var(--accent) 60%,transparent); border-radius:50% 50% 46% 46%}
+
+  .granted{
+    text-align:center; padding:8px 0 2px; display:grid; gap:12px; place-items:center;
+    animation:pop .25s ease;
+  }
+  .granted .seal{
+    width:74px; height:74px; border-radius:50%; background:var(--ok-soft); border:2px solid var(--ok);
+    display:grid; place-items:center; color:var(--ok); font-size:2rem;
+  }
+  .granted h3{color:var(--ok)}
+  .lockout{text-align:center; color:var(--danger); font-weight:600; padding:12px; background:var(--danger-soft); border-radius:12px; margin-top:12px}
+
+  /* Locking sequence */
+  .lockseq{display:grid; gap:16px; place-items:center; padding:14px 0 6px; text-align:center}
+  .vault-ic{width:86px; height:86px; border-radius:50%; display:grid; place-items:center;
+    background:var(--accent-soft); border:2px solid var(--accent); font-size:2.2rem; position:relative}
+  .vault-ic.sealed{background:var(--ok-soft); border-color:var(--ok)}
+  .spinner{position:absolute; inset:-7px; border-radius:50%; border:3px solid transparent;
+    border-top-color:var(--accent); border-right-color:var(--accent); animation:spin .9s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @media (prefers-reduced-motion:reduce){.spinner{animation:none; border-color:var(--accent)}}
+  .lockpct{font-family:"Chakra Petch",sans-serif; font-weight:700; font-size:1.7rem; letter-spacing:.02em}
+  .progress{width:100%; height:11px; border-radius:999px; background:var(--surface-2);
+    border:1px solid var(--line-strong); overflow:hidden}
+  .progress>i{display:block; height:100%; width:0; border-radius:999px;
+    background:linear-gradient(90deg,var(--accent),var(--accent-ink)); transition:width .18s ease}
+  .lockstep{font-family:"Space Mono",monospace; font-size:.82rem; color:var(--muted); min-height:1.3em}
+  .lockstep.ok{color:var(--ok); font-weight:700}
+  .steplist{display:grid; gap:7px; width:100%; margin-top:2px; text-align:left}
+  .steplist div{font-size:.8rem; color:var(--line-strong); display:flex; gap:8px; align-items:center; transition:.2s}
+  .steplist div.cur{color:var(--fg); font-weight:600}
+  .steplist div.done{color:var(--muted)}
+  .steplist .tick{width:16px; flex:none; text-align:center}
+
+  footer{border-top:1px solid var(--line); color:var(--muted); font-size:.82rem; padding-block:20px 30px; text-align:center}
   footer b{color:var(--accent)}
-
-  @media (max-width:640px){ .steps{grid-template-columns:1fr} .demo-grid{grid-template-columns:1fr} }
-  @media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
+  .demo-note{font-size:.76rem; color:var(--muted); background:var(--surface-2); border:1px solid var(--line); border-radius:10px; padding:9px 11px; margin-top:12px; line-height:1.45}
 </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="bar">
+
+
+<header>
+  <div class="wrap hd">
+    <div class="logo">
       <svg class="eye" viewBox="0 0 48 48" aria-hidden="true">
-        <defs><radialGradient id="g1" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#f3d78a"/><stop offset="55%" stop-color="#c8972b"/><stop offset="100%" stop-color="#7a5a10"/></radialGradient></defs>
-        <path d="M24 10 C10 10 3 24 3 24 S10 38 24 38 45 24 45 24 38 10 24 10Z" fill="none" stroke="#e4b23e" stroke-width="3"/>
-        <circle cx="24" cy="24" r="10" fill="url(#g1)"/><circle cx="24" cy="24" r="4.4" fill="#17120a"/><circle cx="27" cy="21" r="1.6" fill="#fff" opacity=".85"/>
+        <defs><radialGradient id="ir" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#f3d78a"/><stop offset="55%" stop-color="#c8972b"/><stop offset="100%" stop-color="#7a5a10"/>
+        </radialGradient></defs>
+        <path d="M24 10 C10 10 3 24 3 24 S10 38 24 38 45 24 45 24 38 10 24 10Z" fill="none" stroke="#c8972b" stroke-width="3"/>
+        <circle cx="24" cy="24" r="10" fill="url(#ir)"/>
+        <circle cx="24" cy="24" r="4.4" fill="#17120a"/>
+        <circle cx="27" cy="21" r="1.6" fill="#fff" opacity=".85"/>
       </svg>
-      <span class="nm">HAWK EYE</span>
-      <span class="sp"></span>
-      <button class="theme-btn" id="themeBtn" aria-label="Switch theme" title="Switch light / dark">◐</button>
+      <div class="brand">
+        <h1>HAWK EYE</h1>
+        <p>Lock any website &middot; an invention by <b>The I Min</b></p>
+      </div>
     </div>
-
-    <header class="hero">
-      <svg class="bigeye" viewBox="0 0 48 48" aria-hidden="true">
-        <defs><radialGradient id="g2" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#f3d78a"/><stop offset="55%" stop-color="#c8972b"/><stop offset="100%" stop-color="#7a5a10"/></radialGradient></defs>
-        <path d="M24 9 C9 9 2 24 2 24 S9 39 24 39 46 24 46 24 39 9 24 9Z" fill="none" stroke="#e4b23e" stroke-width="2.5"/>
-        <circle cx="24" cy="24" r="11" fill="url(#g2)"/><circle cx="24" cy="24" r="4.8" fill="#17120a"/><circle cx="28" cy="20" r="1.8" fill="#fff" opacity=".85"/>
-      </svg>
-      <h1>HAWK EYE</h1>
-      <div class="tagline">Lock any website. Only you get in.</div>
-      <p class="sub">Put a lock on any site in Chrome. Nobody opens it without your PIN, your secret phrase, or your drawn pattern — the hawk is watching.</p>
-      <div><span class="credit">an invention by The I Min</span></div>
-      <div class="cta">
-        <a class="btn btn-primary" href="hawk-eye-extension.zip" download>⬇ Download for Chrome</a>
-        <a class="btn btn-ghost" href="#demo">Try the demo</a>
-      </div>
-    </header>
-
-    <section>
-      <div class="eyebrow">How it works</div>
-      <h2 class="sec">Three steps to guard a site</h2>
-      <div class="steps">
-        <div class="step"><div class="n">STEP 01</div><h3>Pick a site</h3><p>Type any website — a game site, a video site, anything you want to protect.</p></div>
-        <div class="step"><div class="n">STEP 02</div><h3>Set a lock</h3><p>Choose a PIN code, a secret phrase, or draw a pattern. Your secret is scrambled before it's saved.</p></div>
-        <div class="step"><div class="n">STEP 03</div><h3>Hawk Eye guards it</h3><p>Next time anyone opens that site, the lock screen stops them until they get it right.</p></div>
-      </div>
-    </section>
-
-    <section id="demo">
-      <div class="eyebrow">Try it</div>
-      <h2 class="sec">Lock a pretend site</h2>
-      <div class="demo">
-        <p class="demo-note">This is a <b>demo</b> you can play with right here. The <b>real</b> locking of actual websites happens in the Chrome extension below.</p>
-        <div class="demo-grid">
-          <div class="field">
-            <label for="dName">Site name</label>
-            <input class="inp" id="dName" placeholder="My Game Site" maxlength="30" autocomplete="off">
-            <label for="dPin">Choose a PIN (3–8 digits)</label>
-            <input class="inp mono" id="dPin" inputmode="numeric" maxlength="8" placeholder="1234" autocomplete="off">
-            <button class="btn btn-primary block" id="dLock" style="margin-top:14px">🔒 Lock this site</button>
-          </div>
-          <div>
-            <div class="vault" id="dVault"></div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section>
-      <div class="download" id="download">
-        <div class="eyebrow">Get the real thing</div>
-        <h2>Download Hawk Eye for Chrome</h2>
-        <p class="sub" style="margin:10px auto 0">The extension is the version that <b>really</b> locks websites — a web page alone can't. Free, and everything stays on your computer.</p>
-        <div class="cta"><a class="btn btn-primary" href="hawk-eye-extension.zip" download>⬇ Download the extension (.zip)</a></div>
-        <ol class="install">
-          <li><b>Unzip</b> the file you downloaded (put the folder on your Desktop).</li>
-          <li>In Chrome, go to <code>chrome://extensions</code></li>
-          <li>Turn on <b>Developer mode</b> (switch, top-right).</li>
-          <li>Click <b>Load unpacked</b> and choose the <code>hawk-eye-extension</code> folder.</li>
-          <li>Pin Hawk Eye, click its icon, and lock your first site. 🦅</li>
-        </ol>
-        <div class="limits">
-          <b>Honest limits:</b> Hawk Eye locks sites in <b>this Chrome, on this computer</b>. It can't use a real fingerprint reader or face camera — that needs a full installed app (<i>"a thumbprint if their computer has it,"</i> like the original notebook said). The PIN, phrase, and pattern locks are 100% real.
-        </div>
-      </div>
-    </section>
-
-    <footer>Hawk Eye — an invention by <b>The I Min</b>. 🦅 Built and tested with Claude Code.</footer>
+    <div class="spacer"></div>
+    <button class="theme-btn" id="themeBtn" title="Switch light / dark" aria-label="Switch theme">◐</button>
   </div>
+</header>
+
+<main class="wrap">
+  <div class="intro">
+    <span class="tag">Watching</span>
+    <span id="introText">Pick a site, put a lock on it. Nobody gets in without the code, the phrase, the pattern, or a scan.</span>
+  </div>
+  <section class="vault" id="vault" aria-label="Locked sites"></section>
+</main>
+
+<footer class="wrap">
+  Hawk Eye keeps your locks on <b>this device only</b> &mdash; codes are scrambled before they're saved, never stored as plain text.
+  <br>Built from a handwritten idea by The I Min. 🦅
+</footer>
+
+<div class="overlay" id="overlay" hidden><div class="modal" id="modal"></div></div>
 
 <script>
 "use strict";
-const $=(s,r=document)=>r.querySelector(s);
-/* theme */
-try{const t=localStorage.getItem("he_theme"); if(t) document.documentElement.setAttribute("data-theme",t);}catch(e){}
+const $ = (s,r=document)=>r.querySelector(s);
+const el = (t,c)=>{const e=document.createElement(t); if(c) e.className=c; return e;};
+const LS_KEY="hawkeye.sites.v1", LS_THEME="hawkeye.theme";
+
+/* ---------- theme ---------- */
+(function(){
+  try{const t=localStorage.getItem(LS_THEME); if(t) document.documentElement.setAttribute("data-theme",t);}catch(e){}
+})();
 $("#themeBtn").addEventListener("click",()=>{
-  const cur=document.documentElement.getAttribute("data-theme")||"dark";
-  const next=cur==="dark"?"light":"dark";
+  const cur=document.documentElement.getAttribute("data-theme");
+  const isDark = cur ? cur==="dark" : matchMedia("(prefers-color-scheme:dark)").matches;
+  const next = isDark ? "light" : "dark";
   document.documentElement.setAttribute("data-theme",next);
-  try{localStorage.setItem("he_theme",next);}catch(e){}
+  try{localStorage.setItem(LS_THEME,next);}catch(e){}
 });
 
-/* hashing (same idea as the extension) */
+/* ---------- crypto ---------- */
 async function hash(str){
-  const buf=await crypto.subtle.digest("SHA-256", new TextEncoder().encode("hawkeye::"+str));
-  return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,"0")).join("");
+  try{
+    const buf=await crypto.subtle.digest("SHA-256", new TextEncoder().encode("hawkeye::"+str));
+    return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,"0")).join("");
+  }catch(e){ // fallback hash if subtle unavailable
+    let h=5381; for(let i=0;i<str.length;i++) h=((h<<5)+h+str.charCodeAt(i))>>>0;
+    return "f"+h.toString(16);
+  }
 }
-const TILE=["#c0392b","#8e44ad","#2980b9","#16a085","#d35400","#c8972b","#27ae60","#7f3fbf"];
-const colorFor=s=>{let h=0;for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))>>>0;return TILE[h%TILE.length];};
-const esc=s=>String(s).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
 
-let demoSite=null; // {name, hash, open}
-const vault=$("#dVault");
-function renderVault(){
-  vault.innerHTML="";
-  if(!demoSite){ vault.innerHTML='<div class="empty">No site locked yet.<br>Lock one on the left to try it.</div>'; return; }
-  const c=document.createElement("div"); c.className="lockcard"+(demoSite.open?" open":"");
-  const L=demoSite.name.trim()[0].toUpperCase();
-  c.innerHTML=`<div class="favic" style="background:${colorFor(demoSite.name)}">${L}</div>
-    <div style="min-width:0"><div class="nm">${esc(demoSite.name)}</div><div class="st">${demoSite.open?"✔ Unlocked":"🔒 Locked"}</div></div><div class="sp"></div>`;
-  const b=document.createElement("button"); b.className="btn small "+(demoSite.open?"btn-ghost":"btn-primary");
-  b.textContent=demoSite.open?"Lock again":"Unlock";
-  b.addEventListener("click",()=>{ if(demoSite.open){demoSite.open=false; renderVault();} else openChallenge(); });
-  c.appendChild(b); vault.appendChild(c);
+/* ---------- data ---------- */
+const TILE_COLORS=["#c0392b","#8e44ad","#2980b9","#16a085","#d35400","#2c3e50","#c8972b","#27ae60","#7f3fbf","#1f6f8b"];
+function colorFor(s){let h=0;for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))>>>0;return TILE_COLORS[h%TILE_COLORS.length];}
+const LOCKS={
+  pin:   {label:"PIN code",  icon:"🔢", badge:"PIN"},
+  phrase:{label:"Secret phrase", icon:"💬", badge:"Phrase"},
+  pattern:{label:"Pattern", icon:"⠿", badge:"Pattern"},
+  fingerprint:{label:"Fingerprint", icon:"🫆", badge:"Fingerprint"},
+  face:  {label:"Face scan", icon:"🙂", badge:"Face"},
+};
+const uid=()=>Math.random().toString(36).slice(2,9);
+
+let sites=[];
+function load(){
+  try{const raw=localStorage.getItem(LS_KEY); if(raw){sites=JSON.parse(raw); return;}}catch(e){}
+  sites=seed();
+  save();
 }
-$("#dLock").addEventListener("click",async()=>{
-  const name=$("#dName").value.trim(); const pin=$("#dPin").value.trim();
-  if(!name){flash("Give the site a name.");return;}
-  if(!/^\d{3,8}$/.test(pin)){flash("PIN must be 3–8 digits.");return;}
-  demoSite={name, hash:await hash(pin), open:false};
-  $("#dName").value=""; $("#dPin").value=""; renderVault();
-});
-function flash(msg){ let e=$("#dFlash"); if(!e){e=document.createElement("div");e.id="dFlash";e.className="err";e.style.marginTop="8px";$("#dLock").after(e);} e.textContent=msg; setTimeout(()=>{if(e)e.textContent="";},2200); }
+function save(){ try{localStorage.setItem(LS_KEY, JSON.stringify(sites));}catch(e){} }
 
-let fails=0;
-function openChallenge(){
+function seed(){
+  // Examples pre-locked with demo secrets shown in the hint so you can try unlocking right away.
+  return [
+    {id:uid(), name:"My Diary", url:"https://example.com/diary", type:"pin",
+     secret:"demo:1234", hint:"demo code is 1234", example:true},
+    {id:uid(), name:"Game Vault", url:"https://poki.com", type:"pattern",
+     secret:"demo:0-1-2-5-8", hint:"trace an L shape (top row, then down the right)", example:true},
+    {id:uid(), name:"Mom's Email", url:"https://mail.google.com", type:"fingerprint",
+     secret:"", hint:"press & hold the sensor", example:true},
+  ];
+}
+// resolve a "demo:..." secret into a live hash on first need
+async function ensureHash(site){
+  if(site.secret && site.secret.startsWith("demo:")){
+    site.secret = await hash(site.secret.slice(5));
+    save();
+  }
+}
+
+/* ---------- render vault ---------- */
+const opened=new Set();
+function render(){
+  const v=$("#vault"); v.innerHTML="";
+  sites.forEach(site=>v.appendChild(cardFor(site)));
+  const add=el("button","add-card"); add.innerHTML='<span class="plus">+</span><span>Lock a new site</span>';
+  add.addEventListener("click",openSetup); v.appendChild(add);
+  $("#introText").textContent = sites.length
+    ? "Pick a site, put a lock on it. Nobody gets in without the code, the phrase, the pattern, or a scan."
+    : "Nothing locked yet — tap “Lock a new site” to protect your first one.";
+}
+function cardFor(site){
+  const c=el("div","card"); if(opened.has(site.id)) c.classList.add("open");
+  const lk=LOCKS[site.type];
+  const letter=(site.name.trim()[0]||"?").toUpperCase();
+  c.innerHTML=`
+    <div class="lockbar"></div>
+    <div class="top">
+      <div class="favic" style="background:${colorFor(site.name)}">${letter}</div>
+      <div style="min-width:0">
+        <div class="name">${esc(site.name)}</div>
+        <div class="url">${esc(prettyUrl(site.url))}</div>
+      </div>
+    </div>
+    <div class="badges">
+      <span class="badge lk">${lk.icon} ${lk.badge}</span>
+      ${site.example?'<span class="badge">example</span>':''}
+    </div>
+    <div class="foot"></div>`;
+  const foot=$(".foot",c);
+  const status=el("div","status");
+  status.innerHTML = opened.has(site.id) ? "✔ Unlocked" : "🔒 Locked";
+  foot.appendChild(status);
+  const spacer=el("div"); spacer.style.flex="1"; foot.appendChild(spacer);
+  if(opened.has(site.id)){
+    const open=el("a","btn btn-ok small"); open.textContent="Open ↗";
+    open.href=fullUrl(site.url); open.target="_blank"; open.rel="noopener"; foot.appendChild(open);
+  }else{
+    const b=el("button","btn btn-primary small"); b.textContent="Unlock";
+    b.addEventListener("click",()=>openChallenge(site)); foot.appendChild(b);
+  }
+  const del=el("button","icon-x"); del.innerHTML="🗑"; del.title="Remove lock";
+  del.addEventListener("click",(e)=>{e.stopPropagation(); removeSite(site);});
+  foot.appendChild(del);
+  return c;
+}
+function removeSite(site){
+  sites=sites.filter(s=>s.id!==site.id); opened.delete(site.id); save(); render();
+}
+function esc(s){return String(s).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));}
+function prettyUrl(u){return u.replace(/^https?:\/\//,"").replace(/\/$/,"");}
+function fullUrl(u){return /^https?:\/\//.test(u)?u:"https://"+u;}
+
+/* ---------- modal helpers ---------- */
+const overlay=$("#overlay"), modal=$("#modal");
+function showModal(html){ modal.innerHTML=html; overlay.hidden=false; }
+function closeModal(){ overlay.hidden=true; modal.innerHTML=""; }
+overlay.addEventListener("click",e=>{ if(e.target===overlay) closeModal(); });
+document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&!overlay.hidden) closeModal(); });
+
+function modalHead(title,sub,favName){
+  const letter=favName?(favName.trim()[0]||"?").toUpperCase():"🦅";
+  const bg=favName?colorFor(favName):"var(--accent)";
+  return `<div class="m-head">
+    <div class="favic" style="background:${bg}">${favName?letter:'🦅'}</div>
+    <div style="min-width:0"><h3>${esc(title)}</h3><div class="sub">${esc(sub)}</div></div>
+    <button class="icon-x close" onclick="window.__closeModal()">✕</button>
+  </div>`;
+}
+window.__closeModal=closeModal;
+
+/* ---------- setup new site ---------- */
+let setupType="pin";
+function openSetup(){
+  showModal(`${modalHead("Lock a new site","Choose what it is, and how to get in","")}
+    <div class="m-body">
+      <label class="fld" for="suName">Site name</label>
+      <input class="inp" id="suName" placeholder="e.g. My Diary" maxlength="40" autocomplete="off">
+      <label class="fld" for="suUrl">Website address</label>
+      <input class="inp" id="suUrl" placeholder="example.com" autocomplete="off" inputmode="url">
+      <label class="fld">Lock it with</label>
+      <div class="lock-types" id="ltBox">
+        ${Object.entries(LOCKS).map(([k,v])=>`
+          <button type="button" class="lt" data-k="${k}" aria-pressed="${k==='pin'}">
+            <span class="ic">${v.icon}</span>
+            <span>${v.label}<small>${k==='fingerprint'||k==='face'?'demo scanner':'you set the secret'}</small></span>
+          </button>`).join("")}
+      </div>
+      <div id="secretArea"></div>
+      <div class="err" id="suErr"></div>
+      <button class="btn btn-primary block" id="suSave" style="margin-top:14px">🔒 Lock this site</button>
+      <div class="demo-note">Fingerprint &amp; Face are <b>demo scanners</b> — they show how the real thing feels. True hardware scans only work in the installed Hawk Eye app, <i>if their computer has it</i>.</div>
+    </div>`);
+  setupType="pin"; renderSecretArea();
+  $("#ltBox").addEventListener("click",e=>{
+    const b=e.target.closest(".lt"); if(!b)return;
+    setupType=b.dataset.k;
+    [...$("#ltBox").children].forEach(x=>x.setAttribute("aria-pressed", x.dataset.k===setupType));
+    renderSecretArea();
+  });
+  $("#suSave").addEventListener("click",saveNewSite);
+  setTimeout(()=>$("#suName")?.focus(),60);
+}
+function renderSecretArea(){
+  const a=$("#secretArea");
+  if(setupType==="pin"){
+    a.innerHTML=`<label class="fld" for="suSecret">Set a PIN (3–8 digits)</label>
+      <input class="inp mono" id="suSecret" inputmode="numeric" maxlength="8" placeholder="••••" autocomplete="off">`;
+  }else if(setupType==="phrase"){
+    a.innerHTML=`<label class="fld" for="suSecret">Set a secret phrase</label>
+      <input class="inp" id="suSecret" maxlength="40" placeholder="open sesame" autocomplete="off">`;
+  }else if(setupType==="pattern"){
+    a.innerHTML=`<label class="fld">Draw your pattern — tap the dots in order</label>`;
+    a.appendChild(buildPattern((seq)=>{a.dataset.seq=seq;}));
+  }else{
+    a.innerHTML=`<div class="demo-note" style="margin-top:4px">No secret to set — the ${LOCKS[setupType].label.toLowerCase()} is a demo scan. Anyone with this device can pass it, so pair important sites with a PIN, phrase, or pattern.</div>`;
+    a.dataset.seq="";
+  }
+}
+async function saveNewSite(){
+  const name=$("#suName").value.trim(), url=$("#suUrl").value.trim();
+  const errEl=$("#suErr"); errEl.textContent="";
+  if(!name){errEl.textContent="Give the site a name.";return;}
+  if(!url){errEl.textContent="Add the website address.";return;}
+  let secret="";
+  if(setupType==="pin"){
+    const v=$("#suSecret").value.trim();
+    if(!/^\d{3,8}$/.test(v)){errEl.textContent="PIN must be 3–8 digits.";return;}
+    secret=await hash(v);
+  }else if(setupType==="phrase"){
+    const v=$("#suSecret").value.trim();
+    if(v.length<3){errEl.textContent="Phrase needs at least 3 letters.";return;}
+    secret=await hash(v.toLowerCase());
+  }else if(setupType==="pattern"){
+    const seq=$("#secretArea").dataset.seq||"";
+    if(seq.split("-").filter(Boolean).length<3){errEl.textContent="Connect at least 3 dots.";return;}
+    secret=await hash(seq);
+  }
+  const newSite={id:uid(),name,url,type:setupType,secret,hint:"",example:false};
+  runLockSequence(newSite);
+}
+
+/* ---------- locking sequence (takes as long as the real work would) ---------- */
+function runLockSequence(site){
+  const host=prettyUrl(site.url);
+  const lockLabel=LOCKS[site.type].label.toLowerCase();
+  // Each step carries a realistic duration (ms). Bigger-looking sites take longer.
+  const weight=Math.min(host.length,24)/24;             // 0–1, longer address = heavier site
+  const steps=[
+    ["Reaching "+host+" …",            800 + 900*weight],
+    ["Reading the site's pages …",     1200 + 1600*weight],
+    ["Building the Hawk Eye shield …", 1400 + 700*weight],
+    ["Setting your "+lockLabel+" …",   1000 + 500*weight],
+    ["Sealing the lock …",             900],
+  ];
+  const total=steps.reduce((a,s)=>a+s[1],0);
+  showModal(`${modalHead("Locking "+site.name, host, site.name)}
+    <div class="m-body"><div class="lockseq">
+      <div class="vault-ic" id="lsIc"><span class="spinner"></span>🔓</div>
+      <div class="lockpct" id="lsPct">0%</div>
+      <div class="progress"><i id="lsBar"></i></div>
+      <div class="lockstep" id="lsStep">Starting up …</div>
+      <div class="steplist" id="lsList">
+        ${steps.map((s,k)=>`<div data-k="${k}"><span class="tick">○</span><span>${esc(s[0])}</span></div>`).join("")}
+      </div>
+    </div></div>`);
+  const bar=$("#lsBar"), pct=$("#lsPct"), stepEl=$("#lsStep"), list=$("#lsList");
+  let elapsed=0, i=0;
+  function markList(){
+    [...list.children].forEach((d,k)=>{
+      d.classList.toggle("done",k<i); d.classList.toggle("cur",k===i);
+      d.querySelector(".tick").textContent = k<i ? "✓" : (k===i ? "◐" : "○");
+    });
+  }
+  function runStep(){
+    if(i>=steps.length){ finishLock(site); return; }
+    markList();
+    const [label,dur]=steps[i];
+    stepEl.textContent=label; stepEl.classList.remove("ok");
+    const from=elapsed, t0=performance.now();
+    (function anim(now){
+      const p=Math.min((now-t0)/dur,1);
+      const frac=(from+dur*p)/total;
+      bar.style.width=(frac*100)+"%"; pct.textContent=Math.round(frac*100)+"%";
+      if(p<1){ requestAnimationFrame(anim); }
+      else{ elapsed=from+dur; i++; setTimeout(runStep,140); }
+    })(t0);
+  }
+  requestAnimationFrame(()=>requestAnimationFrame(runStep));
+}
+function finishLock(site){
+  const ic=$("#lsIc");
+  if(ic){ ic.classList.add("sealed"); ic.innerHTML="🔒"; }
+  if($("#lsPct")) $("#lsPct").textContent="100%";
+  if($("#lsBar")) $("#lsBar").style.width="100%";
+  const list=$("#lsList");
+  if(list) [...list.children].forEach(d=>{d.classList.add("done"); d.classList.remove("cur"); d.querySelector(".tick").textContent="✓";});
+  const stepEl=$("#lsStep"); if(stepEl){ stepEl.textContent="🔒 "+site.name+" is locked."; stepEl.classList.add("ok"); }
+  sites.push(site); save();
+  setTimeout(()=>{ closeModal(); render(); }, 1000);
+}
+
+/* ---------- pattern builder (reused for setup + challenge) ---------- */
+function buildPattern(onChange){
+  const wrap=el("div","pattern-wrap");
+  const svg=document.createElementNS("http://www.w3.org/2000/svg","svg");
+  svg.setAttribute("viewBox","0 0 230 230");
+  const poly=document.createElementNS("http://www.w3.org/2000/svg","polyline");
+  poly.setAttribute("fill","none"); poly.setAttribute("stroke","var(--accent)");
+  poly.setAttribute("stroke-width","4"); poly.setAttribute("stroke-linejoin","round"); poly.setAttribute("stroke-linecap","round");
+  svg.appendChild(poly); wrap.appendChild(svg);
+  const grid=el("div","pat-grid"); const seq=[];
+  const centers=[]; for(let i=0;i<9;i++){const x=38+(i%3)*77, y=38+((i/3|0))*77; centers.push([x,y]);}
+  for(let i=0;i<9;i++){
+    const d=el("div","dot"); d.dataset.i=i; d.innerHTML="<b></b>";
+    d.addEventListener("click",()=>{
+      if(seq.includes(i)) return;
+      seq.push(i); d.classList.add("on");
+      poly.setAttribute("points", seq.map(k=>centers[k].join(",")).join(" "));
+      onChange(seq.join("-"));
+    });
+    grid.appendChild(d);
+  }
+  wrap.appendChild(grid);
+  const clr=el("button","btn btn-ghost small"); clr.textContent="Clear"; clr.style.cssText="display:block;margin:4px auto 0";
+  clr.addEventListener("click",()=>{seq.length=0; poly.setAttribute("points",""); [...grid.children].forEach(d=>d.classList.remove("on")); onChange("");});
+  const box=el("div"); box.appendChild(wrap); box.appendChild(clr);
+  return box;
+}
+
+/* ---------- lockout tracking ---------- */
+const fails={};
+function lockedOut(id){ const f=fails[id]; return f&&f.until>Date.now()?Math.ceil((f.until-Date.now())/1000):0; }
+function recordFail(site){
+  const f=fails[site.id]||(fails[site.id]={n:0,until:0}); f.n++;
+  if(f.n>=3){ f.until=Date.now()+30000; f.n=0; }
+}
+function clearFail(id){ delete fails[id]; }
+
+/* ---------- challenge ---------- */
+async function openChallenge(site){
+  await ensureHash(site);
+  const lk=LOCKS[site.type];
+  const hint = site.hint ? `<div class="hint">Hint: ${esc(site.hint)}</div>` : "";
+  showModal(`${modalHead(site.name, lk.icon+" "+lk.label+" required", site.name)}
+    <div class="m-body">
+      <div id="chArea"></div>
+      <div class="err" id="chErr"></div>
+      ${hint}
+    </div>`);
+  const lo=lockedOut(site.id);
+  if(lo){ renderLockout(site,lo); return; }
+  const area=$("#chArea");
+  if(site.type==="pin") buildPinChallenge(site,area);
+  else if(site.type==="phrase") buildPhraseChallenge(site,area);
+  else if(site.type==="pattern") buildPatternChallenge(site,area);
+  else buildBioChallenge(site,area);
+}
+function renderLockout(site,secs){
+  $("#chArea").innerHTML=`<div class="lockout">🦅 Too many wrong tries. The hawk is watching.<br>Try again in <b id="loCount">${secs}</b>s.</div>`;
+  const t=setInterval(()=>{
+    const left=lockedOut(site.id);
+    const c=$("#loCount"); if(!c){clearInterval(t);return;}
+    if(left<=0){clearInterval(t); clearFail(site.id); openChallenge(site);} else c.textContent=left;
+  },500);
+}
+async function tryPass(site,ok,fail){
+  if(ok){ clearFail(site.id); grantAccess(site); }
+  else{ recordFail(site); fail(); }
+}
+function shake(){ modal.animate?.([{transform:"translateX(-7px)"},{transform:"translateX(7px)"},{transform:"translateX(0)"}],{duration:180}); }
+
+function buildPinChallenge(site,area){
   let entry="";
-  vault.innerHTML=`<div style="text-align:center;font-family:'Chakra Petch',sans-serif;font-weight:600;margin-bottom:4px">Enter PIN for ${esc(demoSite.name)}</div>
-    <div class="pin-dots" id="pd"></div>
+  area.innerHTML=`<div class="pin-dots" id="pd"></div>
     <div class="keypad" id="kp">
       ${[1,2,3,4,5,6,7,8,9].map(n=>`<button class="key" data-n="${n}">${n}</button>`).join("")}
-      <button class="key fn" data-a="clear">clear</button><button class="key" data-n="0">0</button><button class="key fn" data-a="ok">enter</button>
-    </div><div class="err" id="ce"></div>`;
-  const paint=()=>{$("#pd").innerHTML = entry? entry.split("").map(()=>'<i class="on"></i>').join("") : '<i></i><i></i><i></i><i></i>';};
+      <button class="key fn" data-a="clear">clear</button>
+      <button class="key" data-n="0">0</button>
+      <button class="key fn" data-a="ok">enter</button>
+    </div>`;
+  const dots=$("#pd");
+  const paint=()=>{dots.innerHTML=entry.split("").map(()=>'<i class="on"></i>').join("")|| '<i></i><i></i><i></i><i></i>';
+    if(!entry) dots.innerHTML='<i></i><i></i><i></i><i></i>';};
   paint();
   $("#kp").addEventListener("click",async e=>{
     const b=e.target.closest("button"); if(!b)return;
     if(b.dataset.n!=null){ if(entry.length<8){entry+=b.dataset.n; paint();} }
     else if(b.dataset.a==="clear"){ entry=""; paint(); }
     else if(b.dataset.a==="ok"){
-      if(entry.length<3){$("#ce").textContent="Enter your PIN.";return;}
-      if(await hash(entry)===demoSite.hash){ fails=0; demoSite.open=true; grant(); }
-      else{ fails++; entry=""; paint(); $("#ce").textContent = fails>=3 ? "🦅 The hawk is watching…" : "Wrong PIN."; if(fails>=3){fails=0;} }
+      if(entry.length<3){ $("#chErr").textContent="Enter your PIN."; return; }
+      const h=await hash(entry);
+      tryPass(site, h===site.secret, ()=>{ $("#chErr").textContent="Wrong PIN."; entry=""; paint(); shake(); });
     }
   });
 }
-function grant(){
-  vault.innerHTML=`<div class="granted"><div class="seal">✓</div>
-    <div style="color:var(--ok);font-weight:700;font-family:'Chakra Petch',sans-serif;letter-spacing:.05em">ACCESS GRANTED</div>
-    <div style="color:var(--muted);font-size:.86rem">Hawk Eye let you into ${esc(demoSite.name)}.</div></div>`;
-  setTimeout(renderVault,1400);
+function buildPhraseChallenge(site,area){
+  area.innerHTML=`<input class="inp" id="phIn" placeholder="type the secret phrase" autocomplete="off" style="margin-top:10px">
+    <button class="btn btn-primary block" id="phGo" style="margin-top:12px">Unlock</button>`;
+  const go=async()=>{
+    const v=$("#phIn").value.trim().toLowerCase();
+    if(!v){$("#chErr").textContent="Type the phrase.";return;}
+    const h=await hash(v);
+    tryPass(site, h===site.secret, ()=>{$("#chErr").textContent="That's not the phrase."; shake();});
+  };
+  $("#phGo").addEventListener("click",go);
+  $("#phIn").addEventListener("keydown",e=>{if(e.key==="Enter")go();});
+  setTimeout(()=>$("#phIn")?.focus(),60);
 }
-renderVault();
+function buildPatternChallenge(site,area){
+  const box=buildPattern(seq=>{area.dataset.seq=seq;});
+  area.appendChild(box);
+  const go=el("button","btn btn-primary block"); go.textContent="Unlock"; go.style.marginTop="8px";
+  go.addEventListener("click",async()=>{
+    const seq=area.dataset.seq||"";
+    if(seq.split("-").filter(Boolean).length<3){$("#chErr").textContent="Connect at least 3 dots.";return;}
+    const h=await hash(seq);
+    tryPass(site, h===site.secret, ()=>{$("#chErr").textContent="Pattern doesn't match."; shake();
+      [...area.querySelectorAll(".dot")].forEach(d=>d.classList.remove("on"));
+      area.querySelector("polyline").setAttribute("points",""); area.dataset.seq="";});
+  });
+  area.appendChild(go);
+}
+function buildBioChallenge(site,area){
+  if(site.type==="fingerprint"){
+    area.innerHTML=`<div class="scan-stage">
+      <div class="finger" id="fp" role="button" tabindex="0" aria-label="Press and hold to scan">
+        <svg viewBox="0 0 48 48"><g class="fpath">
+          <path d="M24 8c-7 0-12 5-12 13v6"/><path d="M36 27v-6c0-4-2-8-6-10"/>
+          <path d="M17 30v-9c0-4 3-7 7-7s7 3 7 7v10"/><path d="M22 33v-12c0-1 1-2 2-2s2 1 2 2v14"/>
+          <path d="M18 38c-1-3-1-6-1-8"/><path d="M31 36c1-3 1-6 1-9"/>
+        </g></svg>
+      </div>
+      <div class="hint" style="text-align:center">Press &amp; hold the sensor to scan</div>
+    </div>`;
+    const fp=$("#fp"); let timer=null,raf=null;
+    const start=()=>{
+      fp.classList.add("go"); const t0=performance.now();
+      const step=now=>{ const p=Math.min((now-t0)/1200,1);
+        if(p>=1){ fp.classList.remove("go"); fp.classList.add("done"); setTimeout(()=>tryPass(site,true,()=>{}),250); return; }
+        raf=requestAnimationFrame(step);
+      };
+      raf=requestAnimationFrame(step);
+    };
+    const stop=()=>{ if(!fp.classList.contains("done")){ fp.classList.remove("go"); cancelAnimationFrame(raf);} };
+    fp.addEventListener("pointerdown",e=>{e.preventDefault();start();});
+    fp.addEventListener("pointerup",stop); fp.addEventListener("pointerleave",stop);
+    fp.addEventListener("keydown",e=>{if(e.key===" "||e.key==="Enter"){e.preventDefault();start();}});
+    fp.addEventListener("keyup",stop);
+  }else{
+    area.innerHTML=`<div class="scan-stage">
+      <div class="face-stage" id="fs">
+        <div class="reticle"></div>
+        <svg class="silh" viewBox="0 0 48 48"><g fill="currentColor" opacity=".55">
+          <circle cx="24" cy="18" r="9"/><path d="M8 44c0-9 7-14 16-14s16 5 16 14z"/></g></svg>
+        <div class="scanline"></div>
+      </div>
+      <button class="btn btn-primary" id="fsGo">Scan my face</button>
+      <div class="hint" style="text-align:center">Line up and tap scan</div>
+    </div>`;
+    $("#fsGo").addEventListener("click",()=>{
+      const fs=$("#fs"), btn=$("#fsGo");
+      fs.classList.add("go"); btn.disabled=true; btn.textContent="Scanning…";
+      setTimeout(()=>{ fs.classList.remove("go"); fs.classList.add("done"); btn.textContent="Matched ✓";
+        setTimeout(()=>tryPass(site,true,()=>{}),250); },1700);
+    });
+  }
+}
+
+/* ---------- access granted ---------- */
+function grantAccess(site){
+  opened.add(site.id);
+  $("#modal").querySelector(".m-body").innerHTML=`
+    <div class="granted">
+      <div class="seal">✓</div>
+      <h3>Access granted</h3>
+      <div class="sub" style="color:var(--muted)">Hawk Eye let you into <b>${esc(site.name)}</b>.</div>
+      <a class="btn btn-ok block" href="${fullUrl(site.url)}" target="_blank" rel="noopener">Open ${esc(prettyUrl(site.url))} ↗</a>
+      <button class="btn btn-ghost block" onclick="window.__closeModal()">Done</button>
+    </div>`;
+  render();
+}
+
+/* ---------- boot ---------- */
+load(); render();
 </script>
+
 </body>
 </html>
