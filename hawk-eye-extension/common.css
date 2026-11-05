@@ -1,0 +1,77 @@
+/* Hawk Eye — shared styles for the popup and the lock screen. Dark tactical theme. */
+:root{
+  --bg:#0d0f15; --surface:#161a23; --surface-2:#1d222e; --fg:#e8ebf3;
+  --muted:#9aa2b6; --line:#272d3b; --line-strong:#38404f;
+  --accent:#e4b23e; --accent-soft:#3a2f14; --accent-ink:#f2d58a;
+  --ok:#3ccf8a; --ok-soft:#13291f; --danger:#e5604c; --danger-soft:#2d1613;
+  --r:14px; --r-sm:10px;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font-family:"Hanken Grotesk",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  line-height:1.5; -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3{font-family:"Chakra Petch","Segoe UI",system-ui,sans-serif; margin:0; letter-spacing:.04em}
+.mono{font-family:"Space Mono",ui-monospace,monospace}
+
+.he-logo{display:flex; align-items:center; gap:10px}
+.he-logo svg{width:34px; height:34px; flex:none}
+.he-logo h1{font-size:1.15rem; letter-spacing:.14em}
+.he-logo p{margin:0; font-size:.68rem; color:var(--muted)}
+.he-logo b{color:var(--accent)}
+
+.btn{
+  font-family:"Hanken Grotesk",sans-serif; font-weight:600; font-size:.9rem; cursor:pointer;
+  border-radius:var(--r-sm); border:1px solid transparent; padding:9px 13px; transition:.15s;
+  display:inline-flex; align-items:center; justify-content:center; gap:7px; color:var(--fg);
+}
+.btn-primary{background:var(--accent); color:#1b1402; border-color:var(--accent)}
+.btn-primary:hover{filter:brightness(1.07)}
+.btn-ok{background:var(--ok); color:#06160e; border-color:var(--ok)}
+.btn-ghost{background:var(--surface-2); color:var(--fg); border-color:var(--line-strong)}
+.btn-ghost:hover{border-color:var(--accent)}
+.btn-danger{background:transparent; color:var(--danger); border-color:var(--line)}
+.btn-danger:hover{border-color:var(--danger)}
+.btn.block{width:100%}
+.btn.small{padding:7px 10px; font-size:.82rem}
+.btn:disabled{opacity:.5; cursor:default}
+
+label.fld{display:block; font-size:.76rem; font-weight:600; color:var(--muted); margin:12px 0 5px}
+input.inp, select.inp{
+  width:100%; font-family:inherit; font-size:.95rem; color:var(--fg);
+  background:var(--surface-2); border:1px solid var(--line-strong); border-radius:var(--r-sm);
+  padding:10px 12px; outline:none;
+}
+input.inp:focus, select.inp:focus{border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft)}
+.err{color:var(--danger); font-size:.82rem; font-weight:600; margin-top:8px; min-height:1.1em}
+.hint{font-size:.78rem; color:var(--muted); margin-top:6px}
+
+.lock-types{display:grid; grid-template-columns:1fr 1fr 1fr; gap:7px; margin-top:4px}
+.lt{
+  border:1px solid var(--line-strong); background:var(--surface-2); border-radius:11px;
+  padding:9px 6px; cursor:pointer; display:grid; place-items:center; gap:3px; font-weight:600; font-size:.78rem; color:var(--fg);
+}
+.lt .ic{font-size:1.1rem}
+.lt[aria-pressed="true"]{border-color:var(--accent); background:var(--accent-soft); color:var(--accent-ink)}
+
+/* PIN pad */
+.pin-dots{display:flex; gap:11px; justify-content:center; margin:14px 0}
+.pin-dots i{width:13px; height:13px; border-radius:50%; border:2px solid var(--line-strong); display:block}
+.pin-dots i.on{background:var(--accent); border-color:var(--accent)}
+.keypad{display:grid; grid-template-columns:repeat(3,1fr); gap:9px; max-width:250px; margin:0 auto}
+.key{
+  font-family:"Space Mono",monospace; font-size:1.25rem; font-weight:700; padding:13px 0;
+  background:var(--surface-2); border:1px solid var(--line-strong); border-radius:11px; cursor:pointer; color:var(--fg);
+}
+.key:hover{border-color:var(--accent)} .key:active{background:var(--accent-soft)}
+.key.fn{font-size:.92rem; font-family:inherit; font-weight:600; color:var(--muted)}
+
+/* Pattern */
+.pattern-wrap{position:relative; width:210px; height:210px; margin:12px auto 2px; touch-action:none}
+.pattern-wrap svg{position:absolute; inset:0; width:100%; height:100%; pointer-events:none}
+.pat-grid{position:absolute; inset:0; display:grid; grid-template-columns:repeat(3,1fr); grid-template-rows:repeat(3,1fr)}
+.dot{display:grid; place-items:center}
+.dot b{width:18px; height:18px; border-radius:50%; background:var(--line-strong); transition:.12s; display:block}
+.dot.on b{background:var(--accent); transform:scale(1.35); box-shadow:0 0 0 6px var(--accent-soft)}

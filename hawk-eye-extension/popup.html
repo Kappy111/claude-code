@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Hawk Eye</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=Hanken+Grotesk:wght@400;600;700&family=Space+Mono:wght@700&display=swap">
+<link rel="stylesheet" href="common.css">
+<style>
+  body{width:340px; max-height:580px; overflow-y:auto}
+  .pad{padding:14px 15px}
+  header{display:flex; align-items:center; gap:10px; padding:14px 15px; border-bottom:1px solid var(--line);
+    background:linear-gradient(180deg,var(--surface),var(--bg))}
+  .section-title{font-size:.72rem; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); margin:16px 0 8px; font-family:"Chakra Petch",sans-serif}
+  .card{background:var(--surface); border:1px solid var(--line); border-radius:var(--r); padding:13px}
+  .site-row{display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--line)}
+  .site-row:last-child{border-bottom:none}
+  .favic{width:34px;height:34px;flex:none;border-radius:9px;display:grid;place-items:center;font-family:"Chakra Petch",sans-serif;font-weight:700;color:#fff;font-size:.95rem}
+  .site-row .nm{font-weight:600; font-size:.9rem; line-height:1.15; word-break:break-word}
+  .site-row .hs{font-size:.75rem; color:var(--muted)}
+  .site-row .b{font-size:.68rem; color:var(--accent-ink); background:var(--accent-soft); padding:2px 7px; border-radius:999px; border:1px solid color-mix(in srgb,var(--accent) 30%,transparent)}
+  .empty{color:var(--muted); font-size:.85rem; text-align:center; padding:14px 6px}
+  #secretArea{margin-top:4px}
+</style>
+</head>
+<body>
+  <header>
+    <span class="he-logo" id="logo"></span>
+  </header>
+
+  <div class="pad">
+    <div class="section-title">Lock a new site</div>
+    <div class="card">
+      <input class="inp" id="suUrl" placeholder="poki.com" autocomplete="off" inputmode="url">
+      <input class="inp" id="suName" placeholder="Nickname (optional)" autocomplete="off" style="margin-top:8px">
+      <label class="fld">Get in with</label>
+      <div class="lock-types" id="ltBox"></div>
+      <div id="secretArea"></div>
+      <div class="err" id="suErr"></div>
+      <button class="btn btn-primary block" id="suSave" style="margin-top:12px">🔒 Lock this site</button>
+    </div>
+
+    <div class="section-title">Locked sites</div>
+    <div class="card" id="listCard"><div class="empty">No sites locked yet.</div></div>
+
+    <button class="btn btn-ghost block" id="lockAll" style="margin-top:14px">🦅 Re-lock everything now</button>
+    <p class="hint" style="text-align:center">Unlocks last until you close Chrome. Locks are saved on this computer only.</p>
+  </div>
+
+  <script src="he-core.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

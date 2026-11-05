@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hawk Eye — Locked</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=Hanken+Grotesk:wght@400;600;700&family=Space+Mono:wght@700&display=swap">
+<link rel="stylesheet" href="common.css">
+<style>
+  body{min-height:100vh; display:grid; place-items:center; padding:24px;
+    background:radial-gradient(1200px 500px at 50% -10%, #1a1f2b, var(--bg))}
+  .lockbox{width:100%; max-width:420px; background:var(--surface); border:1px solid var(--line);
+    border-radius:22px; box-shadow:0 24px 70px rgba(0,0,0,.5); padding:26px 26px 30px; text-align:center}
+  .crest{width:66px; height:66px; margin:0 auto 10px; display:block}
+  .lockbox h1{font-size:1.35rem; letter-spacing:.16em}
+  .lockbox .site{font-family:"Chakra Petch",sans-serif; font-weight:700; font-size:1.05rem; margin-top:14px; word-break:break-word}
+  .lockbox .site .host{color:var(--accent)}
+  .lockbox .ask{color:var(--muted); font-size:.86rem; margin-top:2px}
+  #chArea{margin-top:16px}
+  .err{text-align:center}
+  .row{display:flex; gap:10px; margin-top:16px}
+  .row .btn{flex:1}
+  .lockout{color:var(--danger); font-weight:600; padding:14px; background:var(--danger-soft); border-radius:12px; margin-top:14px}
+  .granted{display:grid; gap:12px; place-items:center; padding:6px 0}
+  .granted .seal{width:72px;height:72px;border-radius:50%;background:var(--ok-soft);border:2px solid var(--ok);display:grid;place-items:center;color:var(--ok);font-size:2rem}
+  .credit{margin-top:18px; font-size:.72rem; color:var(--muted)}
+  .credit b{color:var(--accent)}
+</style>
+</head>
+<body>
+  <div class="lockbox">
+    <span class="crest" id="crest"></span>
+    <h1>HAWK EYE</h1>
+    <div class="site" id="siteName">This site is locked</div>
+    <div class="ask" id="askLine"></div>
+    <div id="chArea"></div>
+    <div class="err" id="chErr"></div>
+    <div class="row">
+      <button class="btn btn-ghost" id="backBtn">← Go back</button>
+    </div>
+    <div class="credit">Locked by Hawk Eye — an invention by <b>The I Min</b></div>
+  </div>
+
+  <script src="he-core.js"></script>
+  <script src="lock.js"></script>
+</body>
+</html>
