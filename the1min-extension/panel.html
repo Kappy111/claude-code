@@ -1,0 +1,152 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>The1Min</title>
+<style>
+  :root{
+    --bg:#ffffff;--surface:#f4f2f9;--ink:#1b1a27;--muted:#6a6782;--line:#ddd9e8;
+    --amber:#e2832a;--amber-soft:#f7d6a8;--mint:#0a9d75;--coral:#dc4747;
+    --f-display:system-ui,-apple-system,"Segoe UI",sans-serif;--f-body:system-ui,-apple-system,sans-serif;
+    --f-mono:ui-monospace,Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme:dark){:root{
+    --bg:#15141f;--surface:#262539;--ink:#f0eef8;--muted:#9d99b6;--line:#302f45;
+    --amber:#f4a73f;--amber-soft:#6a4a22;--mint:#2dd6a4;--coral:#ff6b6f;
+  }}
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{width:380px;min-height:300px;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.5}
+  .bar{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--line)}
+  .bar .name{font-family:var(--f-display);font-weight:800;letter-spacing:-.01em;font-size:1.05rem}
+  .bar .name b{color:var(--amber)}
+  .bar .gear{border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:16px;padding:4px 6px;border-radius:7px}
+  .bar .gear:hover{background:var(--surface);color:var(--ink)}
+  .wrap{padding:16px 16px 20px}
+  .hidden{display:none}
+  .center{text-align:center}
+
+  .buddy{display:flex;justify-content:center;margin:4px 0 8px}
+  .buddy svg{width:66px;height:66px;overflow:visible}
+  .head{fill:var(--surface);stroke:var(--ink);stroke-width:3}
+  .eye{fill:var(--ink)} .mouth{fill:none;stroke:var(--ink);stroke-width:3.4;stroke-linecap:round}
+  .bulb{fill:var(--amber)} .ant{stroke:var(--ink);stroke-width:3;stroke-linecap:round}
+  .pulse .bulb{animation:blip 1s ease-in-out infinite}
+  @keyframes blip{0%,100%{opacity:.35}50%{opacity:1}}
+  @keyframes dots{0%{content:""}25%{content:"."}50%{content:".."}75%{content:"..."}}
+  .dots::after{content:"";animation:dots 1.4s steps(4,end) infinite}
+
+  .lead{font-family:var(--f-display);font-weight:700;font-size:1.12rem;margin:.1rem 0}
+  .sub{color:var(--muted);margin:.3rem auto 0;max-width:30ch}
+
+  .btn{width:100%;font-family:var(--f-display);font-weight:700;font-size:.98rem;border:none;border-radius:12px;padding:13px;cursor:pointer;margin-top:12px}
+  .btn-primary{background:var(--amber);color:#2a1603}
+  .btn-ghost{background:transparent;color:var(--muted);border:1.5px solid var(--line)}
+  .btn-ghost:hover{color:var(--ink)}
+  .row{display:flex;gap:9px}
+  .row .btn{flex:1}
+
+  .toggle{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:16px;padding:11px 13px;background:var(--surface);border-radius:12px}
+  .toggle .t-txt{font-size:.86rem}
+  .toggle .t-txt b{display:block}
+  .toggle .t-txt span{color:var(--muted)}
+  .sw{position:relative;width:42px;height:24px;flex:none}
+  .sw input{opacity:0;width:0;height:0;position:absolute}
+  .sw .track{position:absolute;inset:0;background:var(--line);border-radius:999px;transition:background .15s}
+  .sw .track::before{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .15s}
+  .sw input:checked + .track{background:var(--mint)}
+  .sw input:checked + .track::before{transform:translateX(18px)}
+
+  .problem{background:color-mix(in srgb,var(--amber) 14%,var(--bg));border:1px solid var(--amber-soft);border-radius:12px;padding:11px 13px;font-weight:600;margin-bottom:14px}
+  .cap{font-family:var(--f-mono);font-size:.64rem;letter-spacing:.12em;text-transform:uppercase;color:var(--amber);margin:14px 0 7px}
+  ol.steps{margin:0;padding:0;list-style:none;counter-reset:s;display:flex;flex-direction:column;gap:7px}
+  ol.steps li{counter-increment:s;display:flex;gap:9px}
+  ol.steps li::before{content:counter(s);flex:none;width:22px;height:22px;border-radius:999px;background:var(--mint);color:#04261c;font-family:var(--f-mono);font-weight:700;font-size:.78rem;display:flex;align-items:center;justify-content:center}
+  .resource{background:var(--surface);border:1px solid var(--line);border-radius:11px;padding:10px 12px}
+  .promptbox{position:relative;background:var(--surface);border:1px dashed var(--muted);border-radius:11px;padding:11px 12px;font-family:var(--f-mono);font-size:.8rem;white-space:pre-wrap;overflow-wrap:anywhere}
+  .copy{position:absolute;top:7px;right:7px;border:none;background:var(--ink);color:var(--bg);border-radius:6px;padding:4px 7px;font-size:.7rem;font-weight:600;cursor:pointer}
+  .cheer{text-align:center;color:var(--mint);font-family:var(--f-display);font-weight:700;margin-top:14px}
+
+  label.f{display:block;font-weight:600;margin:14px 0 6px}
+  input[type=password],input[type=text],select{width:100%;font-family:var(--f-body);font-size:.95rem;color:var(--ink);background:var(--surface);border:1.5px solid var(--line);border-radius:10px;padding:10px 11px}
+  input:focus,select:focus{outline:none;border-color:var(--amber)}
+  .hint{color:var(--muted);font-size:.8rem;margin-top:6px}
+  a{color:var(--amber)}
+  code{font-family:var(--f-mono);background:var(--surface);padding:1px 4px;border-radius:4px}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</head>
+<body>
+  <div class="bar">
+    <span class="name">The<b>1Min</b></span>
+    <button class="gear" id="gear" title="Settings">⚙</button>
+  </div>
+  <div class="wrap">
+
+    <!-- HOME -->
+    <section id="v-home" class="center hidden">
+      <div class="buddy"></div>
+      <p class="lead">Stuck? Let me look.</p>
+      <p class="sub">I'll read whatever's in your current tab and show the best way forward.</p>
+      <button class="btn btn-primary" id="read">Read my screen</button>
+      <div class="toggle">
+        <span class="t-txt"><b>Watch for when I'm stuck</b><span>Pop up after a minute of no typing</span></span>
+        <label class="sw"><input type="checkbox" id="watch"><span class="track"></span></label>
+      </div>
+    </section>
+
+    <!-- THINKING -->
+    <section id="v-think" class="center hidden">
+      <div class="buddy pulse"></div>
+      <p class="lead">Reading your screen<span class="dots"></span></p>
+      <p class="sub" id="thinkNote">Working out the clearest next step.</p>
+    </section>
+
+    <!-- RESULT -->
+    <section id="v-result" class="hidden">
+      <div class="problem" id="rProblem"></div>
+      <div class="cap">▸ try this, in order</div>
+      <ol class="steps" id="rSteps"></ol>
+      <div class="cap">◆ a resource that helps</div>
+      <div class="resource" id="rResource"></div>
+      <div class="cap">✦ a better prompt to ask</div>
+      <div class="promptbox"><button class="copy" id="copyBtn">Copy</button><span id="rPrompt"></span></div>
+      <p class="cheer" id="rCheer"></p>
+      <div class="row">
+        <button class="btn btn-ghost" id="deeper">Dig deeper</button>
+        <button class="btn btn-primary" id="done">Done 🎉</button>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section id="v-settings" class="hidden">
+      <p class="lead center">Settings</p>
+      <label class="f" for="key">Anthropic API key</label>
+      <input id="key" type="password" placeholder="sk-ant-..." autocomplete="off" spellcheck="false">
+      <div class="hint">Get one at <a id="getkey" href="https://console.anthropic.com/settings/keys" target="_blank" rel="noreferrer">console.anthropic.com</a>. It's stored only in this browser.</div>
+      <label class="f" for="model">Model</label>
+      <select id="model">
+        <option value="claude-opus-5-5">Claude Opus 5.5 — most capable</option>
+        <option value="claude-sonnet-5-5">Claude Sonnet 5.5 — balanced</option>
+        <option value="claude-haiku-5-5">Claude Haiku 5.5 — fastest & cheapest</option>
+      </select>
+      <div class="hint">Testing a lot? <b>Haiku 5.5</b> costs the least per peek.</div>
+      <button class="btn btn-primary" id="save">Save</button>
+    </section>
+
+    <!-- ERROR -->
+    <section id="v-error" class="center hidden">
+      <div class="buddy"></div>
+      <p class="lead">That didn't work</p>
+      <p class="sub" id="errMsg"></p>
+      <div class="row">
+        <button class="btn btn-ghost" id="errSettings">Settings</button>
+        <button class="btn btn-primary" id="errRetry">Try again</button>
+      </div>
+    </section>
+
+  </div>
+  <script src="shared.js"></script>
+  <script src="panel.js"></script>
+</body>
+</html>
