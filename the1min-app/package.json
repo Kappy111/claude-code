@@ -1,0 +1,17 @@
+{
+  "name": "the1min",
+  "version": "0.1.0",
+  "description": "The1Min — a one-minute stuck watcher that reads your screen and gets you unstuck.",
+  "main": "src/main.js",
+  "author": "Built from a kid's notebook of apps for the future",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^34.2.0"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "latest"
+  }
+}
