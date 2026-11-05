@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hawk Eye — Lock any website</title>
+<meta name="description" content="Hawk Eye is a Chrome extension that locks any website behind a PIN, a secret phrase, or a drawn pattern. An invention by The I Min.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Ccircle cx='24' cy='24' r='10' fill='%23e4b23e'/%3E%3Ccircle cx='24' cy='24' r='4.4' fill='%2317120a'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Hanken+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@700&display=swap">
+<style>
+  /* Layout: a dark tactical landing page — one gold hawk-eye accent, a hero, a live demo, a download wall. */
+  :root{
+    --bg:#0d0f15; --surface:#161a23; --surface-2:#1d222e; --fg:#e8ebf3;
+    --muted:#9aa2b6; --line:#272d3b; --line-strong:#38404f;
+    --accent:#e4b23e; --accent-soft:#3a2f14; --accent-ink:#f2d58a;
+    --ok:#3ccf8a; --ok-soft:#13291f; --danger:#e5604c; --danger-soft:#2d1613;
+    --r:16px; --r-sm:10px;
+    color-scheme:dark;
+  }
+  :root[data-theme="light"]{
+    --bg:#eff1f6; --surface:#ffffff; --surface-2:#f6f7fb; --fg:#191c25;
+    --muted:#5c6273; --line:#e1e4ee; --line-strong:#cdd2e0;
+    --accent:#b7861f; --accent-soft:#f3e4bf; --accent-ink:#6e5110;
+    --ok:#1f9d63; --ok-soft:#d8f1e4; --danger:#c43c2c; --danger-soft:#f7ddd7;
+    color-scheme:light;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:var(--bg); color:var(--fg); overflow-x:hidden;
+    font-family:"Hanken Grotesk",system-ui,-apple-system,Segoe UI,Roboto,sans-serif; line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:980px; margin:0 auto; padding-left:max(18px,env(safe-area-inset-left,0px)); padding-right:max(18px,env(safe-area-inset-right,0px))}
+  h1,h2,h3{font-family:"Chakra Petch",system-ui,sans-serif; margin:0; text-wrap:balance; letter-spacing:.02em}
+  .mono{font-family:"Space Mono",ui-monospace,monospace}
+  a{color:var(--accent-ink)}
+
+  /* top bar */
+  .bar{display:flex; align-items:center; gap:12px; padding-block:16px}
+  .bar .eye{width:40px; height:40px; flex:none}
+  .bar .nm{font-family:"Chakra Petch",sans-serif; font-weight:700; letter-spacing:.16em; font-size:1.1rem}
+  .bar .sp{flex:1}
+  .theme-btn{border:1px solid var(--line-strong); background:var(--surface); color:var(--fg);
+    border-radius:999px; width:38px; height:38px; cursor:pointer; font-size:1rem}
+  .theme-btn:hover{border-color:var(--accent)}
+
+  /* hero */
+  .hero{padding-block:30px 10px; text-align:center}
+  .hero .bigeye{width:96px; height:96px; margin:0 auto 14px; display:block; filter:drop-shadow(0 6px 18px rgba(0,0,0,.4))}
+  .hero h1{font-size:clamp(2.1rem,7vw,3.4rem); letter-spacing:.12em; line-height:1}
+  .hero .tagline{font-size:clamp(1.05rem,3.2vw,1.35rem); color:var(--fg); margin-top:14px; font-weight:600}
+  .hero .sub{color:var(--muted); max-width:34em; margin:10px auto 0}
+  .hero .credit{display:inline-block; margin-top:14px; font-size:.78rem; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--accent-ink); background:var(--accent-soft); border:1px solid color-mix(in srgb,var(--accent) 35%,transparent);
+    padding:5px 12px; border-radius:999px}
+  .cta{display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-top:24px}
+
+  .btn{font-family:"Hanken Grotesk",sans-serif; font-weight:700; font-size:1rem; cursor:pointer; text-decoration:none;
+    border-radius:12px; border:1px solid transparent; padding:13px 20px; transition:.15s;
+    display:inline-flex; align-items:center; justify-content:center; gap:9px; color:var(--fg)}
+  .btn-primary{background:var(--accent); color:#1b1402; border-color:var(--accent)}
+  .btn-primary:hover{filter:brightness(1.07); transform:translateY(-1px)}
+  .btn-ghost{background:var(--surface-2); color:var(--fg); border-color:var(--line-strong)}
+  .btn-ghost:hover{border-color:var(--accent)}
+  .btn-ok{background:var(--ok); color:#06160e; border-color:var(--ok)}
+  .btn.small{padding:9px 14px; font-size:.88rem}
+  .btn.block{width:100%}
+
+  section{padding-block:34px}
+  .eyebrow{font-family:"Chakra Petch",sans-serif; font-size:.74rem; letter-spacing:.18em; text-transform:uppercase; color:var(--accent); text-align:center}
+  h2.sec{font-size:clamp(1.4rem,4vw,1.9rem); text-align:center; margin-top:8px}
+
+  .steps{display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-top:24px}
+  .step{background:var(--surface); border:1px solid var(--line); border-radius:var(--r); padding:20px; min-width:0}
+  .step .n{font-family:"Chakra Petch",sans-serif; font-weight:700; color:var(--accent); font-size:.85rem; letter-spacing:.1em}
+  .step h3{font-size:1.1rem; margin:8px 0 6px}
+  .step p{color:var(--muted); font-size:.92rem; margin:0}
+
+  /* demo */
+  .demo{background:var(--surface); border:1px solid var(--line); border-radius:20px; padding:22px; margin-top:22px}
+  .demo-note{font-size:.82rem; color:var(--muted); text-align:center; margin-bottom:16px}
+  .demo-note b{color:var(--accent)}
+  .demo-grid{display:grid; grid-template-columns:1fr 1fr; gap:18px; align-items:start}
+  .field label{display:block; font-size:.76rem; font-weight:600; color:var(--muted); margin:10px 0 5px}
+  .inp{width:100%; font-family:inherit; font-size:.96rem; color:var(--fg); background:var(--surface-2);
+    border:1px solid var(--line-strong); border-radius:var(--r-sm); padding:11px 12px; outline:none}
+  .inp:focus{border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft)}
+  .vault{min-height:160px; display:grid; gap:10px; align-content:start}
+  .lockcard{background:var(--surface-2); border:1px solid var(--line); border-radius:12px; padding:13px; display:flex; align-items:center; gap:11px}
+  .lockcard .favic{width:38px;height:38px;flex:none;border-radius:9px;display:grid;place-items:center;color:#fff;font-family:"Chakra Petch",sans-serif;font-weight:700}
+  .lockcard .nm{font-weight:600; font-size:.92rem; word-break:break-word}
+  .lockcard .st{font-size:.76rem; color:var(--danger); font-weight:600}
+  .lockcard.open .st{color:var(--ok)}
+  .lockcard .sp{flex:1}
+  .empty{color:var(--muted); font-size:.88rem; text-align:center; padding:26px 10px; border:1.5px dashed var(--line-strong); border-radius:12px}
+  .pin-dots{display:flex; gap:10px; justify-content:center; margin:8px 0 12px}
+  .pin-dots i{width:12px;height:12px;border-radius:50%;border:2px solid var(--line-strong)}
+  .pin-dots i.on{background:var(--accent);border-color:var(--accent)}
+  .keypad{display:grid; grid-template-columns:repeat(3,1fr); gap:8px}
+  .key{font-family:"Space Mono",monospace; font-size:1.15rem; font-weight:700; padding:12px 0; background:var(--surface-2);
+    border:1px solid var(--line-strong); border-radius:10px; cursor:pointer; color:var(--fg)}
+  .key:hover{border-color:var(--accent)} .key.fn{font-size:.85rem; font-family:inherit; color:var(--muted)}
+  .err{color:var(--danger); font-size:.82rem; font-weight:600; min-height:1.1em; text-align:center}
+  .granted{text-align:center; display:grid; gap:8px; place-items:center; padding:10px 0}
+  .granted .seal{width:58px;height:58px;border-radius:50%;background:var(--ok-soft);border:2px solid var(--ok);display:grid;place-items:center;color:var(--ok);font-size:1.5rem}
+
+  /* download */
+  .download{background:linear-gradient(180deg,var(--surface),var(--bg)); border:1px solid var(--line); border-radius:20px; padding:26px; text-align:center; margin-top:8px}
+  .download h2{font-size:1.5rem}
+  .install{counter-reset:step; display:grid; gap:10px; max-width:560px; margin:20px auto 0; text-align:left}
+  .install li{list-style:none; background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:12px 14px 12px 48px; position:relative; color:var(--fg)}
+  .install li::before{counter-increment:step; content:counter(step); position:absolute; left:12px; top:50%; transform:translateY(-50%);
+    width:26px; height:26px; border-radius:50%; background:var(--accent-soft); color:var(--accent-ink);
+    font-family:"Chakra Petch",sans-serif; font-weight:700; display:grid; place-items:center; font-size:.85rem}
+  .install code{background:var(--surface-2); border:1px solid var(--line-strong); border-radius:6px; padding:1px 6px; font-family:"Space Mono",monospace; font-size:.85em}
+
+  .limits{max-width:40em; margin:22px auto 0; font-size:.9rem; color:var(--muted); background:var(--surface-2); border:1px solid var(--line); border-radius:12px; padding:14px 16px}
+
+  footer{border-top:1px solid var(--line); text-align:center; color:var(--muted); font-size:.84rem; padding-block:24px 34px; margin-top:24px}
+  footer b{color:var(--accent)}
+
+  @media (max-width:640px){ .steps{grid-template-columns:1fr} .demo-grid{grid-template-columns:1fr} }
+  @media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="bar">
+      <svg class="eye" viewBox="0 0 48 48" aria-hidden="true">
+        <defs><radialGradient id="g1" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#f3d78a"/><stop offset="55%" stop-color="#c8972b"/><stop offset="100%" stop-color="#7a5a10"/></radialGradient></defs>
+        <path d="M24 10 C10 10 3 24 3 24 S10 38 24 38 45 24 45 24 38 10 24 10Z" fill="none" stroke="#e4b23e" stroke-width="3"/>
+        <circle cx="24" cy="24" r="10" fill="url(#g1)"/><circle cx="24" cy="24" r="4.4" fill="#17120a"/><circle cx="27" cy="21" r="1.6" fill="#fff" opacity=".85"/>
+      </svg>
+      <span class="nm">HAWK EYE</span>
+      <span class="sp"></span>
+      <button class="theme-btn" id="themeBtn" aria-label="Switch theme" title="Switch light / dark">◐</button>
+    </div>
+
+    <header class="hero">
+      <svg class="bigeye" viewBox="0 0 48 48" aria-hidden="true">
+        <defs><radialGradient id="g2" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#f3d78a"/><stop offset="55%" stop-color="#c8972b"/><stop offset="100%" stop-color="#7a5a10"/></radialGradient></defs>
+        <path d="M24 9 C9 9 2 24 2 24 S9 39 24 39 46 24 46 24 39 9 24 9Z" fill="none" stroke="#e4b23e" stroke-width="2.5"/>
+        <circle cx="24" cy="24" r="11" fill="url(#g2)"/><circle cx="24" cy="24" r="4.8" fill="#17120a"/><circle cx="28" cy="20" r="1.8" fill="#fff" opacity=".85"/>
+      </svg>
+      <h1>HAWK EYE</h1>
+      <div class="tagline">Lock any website. Only you get in.</div>
+      <p class="sub">Put a lock on any site in Chrome. Nobody opens it without your PIN, your secret phrase, or your drawn pattern — the hawk is watching.</p>
+      <div><span class="credit">an invention by The I Min</span></div>
+      <div class="cta">
+        <a class="btn btn-primary" href="hawk-eye-extension.zip" download>⬇ Download for Chrome</a>
+        <a class="btn btn-ghost" href="#demo">Try the demo</a>
+      </div>
+    </header>
+
+    <section>
+      <div class="eyebrow">How it works</div>
+      <h2 class="sec">Three steps to guard a site</h2>
+      <div class="steps">
+        <div class="step"><div class="n">STEP 01</div><h3>Pick a site</h3><p>Type any website — a game site, a video site, anything you want to protect.</p></div>
+        <div class="step"><div class="n">STEP 02</div><h3>Set a lock</h3><p>Choose a PIN code, a secret phrase, or draw a pattern. Your secret is scrambled before it's saved.</p></div>
+        <div class="step"><div class="n">STEP 03</div><h3>Hawk Eye guards it</h3><p>Next time anyone opens that site, the lock screen stops them until they get it right.</p></div>
+      </div>
+    </section>
+
+    <section id="demo">
+      <div class="eyebrow">Try it</div>
+      <h2 class="sec">Lock a pretend site</h2>
+      <div class="demo">
+        <p class="demo-note">This is a <b>demo</b> you can play with right here. The <b>real</b> locking of actual websites happens in the Chrome extension below.</p>
+        <div class="demo-grid">
+          <div class="field">
+            <label for="dName">Site name</label>
+            <input class="inp" id="dName" placeholder="My Game Site" maxlength="30" autocomplete="off">
+            <label for="dPin">Choose a PIN (3–8 digits)</label>
+            <input class="inp mono" id="dPin" inputmode="numeric" maxlength="8" placeholder="1234" autocomplete="off">
+            <button class="btn btn-primary block" id="dLock" style="margin-top:14px">🔒 Lock this site</button>
+          </div>
+          <div>
+            <div class="vault" id="dVault"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="download" id="download">
+        <div class="eyebrow">Get the real thing</div>
+        <h2>Download Hawk Eye for Chrome</h2>
+        <p class="sub" style="margin:10px auto 0">The extension is the version that <b>really</b> locks websites — a web page alone can't. Free, and everything stays on your computer.</p>
+        <div class="cta"><a class="btn btn-primary" href="hawk-eye-extension.zip" download>⬇ Download the extension (.zip)</a></div>
+        <ol class="install">
+          <li><b>Unzip</b> the file you downloaded (put the folder on your Desktop).</li>
+          <li>In Chrome, go to <code>chrome://extensions</code></li>
+          <li>Turn on <b>Developer mode</b> (switch, top-right).</li>
+          <li>Click <b>Load unpacked</b> and choose the <code>hawk-eye-extension</code> folder.</li>
+          <li>Pin Hawk Eye, click its icon, and lock your first site. 🦅</li>
+        </ol>
+        <div class="limits">
+          <b>Honest limits:</b> Hawk Eye locks sites in <b>this Chrome, on this computer</b>. It can't use a real fingerprint reader or face camera — that needs a full installed app (<i>"a thumbprint if their computer has it,"</i> like the original notebook said). The PIN, phrase, and pattern locks are 100% real.
+        </div>
+      </div>
+    </section>
+
+    <footer>Hawk Eye — an invention by <b>The I Min</b>. 🦅 Built and tested with Claude Code.</footer>
+  </div>
+
+<script>
+"use strict";
+const $=(s,r=document)=>r.querySelector(s);
+/* theme */
+try{const t=localStorage.getItem("he_theme"); if(t) document.documentElement.setAttribute("data-theme",t);}catch(e){}
+$("#themeBtn").addEventListener("click",()=>{
+  const cur=document.documentElement.getAttribute("data-theme")||"dark";
+  const next=cur==="dark"?"light":"dark";
+  document.documentElement.setAttribute("data-theme",next);
+  try{localStorage.setItem("he_theme",next);}catch(e){}
+});
+
+/* hashing (same idea as the extension) */
+async function hash(str){
+  const buf=await crypto.subtle.digest("SHA-256", new TextEncoder().encode("hawkeye::"+str));
+  return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,"0")).join("");
+}
+const TILE=["#c0392b","#8e44ad","#2980b9","#16a085","#d35400","#c8972b","#27ae60","#7f3fbf"];
+const colorFor=s=>{let h=0;for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))>>>0;return TILE[h%TILE.length];};
+const esc=s=>String(s).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
+
+let demoSite=null; // {name, hash, open}
+const vault=$("#dVault");
+function renderVault(){
+  vault.innerHTML="";
+  if(!demoSite){ vault.innerHTML='<div class="empty">No site locked yet.<br>Lock one on the left to try it.</div>'; return; }
+  const c=document.createElement("div"); c.className="lockcard"+(demoSite.open?" open":"");
+  const L=demoSite.name.trim()[0].toUpperCase();
+  c.innerHTML=`<div class="favic" style="background:${colorFor(demoSite.name)}">${L}</div>
+    <div style="min-width:0"><div class="nm">${esc(demoSite.name)}</div><div class="st">${demoSite.open?"✔ Unlocked":"🔒 Locked"}</div></div><div class="sp"></div>`;
+  const b=document.createElement("button"); b.className="btn small "+(demoSite.open?"btn-ghost":"btn-primary");
+  b.textContent=demoSite.open?"Lock again":"Unlock";
+  b.addEventListener("click",()=>{ if(demoSite.open){demoSite.open=false; renderVault();} else openChallenge(); });
+  c.appendChild(b); vault.appendChild(c);
+}
+$("#dLock").addEventListener("click",async()=>{
+  const name=$("#dName").value.trim(); const pin=$("#dPin").value.trim();
+  if(!name){flash("Give the site a name.");return;}
+  if(!/^\d{3,8}$/.test(pin)){flash("PIN must be 3–8 digits.");return;}
+  demoSite={name, hash:await hash(pin), open:false};
+  $("#dName").value=""; $("#dPin").value=""; renderVault();
+});
+function flash(msg){ let e=$("#dFlash"); if(!e){e=document.createElement("div");e.id="dFlash";e.className="err";e.style.marginTop="8px";$("#dLock").after(e);} e.textContent=msg; setTimeout(()=>{if(e)e.textContent="";},2200); }
+
+let fails=0;
+function openChallenge(){
+  let entry="";
+  vault.innerHTML=`<div style="text-align:center;font-family:'Chakra Petch',sans-serif;font-weight:600;margin-bottom:4px">Enter PIN for ${esc(demoSite.name)}</div>
+    <div class="pin-dots" id="pd"></div>
+    <div class="keypad" id="kp">
+      ${[1,2,3,4,5,6,7,8,9].map(n=>`<button class="key" data-n="${n}">${n}</button>`).join("")}
+      <button class="key fn" data-a="clear">clear</button><button class="key" data-n="0">0</button><button class="key fn" data-a="ok">enter</button>
+    </div><div class="err" id="ce"></div>`;
+  const paint=()=>{$("#pd").innerHTML = entry? entry.split("").map(()=>'<i class="on"></i>').join("") : '<i></i><i></i><i></i><i></i>';};
+  paint();
+  $("#kp").addEventListener("click",async e=>{
+    const b=e.target.closest("button"); if(!b)return;
+    if(b.dataset.n!=null){ if(entry.length<8){entry+=b.dataset.n; paint();} }
+    else if(b.dataset.a==="clear"){ entry=""; paint(); }
+    else if(b.dataset.a==="ok"){
+      if(entry.length<3){$("#ce").textContent="Enter your PIN.";return;}
+      if(await hash(entry)===demoSite.hash){ fails=0; demoSite.open=true; grant(); }
+      else{ fails++; entry=""; paint(); $("#ce").textContent = fails>=3 ? "🦅 The hawk is watching…" : "Wrong PIN."; if(fails>=3){fails=0;} }
+    }
+  });
+}
+function grant(){
+  vault.innerHTML=`<div class="granted"><div class="seal">✓</div>
+    <div style="color:var(--ok);font-weight:700;font-family:'Chakra Petch',sans-serif;letter-spacing:.05em">ACCESS GRANTED</div>
+    <div style="color:var(--muted);font-size:.86rem">Hawk Eye let you into ${esc(demoSite.name)}.</div></div>`;
+  setTimeout(renderVault,1400);
+}
+renderVault();
+</script>
+</body>
+</html>
