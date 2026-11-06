@@ -1,4 +1,4 @@
-// Hawk Eye — shared helpers for the popup and lock screen.
+// the1min — shared helpers for the popup and lock screen.
 
 const HE_LOCKS = {
   pin:     { label: "PIN code",      icon: "\u{1F522}", badge: "PIN" },

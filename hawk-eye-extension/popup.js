@@ -1,7 +1,7 @@
-// Hawk Eye — popup: add locked sites, list them, remove them, re-lock all.
+// the1min — popup: add locked sites, list them, remove them, re-lock all.
 
 document.getElementById("logo").innerHTML =
-  HE_EYE_SVG + '<div><h1>HAWK EYE</h1><p>an invention by <b>The I Min</b></p></div>';
+  HE_EYE_SVG + '<div><h1>the1min</h1><p>your website locker</p></div>';
 
 const TILE = ["#c0392b","#8e44ad","#2980b9","#16a085","#d35400","#2c3e50","#c8972b","#27ae60","#7f3fbf","#1f6f8b"];
 const colorFor = (s) => { let h=0; for (let i=0;i<s.length;i++) h=(h*31+s.charCodeAt(i))>>>0; return TILE[h%TILE.length]; };
@@ -109,7 +109,7 @@ document.getElementById("lockAll").addEventListener("click", () => {
   chrome.runtime.sendMessage({ type: "lockAll" }, () => {
     const b = document.getElementById("lockAll");
     b.textContent = "✓ All sites re-locked";
-    setTimeout(() => (b.textContent = "🦅 Re-lock everything now"), 1500);
+    setTimeout(() => (b.textContent = "🔒 Re-lock everything now"), 1500);
   });
 });
 

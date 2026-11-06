@@ -1,4 +1,4 @@
-// Hawk Eye — lock screen. Shown by the background worker before a locked site loads.
+// the1min — lock screen. Shown by the background worker before a locked site loads.
 
 document.getElementById("crest").innerHTML = HE_EYE_SVG;
 
@@ -45,7 +45,7 @@ function renderChallenge() {
 function renderLockout() {
   const area = document.getElementById("chArea");
   const secs = Math.ceil((lockedUntil - Date.now()) / 1000);
-  area.innerHTML = `<div class="lockout">🦅 Too many wrong tries. The hawk is watching.<br>Try again in <b id="loc">${secs}</b>s.</div>`;
+  area.innerHTML = `<div class="lockout">🔒 Too many wrong tries. the1min is watching.<br>Try again in <b id="loc">${secs}</b>s.</div>`;
   const t = setInterval(() => {
     const left = Math.ceil((lockedUntil - Date.now()) / 1000);
     const c = document.getElementById("loc");

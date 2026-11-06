@@ -1,6 +1,6 @@
-// Hawk Eye — background service worker.
+// the1min — background service worker.
 // Watches every page you navigate to. If the site is locked and not currently
-// unlocked for this browser session, it redirects the tab to the Hawk Eye lock
+// unlocked for this browser session, it redirects the tab to the the1min lock
 // screen before the page can load.
 
 importScripts("he-match.js"); // heNorm, heFindLock, heShouldLock

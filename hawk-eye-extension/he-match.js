@@ -1,4 +1,4 @@
-// Hawk Eye — pure site-matching logic. No chrome/DOM use, so it can be loaded by
+// the1min — pure site-matching logic. No chrome/DOM use, so it can be loaded by
 // the background service worker (importScripts) AND unit-tested in Node.
 
 function heNorm(h) {

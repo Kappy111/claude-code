@@ -1,7 +1,7 @@
-# Hawk Eye 🦅
+# the1min 🔒
 
 **Lock any website behind a PIN, a secret phrase, or a drawn pattern.**
-A Chrome extension built from a handwritten invention by *The I Min*.
+A Chrome extension — your own invention.
 
 This is the **real** version. Unlike a web page, a browser extension is allowed to
 watch the sites you visit and stop them loading until you pass the lock.
@@ -12,9 +12,9 @@ watch the sites you visit and stop them loading until you pass the lock.
 
 - Put a lock on **any website** (`poki.com`, `youtube.com`, anything).
 - When you — or anyone on this computer — tries to open that site, Chrome shows the
-  **Hawk Eye lock screen first**. No code, no entry.
+  **the1min lock screen first**. No code, no entry.
 - Three ways to lock: **PIN code**, **secret phrase**, or a **drawn pattern**.
-- **3 wrong tries** = a 30-second lockout ("the hawk is watching").
+- **3 wrong tries** = a 30-second lockout ("the1min is watching").
 - Once you unlock a site, it stays open **until you close Chrome**. Then it re-locks.
 - Your PINs and phrases are **scrambled (hashed) before they're saved** and never leave
   this computer.
@@ -29,15 +29,15 @@ watch the sites you visit and stop them loading until you pass the lock.
 3. Turn on **Developer mode** — the switch in the **top-right corner**.
 4. Click **"Load unpacked"** (top-left).
 5. Choose the **`hawk-eye-extension`** folder.
-6. Hawk Eye appears in your extensions. Click the **puzzle-piece icon** in the Chrome
-   toolbar and **pin** Hawk Eye so you can reach it easily.
+6. the1min appears in your extensions. Click the **puzzle-piece icon** in the Chrome
+   toolbar and **pin** the1min so you can reach it easily.
 
 ## How to use it
 
-1. Click the **Hawk Eye icon** in the toolbar.
+1. Click the **the1min icon** in the toolbar.
 2. Type a website (like `poki.com`), pick **PIN / Phrase / Pattern**, set your secret,
    and hit **🔒 Lock this site**.
-3. Try visiting that site — the Hawk Eye lock screen stops you until you enter the secret.
+3. Try visiting that site — the the1min lock screen stops you until you enter the secret.
 4. **"Re-lock everything now"** in the popup instantly re-locks every site without
    waiting for Chrome to close.
 
@@ -55,4 +55,4 @@ watch the sites you visit and stop them loading until you pass the lock.
 
 ---
 
-*Invented by The I Min. 🦅*
+*Your own invention. 🔒*

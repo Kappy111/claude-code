@@ -1,14 +1,14 @@
 {
   "manifest_version": 3,
-  "name": "Hawk Eye",
+  "name": "the1min",
   "version": "1.0.0",
-  "description": "Lock any website behind a PIN, a secret phrase, or a drawn pattern. An invention by The I Min.",
+  "description": "Lock any website behind a PIN, a secret phrase, or a drawn pattern. Your own invention.",
   "permissions": ["storage", "webNavigation", "tabs"],
   "host_permissions": ["http://*/*", "https://*/*"],
   "background": { "service_worker": "background.js" },
   "action": {
     "default_popup": "popup.html",
-    "default_title": "Hawk Eye — lock a website"
+    "default_title": "the1min — lock a website"
   },
   "web_accessible_resources": [
     { "resources": ["lock.html"], "matches": ["http://*/*", "https://*/*"] }
