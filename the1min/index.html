@@ -287,7 +287,6 @@
       </div>
     </div>
     <div class="spacer"></div>
-    <button class="theme-btn" id="appLockBtn" title="Lock the1min itself" aria-label="App lock" style="margin-right:8px">🔒</button>
     <button class="theme-btn" id="themeBtn" title="Switch light / dark" aria-label="Switch theme">◐</button>
   </div>
 </header>
@@ -306,7 +305,7 @@
 </footer>
 
 <div class="overlay" id="overlay" hidden><div class="modal" id="modal"></div></div>
-<div class="gate" id="gate" hidden><div class="gatebox" id="gatebox"></div></div>
+<div class="gate" id="gate"><div class="gatebox" id="gatebox"><div class="biglock">🔒</div><h2>the1min</h2><div class="gsub">Enter the code to get in</div></div></div>
 
 <script>
 "use strict";
@@ -384,8 +383,8 @@ function render(){
   const add=el("button","add-card"); add.innerHTML='<span class="plus">+</span><span>Lock a new site</span>';
   add.addEventListener("click",openSetup); v.appendChild(add);
   $("#introText").textContent = sites.length
-    ? "Pick a site, put a lock on it — or tap 🔒 up top to lock the1min itself."
-    : "Nothing locked yet — tap “Lock a new site”, or tap 🔒 up top to lock the1min itself.";
+    ? "Pick a site, put a lock on it. Nobody gets in without the code, the phrase, the pattern, or a scan."
+    : "Nothing locked yet — tap “Lock a new site” to protect your first one.";
 }
 function cardFor(site){
   const c=el("div","card"); if(opened.has(site.id)) c.classList.add("open");
@@ -760,67 +759,17 @@ function grantAccess(site){
 }
 
 /* ---------- boot ---------- */
-/* ---------- app lock: make the1min ask for a code when it opens ---------- */
-const LS_MASTER="the1min.master.v1";
-function getMaster(){ try{const r=localStorage.getItem(LS_MASTER); return r?JSON.parse(r):null;}catch(e){return null;} }
-function setMaster(m){ try{ if(m) localStorage.setItem(LS_MASTER, JSON.stringify(m)); else localStorage.removeItem(LS_MASTER);}catch(e){} }
+/* ---------- app lock: everyone types the shared code to enter the1min ---------- */
+/* The code is 123, baked in as a scrambled (SHA-256) hash so it isn't sitting in
+   plain sight. It gates the whole app on every open/refresh, on every device, for
+   everyone. Inside, each person still picks their own PIN for the websites they lock. */
+const SITE_CODE_HASH = "f56e12b0c8f591a088a5d477f4500b1a91322d3e4401a732ee56d0c86cf81f4f";
 
-$("#appLockBtn").addEventListener("click", openAppLock);
-function openAppLock(){
-  const m=getMaster();
-  if(m){
-    showModal(`${modalHead("App lock is ON","the1min asks for a "+(m.type==="pin"?"code":"phrase")+" when it opens","")}
-      <div class="m-body">
-        <div class="demo-note" style="margin-top:0">Every time the1min opens or refreshes on this device, it asks for your ${m.type==="pin"?"code":"phrase"} first.</div>
-        <button class="btn btn-ghost block" id="alChange" style="margin-top:12px">Change the code</button>
-        <button class="btn btn-ghost block" id="alRemove" style="margin-top:8px">Turn off app lock</button>
-        <button class="btn btn-primary block" onclick="window.__closeModal()" style="margin-top:8px">Done</button>
-      </div>`);
-    $("#alRemove").addEventListener("click",()=>{ setMaster(null); closeModal(); });
-    $("#alChange").addEventListener("click",()=>{ setMaster(null); setupAppLock(); });
-    return;
-  }
-  setupAppLock();
-}
-function setupAppLock(){
-  showModal(`${modalHead("Lock the1min","Set a code so the1min asks for it every time it opens","")}
-    <div class="m-body">
-      <label class="fld">Lock the1min with</label>
-      <div class="lock-types" id="alBox">
-        <button type="button" class="lt" data-k="pin" aria-pressed="true"><span class="ic">🔢</span><span>Code<small>digits</small></span></button>
-        <button type="button" class="lt" data-k="phrase" aria-pressed="false"><span class="ic">💬</span><span>Phrase<small>secret words</small></span></button>
-      </div>
-      <div id="alSecret"></div>
-      <div class="err" id="alErr"></div>
-      <button class="btn btn-primary block" id="alSave" style="margin-top:14px">🔒 Turn on app lock</button>
-      <div class="demo-note">After this, opening or refreshing the1min on this device asks for your code first.</div>
-    </div>`);
-  let t="pin"; renderAl();
-  function renderAl(){ const a=$("#alSecret");
-    if(t==="pin") a.innerHTML=`<label class="fld">Set a code (3–8 digits)</label><input class="inp mono" id="alIn" inputmode="numeric" maxlength="8" placeholder="••••" autocomplete="off">`;
-    else a.innerHTML=`<label class="fld">Set a secret phrase</label><input class="inp" id="alIn" maxlength="40" placeholder="open sesame" autocomplete="off">`;
-  }
-  $("#alBox").addEventListener("click",e=>{const b=e.target.closest(".lt");if(!b)return;t=b.dataset.k;[...$("#alBox").children].forEach(x=>x.setAttribute("aria-pressed",x.dataset.k===t));renderAl();});
-  $("#alSave").addEventListener("click",async()=>{
-    const v=($("#alIn").value||"").trim();
-    if(t==="pin"){ if(!/^\d{3,8}$/.test(v)){$("#alErr").textContent="Code must be 3–8 digits.";return;} setMaster({type:"pin",secret:await hash(v)}); }
-    else { if(v.length<3){$("#alErr").textContent="Phrase needs at least 3 letters.";return;} setMaster({type:"phrase",secret:await hash(v.toLowerCase())}); }
-    showModal(`${modalHead("App lock is ON 🔒","the1min is now locked on this device","")}
-      <div class="m-body"><div class="demo-note" style="margin-top:0">Next time you open or refresh the1min, it will ask for your ${t==="pin"?"code":"phrase"}. Refresh the page to try it!</div>
-      <button class="btn btn-primary block" onclick="window.__closeModal()" style="margin-top:12px">Got it</button></div>`);
-  });
-  setTimeout(()=>$("#alIn")?.focus(),60);
-}
-
-/* the full-screen gate shown on load when an app lock is set */
 function showGate(){
-  const m=getMaster();
-  const gate=$("#gate");
-  if(!m){ gate.hidden=true; return; }
-  const box=$("#gatebox");
+  const gate=$("#gate"), box=$("#gatebox");
   let fails=0, lockedUntil=0;
   const ok=()=>{ gate.hidden=true; };
-  function bad(reset){ fails++; if(fails>=3){lockedUntil=Date.now()+30000; fails=0; lockout();} else { $("#gErr").textContent="Wrong — try again."; if(reset) reset(); } }
+  function bad(reset){ fails++; if(fails>=3){lockedUntil=Date.now()+30000; fails=0; lockout();} else { $("#gErr").textContent="Wrong code — try again."; if(reset) reset(); } }
   function lockout(){
     const secs=Math.ceil((lockedUntil-Date.now())/1000);
     box.innerHTML=`<div class="biglock">🔒</div><h2>the1min</h2><div class="lockout" style="margin-top:14px">🔒 Too many wrong tries.<br>Try again in <b id="gc">${secs}</b>s.</div>`;
@@ -829,27 +778,18 @@ function showGate(){
   function draw(){
     if(Date.now()<lockedUntil){ lockout(); return; }
     box.innerHTML=`<div class="biglock">🔒</div><h2>the1min</h2>
-      <div class="gsub">Locked — enter your ${m.type==="pin"?"code":"phrase"} to get in</div>
+      <div class="gsub">Enter the code to get in</div>
       <div id="gArea"></div><div class="err" id="gErr"></div>`;
-    if(m.type==="pin") pin(); else phrase();
-  }
-  function pin(){
     let entry="";
     $("#gArea").innerHTML=`<div class="pin-dots" id="gpd"></div>
       <div class="keypad" id="gkp">${[1,2,3,4,5,6,7,8,9].map(n=>`<button class="key" data-n="${n}">${n}</button>`).join("")}
         <button class="key fn" data-a="clear">clear</button><button class="key" data-n="0">0</button><button class="key fn" data-a="ok">enter</button></div>`;
-    const paint=()=>{$("#gpd").innerHTML=entry?entry.split("").map(()=>'<i class="on"></i>').join(""):'<i></i><i></i><i></i><i></i>';};
+    const paint=()=>{$("#gpd").innerHTML=entry?entry.split("").map(()=>'<i class="on"></i>').join(""):'<i></i><i></i><i></i>';};
     paint();
     $("#gkp").addEventListener("click",async e=>{const b=e.target.closest("button");if(!b)return;
       if(b.dataset.n!=null){ if(entry.length<8){entry+=b.dataset.n;paint();} }
       else if(b.dataset.a==="clear"){ entry="";paint(); }
-      else if(b.dataset.a==="ok"){ if(entry.length<3){$("#gErr").textContent="Enter your code.";return;} (await hash(entry))===m.secret ? ok() : bad(()=>{entry="";paint();}); }});
-  }
-  function phrase(){
-    $("#gArea").innerHTML=`<input class="inp" id="gph" placeholder="secret phrase" autocomplete="off"><button class="btn btn-primary block" id="gpgo" style="margin-top:12px">Unlock</button>`;
-    const go=async()=>{const v=($("#gph").value||"").trim().toLowerCase();if(!v){$("#gErr").textContent="Type the phrase.";return;}(await hash(v))===m.secret ? ok() : bad();};
-    $("#gpgo").addEventListener("click",go); $("#gph").addEventListener("keydown",e=>{if(e.key==="Enter")go();});
-    setTimeout(()=>$("#gph")?.focus(),60);
+      else if(b.dataset.a==="ok"){ if(!entry){$("#gErr").textContent="Enter the code.";return;} (await hash(entry))===SITE_CODE_HASH ? ok() : bad(()=>{entry="";paint();}); }});
   }
   gate.hidden=false; draw();
 }
