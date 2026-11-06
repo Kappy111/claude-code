@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Dust — Gmail cleanup</title>
+<title>Dust — storage cleanup</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap">
@@ -39,6 +39,10 @@
   h2{font-family:"Fredoka",sans-serif;font-weight:600;font-size:23px;margin:0 0 4px;text-wrap:balance}
   .help{color:var(--ink-soft);font-weight:600;font-size:14px;margin:0 0 14px;line-height:1.5}
   .nokey{display:inline-block;background:color-mix(in srgb,var(--good) 16%, var(--panel));color:color-mix(in srgb,var(--good) 80%, var(--ink));border:1px solid color-mix(in srgb,var(--good) 40%, var(--line));font-weight:800;font-size:12.5px;padding:6px 12px;border-radius:999px;margin-bottom:14px}
+  .modeswitch{display:flex;gap:8px;margin-bottom:16px}
+  .mode{flex:1;border:2px solid var(--line);background:var(--panel);border-radius:14px;padding:12px 8px;font-family:"Fredoka",sans-serif;font-weight:600;font-size:16px;cursor:pointer;color:var(--ink-soft)}
+  .mode:hover{border-color:color-mix(in srgb,var(--accent) 50%, var(--line))}
+  .mode.sel{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 12%, var(--panel));color:var(--accent-deep)}
   .quick{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px}
   .qbtn{border:2px solid var(--line);background:var(--panel-2);border-radius:14px;padding:13px 14px;cursor:pointer;text-align:left;font-family:inherit;color:var(--ink)}
   .qbtn:hover{border-color:var(--accent)}
@@ -79,10 +83,16 @@
 <div class="wrap">
   <div class="top">
     <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19.4 4.6 13 11"/><path d="M10.5 8.5 4 15c-1 1-1 3 0 4s3 1 4 0l6.5-6.5"/><path d="M14.5 12.5 7 20"/><path d="M11 16l-3 3"/></svg></div>
-    <div class="brand"><h1>Dust</h1><p>Clean your Gmail — no sign-up.</p></div>
+    <div class="brand"><h1>Dust</h1><p>Clean your clutter — no sign-up.</p></div>
     <button class="theme-btn" id="themeBtn" title="Light / dark">◐</button>
   </div>
 
+  <div class="modeswitch">
+    <button class="mode sel" id="mEmail">✉️ Emails</button>
+    <button class="mode" id="mFiles">📸 Photos &amp; Files</button>
+  </div>
+
+  <div id="emailMode">
   <section class="card" id="surveyCard">
     <span class="nokey">✓ No key · No login · No install</span>
     <h2>Clean your Gmail</h2>
@@ -140,8 +150,36 @@
 
     <div style="margin-top:16px"><button class="btn ghost" id="backBtn">← Start over</button></div>
   </section>
+  </div><!-- /emailMode -->
 
-  <p class="footnote">Dust · your survey becomes a Gmail search. The notebook idea, working for real.</p>
+  <div id="filesMode" hidden>
+    <section class="card">
+      <span class="nokey">✓ No key · No install · Works on your Chromebook</span>
+      <h2>📸 Clean photos &amp; big files</h2>
+      <p class="help">Photos and files work differently from email. The fastest, safest way is Google's own cleanup tool — it finds your biggest and blurriest junk (blurry photos, screenshots, huge videos, big files) and deletes it to free storage. It all goes to Trash first, so it's undoable.</p>
+      <div><a class="btn" href="https://one.google.com/storage/management" target="_blank" rel="noopener">Open Google's storage cleaner →</a></div>
+      <ol class="steps">
+        <li>You'll see <b>junk piles</b> — blurry photos, screenshots, big videos, large files.</li>
+        <li>Tap a pile → <b>Review and select</b> the stuff you don't want.</li>
+        <li>Tap <b>Delete</b> — it moves to Trash and frees your storage. 🎉</li>
+      </ol>
+      <div class="note">🛟 Deleted photos wait in <b>Google Photos Trash for 60 days</b>, and files in <b>Drive Trash for 30 days</b> — easy to undo. Heads-up: no app anywhere can auto-delete Google Photos; Google only lets <b>you</b> do it, and this is the real way.</div>
+    </section>
+
+    <section class="card">
+      <h2>💾 Clean your Downloads</h2>
+      <p class="help">Old downloads pile up in your Chromebook's Files app. Here's the quick way to clear the big, old ones.</p>
+      <ol class="steps">
+        <li>Open the <b>Files</b> app → click <b>Downloads</b>.</li>
+        <li>Click the <b>sort</b> button → sort by <b>Size</b> (or Date) so the biggest and oldest are on top.</li>
+        <li>Click the old junk (hold <b>Ctrl</b> to pick several) → press <b>Delete</b>.</li>
+        <li>Empty the <b>Trash</b> in the Files app when you're sure, to free the space.</li>
+      </ol>
+      <div class="note">🛟 Only delete things you don't need — your photos and schoolwork are worth keeping! When unsure, leave it.</div>
+    </section>
+  </div><!-- /filesMode -->
+
+  <p class="footnote">Dust · sweep your emails, photos, and files. The notebook idea, working for real.</p>
 </div>
 
 <script>
@@ -155,6 +193,16 @@
   const sysDark=()=>matchMedia("(prefers-color-scheme:dark)").matches;
   $("#themeBtn").onclick=()=>{const c=root.getAttribute("data-theme");let n=!c?(sysDark()?"light":"dark"):(c==="dark"?"light":"dark");root.setAttribute("data-theme",n);try{localStorage.setItem("dust-theme",n)}catch(e){}};
   try{const t=localStorage.getItem("dust-theme");if(t)root.setAttribute("data-theme",t)}catch(e){}
+
+  /* mode switch: emails vs photos & files */
+  const mEmail=$("#mEmail"), mFiles=$("#mFiles");
+  function setMode(files){
+    $("#filesMode").hidden=!files; $("#emailMode").hidden=files;
+    mFiles.classList.toggle("sel",files); mEmail.classList.toggle("sel",!files);
+    window.scrollTo({top:0,behavior:"smooth"});
+  }
+  mEmail.onclick=()=>setMode(false);
+  mFiles.onclick=()=>setMode(true);
 
   function showResult(q){
     const full = q + " -is:starred";
