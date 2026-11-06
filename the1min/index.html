@@ -264,6 +264,18 @@
   .gatebox h2{font-family:"Chakra Petch",sans-serif; letter-spacing:.14em; font-size:1.5rem}
   .gatebox .gsub{color:var(--muted); font-size:.9rem; margin:4px 0 16px}
   .gatebox .keypad{max-width:260px; margin:0 auto}
+
+  /* animated padlock on the front gate */
+  .lockicon{width:88px; height:88px; margin:0 auto 10px; display:block; overflow:visible}
+  .lockicon .shackle{transform-box:fill-box; transform-origin:50% 100%; animation:lockSnap .8s cubic-bezier(.34,1.56,.5,1) both}
+  @keyframes lockSnap{ 0%{transform:translateY(-11px)} 65%{transform:translateY(1.5px)} 82%{transform:translateY(-1px)} 100%{transform:translateY(0)} }
+  .lockicon .lbody{transform-box:fill-box; transform-origin:50% 100%; animation:lockBump .8s ease both}
+  @keyframes lockBump{ 0%,60%{transform:scale(1)} 70%{transform:scale(1.06,.94)} 85%{transform:scale(.98,1.02)} 100%{transform:scale(1)} }
+  .lockicon.unlocking .shackle{animation:lockOpen .45s ease forwards}
+  @keyframes lockOpen{ from{transform:translateY(0)} to{transform:translateY(-13px)} }
+  .gate.opening{animation:gateOut .45s ease .12s forwards}
+  @keyframes gateOut{ to{opacity:0; transform:scale(1.05)} }
+  @media (prefers-reduced-motion:reduce){ .lockicon .shackle,.lockicon .lbody,.lockicon.unlocking .shackle,.gate.opening{animation:none!important} }
 </style>
 </head>
 <body>
@@ -305,7 +317,7 @@
 </footer>
 
 <div class="overlay" id="overlay" hidden><div class="modal" id="modal"></div></div>
-<div class="gate" id="gate"><div class="gatebox" id="gatebox"><div class="biglock">🔒</div><h2>the1min</h2><div class="gsub">Enter the code to get in</div></div></div>
+<div class="gate" id="gate"><div class="gatebox" id="gatebox"><svg class="lockicon" viewBox="0 0 64 64" aria-hidden="true"><g class="shackle"><path d="M21 32 V23 a11 11 0 0 1 22 0 V32" fill="none" stroke="var(--accent)" stroke-width="5.5" stroke-linecap="round"/></g><rect class="lbody" x="14" y="30" width="36" height="26" rx="7" fill="var(--accent)"/><circle cx="32" cy="41" r="3.6" fill="#1a1205"/><rect x="30.4" y="43" width="3.2" height="8" rx="1.6" fill="#1a1205"/></svg><h2>the1min</h2><div class="gsub">Enter the code to get in</div></div></div>
 
 <script>
 "use strict";
@@ -768,16 +780,17 @@ const SITE_CODE_HASH = "f56e12b0c8f591a088a5d477f4500b1a91322d3e4401a732ee56d0c8
 function showGate(){
   const gate=$("#gate"), box=$("#gatebox");
   let fails=0, lockedUntil=0;
-  const ok=()=>{ gate.hidden=true; };
+  const LOCK_SVG=`<svg class="lockicon" id="lockIcon" viewBox="0 0 64 64" aria-hidden="true"><g class="shackle"><path d="M21 32 V23 a11 11 0 0 1 22 0 V32" fill="none" stroke="var(--accent)" stroke-width="5.5" stroke-linecap="round"/></g><rect class="lbody" x="14" y="30" width="36" height="26" rx="7" fill="var(--accent)"/><circle cx="32" cy="41" r="3.6" fill="#1a1205"/><rect x="30.4" y="43" width="3.2" height="8" rx="1.6" fill="#1a1205"/></svg>`;
+  const ok=()=>{ const li=$("#lockIcon"); if(li) li.classList.add("unlocking"); gate.classList.add("opening"); setTimeout(()=>{ gate.hidden=true; gate.classList.remove("opening"); }, 470); };
   function bad(reset){ fails++; if(fails>=3){lockedUntil=Date.now()+30000; fails=0; lockout();} else { $("#gErr").textContent="Wrong code — try again."; if(reset) reset(); } }
   function lockout(){
     const secs=Math.ceil((lockedUntil-Date.now())/1000);
-    box.innerHTML=`<div class="biglock">🔒</div><h2>the1min</h2><div class="lockout" style="margin-top:14px">🔒 Too many wrong tries.<br>Try again in <b id="gc">${secs}</b>s.</div>`;
+    box.innerHTML=`${LOCK_SVG}<h2>the1min</h2><div class="lockout" style="margin-top:14px">🔒 Too many wrong tries.<br>Try again in <b id="gc">${secs}</b>s.</div>`;
     const t=setInterval(()=>{const left=Math.ceil((lockedUntil-Date.now())/1000);const c=$("#gc");if(!c){clearInterval(t);return;}if(left<=0){clearInterval(t);fails=0;draw();}else c.textContent=left;},500);
   }
   function draw(){
     if(Date.now()<lockedUntil){ lockout(); return; }
-    box.innerHTML=`<div class="biglock">🔒</div><h2>the1min</h2>
+    box.innerHTML=`${LOCK_SVG}<h2>the1min</h2>
       <div class="gsub">Enter the code to get in</div>
       <div id="gArea"></div><div class="err" id="gErr"></div>`;
     let entry="";
