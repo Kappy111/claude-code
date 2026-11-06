@@ -39,6 +39,13 @@
   h2{font-family:"Fredoka",sans-serif;font-weight:600;font-size:23px;margin:0 0 4px;text-wrap:balance}
   .help{color:var(--ink-soft);font-weight:600;font-size:14px;margin:0 0 14px;line-height:1.5}
   .nokey{display:inline-block;background:color-mix(in srgb,var(--good) 16%, var(--panel));color:color-mix(in srgb,var(--good) 80%, var(--ink));border:1px solid color-mix(in srgb,var(--good) 40%, var(--line));font-weight:800;font-size:12.5px;padding:6px 12px;border-radius:999px;margin-bottom:14px}
+  .quick{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px}
+  .qbtn{border:2px solid var(--line);background:var(--panel-2);border-radius:14px;padding:13px 14px;cursor:pointer;text-align:left;font-family:inherit;color:var(--ink)}
+  .qbtn:hover{border-color:var(--accent)}
+  .qbtn b{display:block;font-weight:800;font-size:14.5px}
+  .qbtn small{display:block;color:var(--ink-soft);font-weight:700;font-size:12px;margin-top:2px}
+  .divider{display:flex;align-items:center;gap:12px;margin:20px 0 4px;color:var(--ink-soft);font-weight:800;font-size:12px;text-transform:uppercase;letter-spacing:1.5px}
+  .divider::before,.divider::after{content:"";flex:1;height:1px;background:var(--line)}
   label.fld{display:block;font-weight:800;font-size:14px;margin:18px 0 8px}
   .opts{display:grid;gap:10px}
   .opt{display:flex;align-items:center;gap:12px;padding:13px 15px;border-radius:14px;border:2px solid var(--line);background:var(--panel-2);cursor:pointer;font-weight:700;font-size:15px;color:var(--ink);text-align:left}
@@ -65,6 +72,7 @@
   .footnote{text-align:center;color:var(--ink-soft);font-size:12px;font-weight:700;margin-top:6px}
   [hidden]{display:none!important}
   @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+  @media (max-width:430px){.quick{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -76,9 +84,19 @@
   </div>
 
   <section class="card" id="surveyCard">
-    <span class="nokey">✓ No Client ID · No login · No install</span>
-    <h2>Build your cleanup</h2>
-    <p class="help">Answer the survey. Dust turns it into a real Gmail search, opens Gmail right to it, and you delete with a couple of clicks. You're already logged into Gmail, so nothing else is needed.</p>
+    <span class="nokey">✓ No key · No login · No install</span>
+    <h2>Clean your Gmail</h2>
+    <p class="help">Tap a Quick Sweep for an instant cleanup, or build your own below. Dust opens Gmail right to the junk — then it's two clicks to trash it all.</p>
+
+    <div class="kicker">⚡ Quick sweeps — one tap</div>
+    <div class="quick" id="quick">
+      <button class="qbtn" data-q="older_than:6m category:promotions"><b>📣 Old ads</b><small>Promotions older than 6 months</small></button>
+      <button class="qbtn" data-q="category:promotions"><b>🗞️ All ads ever</b><small>Everything in Promotions</small></button>
+      <button class="qbtn" data-q="older_than:2y"><b>🕰️ Really old mail</b><small>Anything older than 2 years</small></button>
+      <button class="qbtn" data-q="older_than:1y category:social"><b>👥 Old social</b><small>Social updates over 1 year</small></button>
+    </div>
+
+    <div class="divider">or build your own</div>
 
     <label class="fld">1. From what dates do you want to delete?</label>
     <div class="opts" id="dateOpts">
@@ -90,7 +108,7 @@
 
     <label class="fld" for="senders">2. From what companies or senders?</label>
     <input type="text" id="senders" placeholder="amazon, netflix, groupon" autocomplete="off" spellcheck="false">
-    <p class="help" style="margin:6px 0 0">Separate names with commas. Leave blank to skip.</p>
+    <p class="help" style="margin:6px 0 0">Type real company names, separated by commas. Leave blank to skip. (Tip: don't type “all” — leave it empty to mean everyone.)</p>
 
     <div class="opts" style="margin-top:16px">
       <button class="opt" id="promoOpt">📣 Also sweep the Promotions tab <small>all those ads &amp; deals</small><span class="tick"></span></button>
@@ -120,7 +138,7 @@
 
     <div class="note">🛟 Totally safe: deleted mail goes to your <b>Trash</b>, which Gmail keeps for <b>30 days</b>. Changed your mind? Open <b>Trash</b>, select it, and <b>Move to Inbox</b>. To free the storage for real, empty the Trash when you're sure.</div>
 
-    <div style="margin-top:16px"><button class="btn ghost" id="backBtn">← Change my answers</button></div>
+    <div style="margin-top:16px"><button class="btn ghost" id="backBtn">← Start over</button></div>
   </section>
 
   <p class="footnote">Dust · your survey becomes a Gmail search. The notebook idea, working for real.</p>
@@ -131,42 +149,54 @@
   "use strict";
   const $=s=>document.querySelector(s);
   const answers={date:null, promo:false};
+  const STOP=new Set(["all","everything","everyone","every","any","anyone","anybody","*"]);
 
   const root=document.documentElement;
   const sysDark=()=>matchMedia("(prefers-color-scheme:dark)").matches;
   $("#themeBtn").onclick=()=>{const c=root.getAttribute("data-theme");let n=!c?(sysDark()?"light":"dark"):(c==="dark"?"light":"dark");root.setAttribute("data-theme",n);try{localStorage.setItem("dust-theme",n)}catch(e){}};
   try{const t=localStorage.getItem("dust-theme");if(t)root.setAttribute("data-theme",t)}catch(e){}
 
+  function showResult(q){
+    const full = q + " -is:starred";
+    $("#queryText").textContent=full;
+    $("#openGmail").href="https://mail.google.com/mail/u/0/#search/"+encodeURIComponent(full);
+    $("#surveyCard").hidden=true;
+    $("#resultCard").hidden=false;
+    window.scrollTo({top:0,behavior:"smooth"});
+  }
+
+  /* quick sweeps */
+  document.querySelectorAll("#quick .qbtn").forEach(b=>{
+    b.onclick=()=>showResult(b.dataset.q);
+  });
+
+  /* survey */
   document.querySelectorAll("#dateOpts .opt").forEach(b=>{
     b.onclick=()=>{answers.date=b.dataset.op;document.querySelectorAll("#dateOpts .opt").forEach(o=>o.classList.toggle("sel",o===b));};
   });
   const promo=$("#promoOpt");
   promo.onclick=()=>{answers.promo=!answers.promo;promo.classList.toggle("sel",answers.promo);};
 
-  function buildQuery(){
+  $("#buildBtn").onclick=()=>{
+    $("#err").textContent="";
+    if(answers.date===null){ $("#err").textContent="Pick a date option first, or tap a Quick Sweep up top."; return; }
     const parts=[];
-    const senders=$("#senders").value.split(",").map(s=>s.trim()).filter(Boolean);
+    const senders=$("#senders").value.split(",").map(s=>s.trim()).filter(Boolean).filter(s=>!STOP.has(s.toLowerCase()));
     if(answers.date) parts.push(answers.date);
     if(senders.length) parts.push("from:("+senders.join(" OR ")+")");
     if(answers.promo) parts.push("category:promotions");
     const meaningful = answers.date || senders.length || answers.promo;
-    parts.push("-is:starred");
-    return {q:parts.join(" "), meaningful};
-  }
-
-  $("#buildBtn").onclick=()=>{
-    $("#err").textContent="";
-    if(answers.date===null){ $("#err").textContent="Pick a date option first."; return; }
-    const {q,meaningful}=buildQuery();
-    if(!meaningful){ $("#err").textContent="That would match your whole inbox. Add some senders or turn on the Promotions tab."; return; }
-    $("#queryText").textContent=q;
-    $("#openGmail").href="https://mail.google.com/mail/u/0/#search/"+encodeURIComponent(q);
-    $("#surveyCard").hidden=true;
-    $("#resultCard").hidden=false;
-    window.scrollTo({top:0,behavior:"smooth"});
+    if(!meaningful){ $("#err").textContent="That would match your whole inbox. Pick a date, add real company names, or turn on the Promotions tab."; return; }
+    showResult(parts.join(" "));
   };
 
-  $("#backBtn").onclick=()=>{ $("#resultCard").hidden=true; $("#surveyCard").hidden=false; window.scrollTo({top:0,behavior:"smooth"}); };
+  $("#backBtn").onclick=()=>{
+    $("#resultCard").hidden=true; $("#surveyCard").hidden=false;
+    answers.date=null; answers.promo=false;
+    document.querySelectorAll("#dateOpts .opt").forEach(o=>o.classList.remove("sel"));
+    promo.classList.remove("sel"); $("#senders").value="";
+    window.scrollTo({top:0,behavior:"smooth"});
+  };
 
   $("#copyBtn").onclick=async()=>{
     const q=$("#queryText").textContent;
