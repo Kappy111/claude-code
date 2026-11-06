@@ -1,0 +1,64 @@
+=================================================
+  DUST — the Chrome extension
+=================================================
+
+This does the most of any version:
+  * EMAILS  — auto-sweeps old junk mail to Trash, by itself, NO key needed
+              (Dust clicks inside Gmail for you, like your own hands).
+  * DOWNLOADS — really deletes old files Chrome downloaded, to free space.
+  * PHOTOS  — opens Google's own cleaner for junk photos/videos/files.
+
+
+-------------------------------------------------
+BIG HEADS-UP, READ FIRST
+-------------------------------------------------
+To add an extension that isn't from the Chrome Web Store, you turn on
+"Developer mode". On a SCHOOL or FAMILY-LINK Chromebook, the grown-up who
+manages it has often TURNED THIS OFF. If it's off, the extension can't be
+added -- that's the Chromebook's rule, not Dust. You'll find out at Step 2.
+If it won't let you, use the no-install Dust website instead.
+
+
+-------------------------------------------------
+HOW TO ADD IT  (about 1 minute)
+-------------------------------------------------
+1. Unzip this folder somewhere you can find it (like Downloads).
+
+2. Open Chrome and go to:   chrome://extensions
+   Turn ON the "Developer mode" switch (top-right corner).
+   (If the switch is missing or greyed out, your Chromebook blocks this --
+    stop here and use the Dust website instead.)
+
+3. Click "Load unpacked".
+
+4. Pick the unzipped "dust-extension" folder (the one with manifest.json).
+
+5. Dust appears! Click the puzzle-piece icon in Chrome's toolbar and pin
+   Dust so you can see it.
+
+
+-------------------------------------------------
+HOW TO USE IT
+-------------------------------------------------
+Click the Dust icon. Three tabs:
+
+  EMAILS:  Tap a Quick Sweep (or build your own), then watch Gmail --
+           Dust searches, selects everything that matches, and deletes it
+           to Trash. Keep the Gmail tab open while it works.
+
+  DOWNLOADS: Pick an age -> Find old downloads -> look at the list ->
+             Delete. (This one is permanent, so check the list first.)
+
+  PHOTOS:  Opens Google's storage cleaner for photos, videos and big files.
+
+
+-------------------------------------------------
+SAFE TO KNOW
+-------------------------------------------------
+* Emails go to Gmail TRASH (kept 30 days) and Starred mail is never touched.
+* The email sweeper works by clicking inside Gmail for you, so it needs NO
+  Google key. If Gmail ever changes its buttons it might stop part-way --
+  then just finish the last click yourself, or tell Claude to fix Dust.
+* Downloads delete is permanent -- review the list before deleting.
+* Dust never sends your emails or files to anyone. It all stays in your
+  browser and your Google account.
