@@ -1,6 +1,5 @@
-// Dust background worker — finds and deletes old downloaded files.
-// chrome.downloads.removeFile actually deletes the file from disk.
-// It only affects files Chrome downloaded (not every file on the computer).
+// Dust background worker — really deletes old downloaded files and tells
+// the truth about how many actually got removed.
 "use strict";
 
 function baseName(p) {
@@ -22,25 +21,23 @@ async function findOld(days) {
 }
 
 async function deleteDownloads(ids) {
-  let removed = 0;
+  let removed = 0, failed = 0;
   for (const id of ids) {
+    let ok = false;
     try {
-      await chrome.downloads.removeFile(id); // delete file from disk (into OS trash where supported)
-      await chrome.downloads.erase({ id });   // remove from the download list
+      await chrome.downloads.removeFile(id); // actually deletes the file from disk
+      ok = true;
       removed++;
-    } catch (e) { /* file already gone — skip */ }
+    } catch (e) {
+      failed++;                              // file couldn't be deleted (gone, or protected)
+    }
+    if (ok) { try { await chrome.downloads.erase({ id }); } catch (e) {} }
   }
-  return { removed };
+  return { removed, failed };
 }
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (!msg) return;
-  if (msg.action === "findDownloads") {
-    findOld(msg.days).then(sendResponse);
-    return true;
-  }
-  if (msg.action === "deleteDownloads") {
-    deleteDownloads(msg.ids).then(sendResponse);
-    return true;
-  }
+  if (msg.action === "findDownloads") { findOld(msg.days).then(sendResponse); return true; }
+  if (msg.action === "deleteDownloads") { deleteDownloads(msg.ids).then(sendResponse); return true; }
 });

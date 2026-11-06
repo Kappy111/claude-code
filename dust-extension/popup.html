@@ -12,40 +12,23 @@
     --line:#20343c; --accent:#2cc4d6; --accent-deep:#5ad6e6; --good:#39c88a; --danger:#ef7f5f;
   }}
   *{box-sizing:border-box;font-family:"Segoe UI",system-ui,sans-serif}
-  body{width:370px;margin:0;background:var(--bg);color:var(--ink);padding:14px}
-  .top{display:flex;align-items:center;gap:10px;margin-bottom:12px}
-  .logo{width:36px;height:36px;border-radius:11px;flex:none;background:linear-gradient(150deg,var(--accent),var(--accent-deep));display:grid;place-items:center}
-  .logo svg{width:22px;height:22px}
-  h1{font-size:20px;margin:0;font-weight:800;letter-spacing:.3px}
+  body{width:330px;margin:0;background:var(--bg);color:var(--ink);padding:16px}
+  .top{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+  .logo{width:38px;height:38px;border-radius:11px;flex:none;background:linear-gradient(150deg,var(--accent),var(--accent-deep));display:grid;place-items:center}
+  .logo svg{width:23px;height:23px}
+  h1{font-size:21px;margin:0;font-weight:800;letter-spacing:.3px}
   .top p{margin:0;font-size:11px;font-weight:700;color:var(--ink-soft)}
-  .tabs{display:flex;gap:6px;margin-bottom:12px}
-  .tab{flex:1;border:2px solid var(--line);background:var(--panel);border-radius:11px;padding:9px 4px;font-weight:800;font-size:13px;cursor:pointer;color:var(--ink-soft)}
-  .tab.sel{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 12%, var(--panel));color:var(--accent-deep)}
-  .pane{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
-  .lbl{font-weight:800;font-size:12px;margin:0 0 8px}
-  .help{font-size:12px;color:var(--ink-soft);font-weight:600;line-height:1.5;margin:0 0 10px}
-  .quick{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
-  .q{border:2px solid var(--line);background:var(--panel-2);border-radius:11px;padding:9px;text-align:left;cursor:pointer;color:var(--ink);font-weight:800;font-size:12.5px}
-  .q:hover{border-color:var(--accent)}
-  .q small{display:block;font-weight:700;color:var(--ink-soft);font-size:10.5px;margin-top:2px}
-  select,input[type=text]{width:100%;font-size:13px;font-weight:700;padding:9px 10px;border-radius:10px;border:2px solid var(--line);background:var(--panel-2);color:var(--ink);margin-bottom:9px}
-  .btn{width:100%;border:none;border-radius:12px;padding:12px;font-weight:800;font-size:14px;cursor:pointer;background:linear-gradient(150deg,var(--accent),var(--accent-deep));color:#fff;margin-top:4px}
-  .btn:hover{filter:brightness(1.06)}
-  .btn.danger{background:linear-gradient(150deg,var(--danger),#c24a2c)}
-  .btn:disabled{opacity:.55;cursor:default}
-  .divider{display:flex;align-items:center;gap:10px;margin:14px 0 10px;color:var(--ink-soft);font-weight:800;font-size:10px;text-transform:uppercase;letter-spacing:1.2px}
-  .divider::before,.divider::after{content:"";flex:1;height:1px;background:var(--line)}
-  .status{font-size:12.5px;font-weight:800;margin-top:10px;min-height:1px;color:var(--accent-deep)}
+  .big{width:100%;border:none;border-radius:15px;padding:17px 14px;font-weight:800;font-size:16px;cursor:pointer;color:#fff;background:linear-gradient(150deg,var(--accent),var(--accent-deep));text-align:left;line-height:1.2}
+  .big small{display:block;font-weight:700;font-size:12px;opacity:.9;margin-top:3px}
+  .big:hover{filter:brightness(1.07)}
+  .big:disabled{opacity:.6;cursor:default}
+  .big.red{background:linear-gradient(150deg,var(--danger),#c24a2c)}
+  .big.alt{background:var(--panel);color:var(--ink);border:2px solid var(--line)}
+  .big.alt small{color:var(--ink-soft);opacity:1}
+  .status{font-size:12.5px;font-weight:800;margin:8px 2px 0;min-height:1px;color:var(--accent-deep)}
   .status.err{color:var(--danger)}
-  .list{margin-top:10px;max-height:150px;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:6px}
-  .row{display:flex;justify-content:space-between;gap:8px;font-size:12px;font-weight:700;padding:5px 6px;border-bottom:1px solid var(--line)}
-  .row:last-child{border-bottom:none}
-  .row span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .row span:last-child{color:var(--ink-soft);flex:none}
-  .note{font-size:11px;color:var(--ink-soft);font-weight:700;line-height:1.45;background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:9px 10px;margin-top:10px}
-  .ck{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:800;margin:8px 0;cursor:pointer}
-  .ck input{width:16px;height:16px}
-  [hidden]{display:none!important}
+  .note{font-size:11px;color:var(--ink-soft);font-weight:700;line-height:1.45;margin:7px 2px 0}
+  .block{margin-bottom:18px}
 </style>
 </head>
 <body>
@@ -54,57 +37,21 @@
     <div><h1>Dust</h1><p>Sweep away the clutter.</p></div>
   </div>
 
-  <div class="tabs">
-    <button class="tab sel" data-pane="email">✉️ Emails</button>
-    <button class="tab" data-pane="dl">💾 Downloads</button>
-    <button class="tab" data-pane="photo">📸 Photos</button>
-  </div>
-
-  <!-- EMAILS -->
-  <div class="pane" id="pane-email">
-    <p class="lbl">⚡ Quick sweeps — one tap</p>
-    <div class="quick">
-      <button class="q" data-q="older_than:6m category:promotions">📣 Old ads<small>Promotions &gt; 6 months</small></button>
-      <button class="q" data-q="category:promotions">🗞️ All ads ever<small>Everything in Promotions</small></button>
-      <button class="q" data-q="older_than:2y">🕰️ Really old mail<small>Older than 2 years</small></button>
-      <button class="q" data-q="older_than:1y category:social">👥 Old social<small>Social over 1 year</small></button>
-    </div>
-    <div class="divider">or build your own</div>
-    <select id="date">
-      <option value="">Any date</option>
-      <option value="older_than:30d">Older than 1 month</option>
-      <option value="older_than:6m">Older than 6 months</option>
-      <option value="older_than:1y" selected>Older than 1 year</option>
-      <option value="older_than:2y">Older than 2 years</option>
-    </select>
-    <input type="text" id="senders" placeholder="companies: amazon, netflix, groupon">
-    <label class="ck"><input type="checkbox" id="promo"> Also sweep the Promotions tab</label>
-    <button class="btn" id="sweepBtn">🧹 Sweep it to Trash</button>
+  <div class="block">
+    <button class="big" id="emailBtn">🗑️ Delete all junk emails<small>All ads, promos &amp; social → Trash</small></button>
     <div class="status" id="emailStatus"></div>
-    <div class="note">🛟 Goes to Gmail Trash (kept 30 days, easy to undo). Starred mail is never touched. Dust clicks inside Gmail for you — keep that tab open while it works.</div>
+    <div class="note">🛟 Clears the ad &amp; junk piles only. Keeps your real inbox and Starred mail, and it all goes to Trash (undo for 30 days). Keep the Gmail tab open while it sweeps.</div>
   </div>
 
-  <!-- DOWNLOADS -->
-  <div class="pane" id="pane-dl" hidden>
-    <p class="help">Find old files Chrome downloaded, then delete the junk to free space.</p>
-    <select id="dlDays">
-      <option value="30">Downloaded over 1 month ago</option>
-      <option value="90" selected>Downloaded over 3 months ago</option>
-      <option value="180">Downloaded over 6 months ago</option>
-      <option value="365">Downloaded over 1 year ago</option>
-    </select>
-    <button class="btn" id="findBtn">🔍 Find old downloads</button>
-    <div class="list" id="dlList" hidden></div>
-    <button class="btn danger" id="delBtn" hidden>🗑️ Delete these files</button>
+  <div class="block">
+    <button class="big red" id="dlBtn">🗑️ Delete all old downloads<small>Files Chrome saved over a month ago</small></button>
     <div class="status" id="dlStatus"></div>
-    <div class="note">⚠️ This only touches files Chrome downloaded, and deleting them is forever (no Trash), so peek at the list first and keep anything you still want.</div>
+    <div class="note">⚠️ This is permanent (no Trash). Tap once to count them, tap again to delete. Recent downloads are left alone.</div>
   </div>
 
-  <!-- PHOTOS -->
-  <div class="pane" id="pane-photo" hidden>
-    <p class="help">Photos can't be deleted by any app — Google only lets you do it. But Google's own cleaner finds your biggest, blurriest junk and deletes it to free storage (into Trash, so it's undoable).</p>
-    <button class="btn" id="photoBtn">📸 Open Google's storage cleaner</button>
-    <div class="note">🛟 It shows blurry photos, screenshots, huge videos and big files. Tap a pile → review → delete. Photos wait in Trash 60 days, Drive files 30 days.</div>
+  <div class="block">
+    <button class="big alt" id="photoBtn">📸 Clean out photos &amp; images<small>Opens Google's photo cleaner</small></button>
+    <div class="note">Photos can't be deleted by any app — Google only lets you do it. This opens Google's cleaner for blurry photos, screenshots &amp; big videos (undo for 60 days).</div>
   </div>
 
   <script src="popup.js"></script>

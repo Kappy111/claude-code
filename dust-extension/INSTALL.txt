@@ -38,18 +38,22 @@ HOW TO ADD IT  (about 1 minute)
 
 
 -------------------------------------------------
-HOW TO USE IT
+HOW TO USE IT  (just big buttons now)
 -------------------------------------------------
-Click the Dust icon. Three tabs:
+Click the Dust icon:
 
-  EMAILS:  Tap a Quick Sweep (or build your own), then watch Gmail --
-           Dust searches, selects everything that matches, and deletes it
-           to Trash. Keep the Gmail tab open while it works.
+  "Delete all junk emails"  -> opens Gmail and sweeps every ad / promo /
+     social email to Trash by itself. Keeps your real inbox + Starred mail.
+     Keep the Gmail tab open while it works.
 
-  DOWNLOADS: Pick an age -> Find old downloads -> look at the list ->
-             Delete. (This one is permanent, so check the list first.)
+  "Delete all old downloads"  -> tap once to count old files, tap again to
+     delete them for real. (Permanent, so it only touches files over a
+     month old and leaves recent ones alone.)
 
-  PHOTOS:  Opens Google's storage cleaner for photos, videos and big files.
+  "Clean out photos & images"  -> opens Google's cleaner for photos/videos.
+
+UPDATING DUST: if Claude gives you new files, replace the folder, then go to
+chrome://extensions and click the little refresh/reload icon on the Dust card.
 
 
 -------------------------------------------------

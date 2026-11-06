@@ -1,8 +1,10 @@
 // Dust content script — runs inside Gmail and acts like your own hands:
-// searches, selects everything that matches, and clicks Delete (Trash).
-// No Google key needed, because it just clicks what you would click.
+// searches, selects everything that matches, and clicks Delete (-> Trash).
+// No Google key needed. Anchored to Gmail's main toolbar [gh="mtb"].
 (function () {
   "use strict";
+  if (window.__dustLoaded) return;          // don't load twice
+  window.__dustLoaded = true;
 
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -17,78 +19,70 @@
     return null;
   }
 
-  function visibleFindByText(re) {
-    const els = document.querySelectorAll("span,a,div,button");
+  function findByText(re) {
+    const els = document.querySelectorAll('span,a,div,button,[role="link"]');
     for (const e of els) {
       if (e.offsetParent === null) continue;
       const t = (e.textContent || "").trim();
-      if (t && re.test(t) && t.length < 80) return e;
+      if (t && t.length < 90 && re.test(t)) return e;
     }
     return null;
   }
 
   async function dustSweep(query) {
     const full = query + " -is:starred";
+
     // 1) run the search (Gmail reacts to the URL hash)
     location.hash = "#search/" + encodeURIComponent(full);
-    await wait(1600);
+    await wait(1800);
 
-    // 2) find the "select" checkbox in the toolbar
-    const selectBox = await waitFor(() => {
-      const boxes = document.querySelectorAll('span[role="checkbox"][aria-label]');
-      for (const b of boxes) {
-        if (b.offsetParent !== null && /select/i.test(b.getAttribute("aria-label") || "")) return b;
-      }
-      return null;
-    });
-    if (!selectBox) {
-      return { ok: false, msg: "I searched your mail, but couldn't find the select box. Click the checkbox and trash can to finish." };
+    // 2) wait for Gmail's main toolbar to exist
+    const toolbar = await waitFor(() => document.querySelector('[gh="mtb"]'), 12000);
+    if (!toolbar) return { ok: false, msg: "Gmail is slow to load — open it, then tap the button again." };
+
+    // nothing matched?
+    if (findByText(/no messages matched|no new mail/i)) {
+      return { ok: false, msg: "Nothing junk left there — already clean! ✨" };
     }
 
-    // are there any results at all?
-    const noResults = visibleFindByText(/no messages matched|no new mail/i);
-    if (noResults) {
-      return { ok: false, msg: "Nothing matched that search — your mail is already clean there!" };
-    }
+    // 3) the select-all checkbox in the toolbar
+    const cb = await waitFor(() => toolbar.querySelector('[role="checkbox"]'), 7000);
+    if (!cb) return { ok: false, msg: "I searched your mail — tap the checkbox, then the trash can, to finish." };
+    if (cb.getAttribute("aria-checked") !== "true") cb.click();
+    await wait(900);
 
-    // 3) select the page
-    selectBox.click();
-    await wait(700);
+    // 4) "Select all conversations that match this search" (covers every page)
+    const allLink = await waitFor(() => findByText(/select all .*conversation|select all .*match/i), 2500);
+    if (allLink) { allLink.click(); await wait(700); }
 
-    // 4) click "Select all conversations that match this search" if it appears
-    const allLink = await waitFor(
-      () => visibleFindByText(/select all .*conversation|select all .*match/i),
-      3500
-    );
-    if (allLink) { allLink.click(); await wait(500); }
-
-    // 5) click Delete (moves to Trash)
+    // 5) the Delete (trash) button
     const del = await waitFor(
-      () => document.querySelector('[aria-label="Delete"]:not([aria-disabled="true"]), [data-tooltip="Delete"]'),
-      3500
+      () => toolbar.querySelector('[aria-label="Delete"]:not([aria-disabled="true"]), [data-tooltip="Delete"]'),
+      4000
     );
-    if (!del) {
-      return { ok: false, msg: "Searched and selected — now click the trash can to finish the sweep." };
-    }
+    if (!del) return { ok: false, msg: "Selected them — tap the trash can to finish the sweep." };
     del.click();
-    await wait(600);
+    await wait(800);
 
     // 6) confirm dialog ("OK" / "Delete") if Gmail asks
-    const confirm = await waitFor(
-      () => visibleFindByText(/^(ok|delete|confirm)$/i),
-      1800
-    );
+    const confirm = await waitFor(() => {
+      const btns = document.querySelectorAll('button,[role="button"]');
+      for (const b of btns) {
+        if (b.offsetParent !== null && /^(ok|delete)$/i.test((b.textContent || "").trim())) return b;
+      }
+      return null;
+    }, 2000);
     if (confirm) confirm.click();
 
-    return { ok: true, msg: "Swept to Trash! 🧹 Freed up your inbox." };
+    return { ok: true, msg: "Swept it all to Trash! 🧹 Inbox cleaned." };
   }
 
   chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     if (msg && msg.action === "dustSweep") {
-      dustSweep(msg.query).then(sendResponse).catch((e) =>
-        sendResponse({ ok: false, msg: "Something changed in Gmail. Your mail is searched — finish with a click." })
+      dustSweep(msg.query).then(sendResponse).catch(() =>
+        sendResponse({ ok: false, msg: "Gmail changed something — your mail is searched, finish with a tap." })
       );
-      return true; // keep the channel open for the async reply
+      return true; // async reply
     }
   });
 })();
