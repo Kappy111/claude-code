@@ -82,6 +82,15 @@
       </div>
       <button class="btn" id="addBtn">Add to my page</button>
       <div class="status" id="status"></div>
+
+      <hr style="border:none;border-top:1px solid var(--line);margin:20px 0">
+      <h2 style="margin-bottom:10px">Add several at once</h2>
+      <div class="field">
+        <label for="bulk">Paste many Suno links — one per line</label>
+        <textarea id="bulk" rows="5" placeholder="https://suno.com/s/aaa: Song one&#10;https://suno.com/s/bbb: Song two" style="width:100%;padding:11px 13px;font-size:1rem;font-family:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:9px;resize:vertical"></textarea>
+        <p class="hint">Optional: put a name after the link with a colon, e.g. <code>link: My Song</code>. Without one, Suno's own title is used.</p>
+      </div>
+      <button class="btn" id="bulkBtn">Add all</button>
     </section>
   </div>
 </div>
@@ -165,6 +174,39 @@
   $('ownerToggle').addEventListener('click', function () { $('ownerPanel').classList.toggle('hide'); loadSongs(); });
   $('pw').addEventListener('change', loadSongs);
   $('addBtn').addEventListener('click', addSong);
+
+  function bulkAdd() {
+    var pw = $('pw').value.trim();
+    if (!pw) { setStatus('Enter your password first.', 'err'); return; }
+    var lines = $('bulk').value.split(/\r?\n/).map(function (x) { return x.trim(); }).filter(Boolean);
+    var items = [];
+    lines.forEach(function (line) {
+      var m = line.match(/(https?:\/\/[^\s]*?suno\.(?:com|ai)\/[a-z]+\/[A-Za-z0-9_-]+)/i);
+      if (!m) return;
+      var url = m[1];
+      var rest = line.slice(line.indexOf(url) + url.length).replace(/^[\s:,\|\-–—]+/, '').trim();
+      items.push({ link: url, title: rest });
+    });
+    if (!items.length) { setStatus('No Suno links found in that text.', 'err'); return; }
+    try { localStorage.setItem('music-pw', pw); } catch (e) {}
+    $('bulkBtn').disabled = true; $('addBtn').disabled = true;
+    var i = 0, ok = 0, fail = 0;
+    function next() {
+      if (i >= items.length) {
+        $('bulkBtn').disabled = false; $('addBtn').disabled = false;
+        setStatus('Added ' + ok + ' of ' + items.length + (fail ? ' (' + fail + ' failed)' : '') + '.', fail ? 'err' : 'ok');
+        $('bulk').value = ''; loadSongs(); return;
+      }
+      var it = items[i]; i++;
+      setStatus('Adding ' + i + ' of ' + items.length + '…');
+      fetch('/api/add', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: pw, link: it.link, title: it.title }) })
+        .then(function (r) { return r.ok; })
+        .then(function (okr) { if (okr) ok++; else fail++; next(); })
+        .catch(function () { fail++; next(); });
+    }
+    next();
+  }
+  $('bulkBtn').addEventListener('click', bulkAdd);
 
   loadSongs();
 </script>
