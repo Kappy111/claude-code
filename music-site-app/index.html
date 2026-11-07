@@ -165,7 +165,7 @@
     });
   }
 
-  function subFor(s) { return s.kind === 'file' ? 'Uploaded' : (s.kind === 'link' ? (s.host || 'Link') : 'Suno'); }
+  function subFor(s) { return s.kind === 'file' ? 'Song' : (s.kind === 'link' ? (s.host || 'Link') : 'Suno'); }
   function dlUrl(u) { return u + (u.indexOf('?') >= 0 ? '&' : '?') + 'download=1'; }
 
   function render(songs) {
@@ -238,11 +238,11 @@
     if (!pw) { setStatus('Enter your password first.', 'err'); return; }
     if (!link) { setStatus('Paste a link.', 'err'); return; }
     try { localStorage.setItem('music-pw', pw); } catch (e) {}
-    $('addBtn').disabled = true; setStatus('Adding…');
+    $('addBtn').disabled = true; setStatus('Adding… (this can take a few seconds for non-Suno songs)');
     post({ password: pw, link: link, title: ttl }).then(function (res) {
       $('addBtn').disabled = false;
       if (!res.ok) { setStatus(res.j.error || 'Could not add that link.', 'err'); return; }
-      setStatus('Added!', 'ok'); $('link').value = ''; $('ttl').value = ''; loadSongs();
+      setStatus(res.j.imported ? 'Added! (imported the real song)' : 'Added!', 'ok'); $('link').value = ''; $('ttl').value = ''; loadSongs();
     }).catch(function () { $('addBtn').disabled = false; setStatus('Something went wrong. Try again.', 'err'); });
   }
 
@@ -292,7 +292,7 @@
       var m = line.match(/(https?:\/\/[^\s]+)/i);
       if (!m) return;
       var url = m[1].replace(/[),.]+$/, '');
-      var rest = line.slice(line.indexOf(url) + url.length).replace(/^[\s:,\|\-–—]+/, '').trim();
+      var rest = line.slice(line.indexOf(url) + url.length).replace(/^[\s,:\|\-–—]+/, '').trim();
       items.push({ link: url, title: rest });
     });
     if (!items.length) { setStatus('No links found in that text.', 'err'); return; }

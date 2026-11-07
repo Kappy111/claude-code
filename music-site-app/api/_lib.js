@@ -66,6 +66,44 @@ async function resolveSuno(link) {
   return { id: id, title: title };
 }
 
+// Try to pull a real, playable audio file from a non-Suno page (e.g. ElevenLabs).
+// Returns { buf, contentType, title } or null if nothing playable was found.
+async function grabAudio(link) {
+  try {
+    const r = await fetch(link, { headers: { 'User-Agent': UA, 'Accept': 'text/html' }, redirect: 'follow' });
+    const html = await r.text();
+    let title = '';
+    let m = html.match(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["']/i);
+    if (m) title = m[1];
+    if (!title) { m = html.match(/<title>([^<]+)<\/title>/i); if (m) title = m[1]; }
+    title = (title || '').replace(/&#x27;/g, "'").replace(/&amp;/g, '&')
+      .replace(/\s*-\s*created with Eleven Music.*$/i, '')
+      .replace(/\s*[|–-]\s*(ElevenLabs|Eleven Music|Suno).*$/i, '').trim();
+
+    const cands = [];
+    let a = html.match(/<meta[^>]+property=["']og:audio["'][^>]+content=["']([^"']+)["']/i); if (a) cands.push(a[1]);
+    a = html.match(/<meta[^>]+name=["']twitter:player:stream["'][^>]+content=["']([^"']+)["']/i); if (a) cands.push(a[1]);
+    let am; const re = /(https?:\/\/[^"'\s\\]+\.(?:mp3|m4a|wav|ogg|aac|mp4)[^"'\s\\]*)/gi;
+    while ((am = re.exec(html))) cands.push(am[1].replace(/&amp;/g, '&'));
+
+    const seen = {};
+    for (const c0 of cands) {
+      const c = c0;
+      if (seen[c]) continue; seen[c] = 1;
+      try {
+        const hr = await fetch(c, { headers: { 'User-Agent': UA } });
+        if (!hr.ok) continue;
+        const ct = (hr.headers.get('content-type') || '').toLowerCase();
+        const isAudio = ct.indexOf('audio') !== -1 || /\.(mp3|m4a|wav|ogg|aac)(\?|$)/i.test(c);
+        if (!isAudio) continue;
+        const buf = Buffer.from(await hr.arrayBuffer());
+        if (buf.length > 20000) return { buf: buf, contentType: ct || 'audio/mpeg', title: title };
+      } catch (e) { /* try next */ }
+    }
+  } catch (e) { /* ignore */ }
+  return null;
+}
+
 function readBody(req) {
   return new Promise(function (resolve) {
     if (req.body && typeof req.body === 'object') { resolve(req.body); return; }
@@ -76,4 +114,4 @@ function readBody(req) {
   });
 }
 
-module.exports = { readList, getSong, putSong, deleteSong, resolveSuno, readBody, hashId, UA };
+module.exports = { readList, getSong, putSong, deleteSong, resolveSuno, grabAudio, readBody, hashId, UA };
