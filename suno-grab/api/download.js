@@ -1,7 +1,7 @@
 // Helper: turn any Suno link (short /s/ share link or full /song/ link)
 // into a real MP3 download.
 // GET /api/download?url=<suno link>&name=<song title>
-// Add &debug=1 to get a JSON diagnostic instead of the file.
+// Add &debug=1 to get a JSON diagnostic (tests every source) instead of the file.
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
@@ -41,27 +41,29 @@ module.exports = async (req, res) => {
   const id = idMatch ? idMatch[0] : null;
   dbg.id = id;
 
-  // Collect every plausible audio URL from the page.
+  // Collect plausible audio URLs from the page, skipping Suno's silent placeholder.
   const found = [];
+  function note(u) { if (u && !/sil-\d+\.mp3/i.test(u)) found.push(u); }
   let m = html.match(/<meta[^>]+property=["']og:audio["'][^>]+content=["']([^"']+)["']/i);
-  if (m) found.push(m[1]);
+  if (m) note(m[1]);
   m = html.match(/<meta[^>]+content=["']([^"']+\.mp3[^"']*)["'][^>]+property=["']og:audio["']/i);
-  if (m) found.push(m[1]);
+  if (m) note(m[1]);
   let am;
   const reAudio = /"audio_url"\s*:\s*"([^"]+)"/g;
-  while ((am = reAudio.exec(html))) found.push(am[1].replace(/\\u0026/g, '&').replace(/\\\//g, '/'));
+  while ((am = reAudio.exec(html))) note(am[1].replace(/\\u0026/g, '&').replace(/\\\//g, '/'));
   const reMp3 = /(https?:\/\/[^"'\s\\]+\.(?:mp3|m4a)[^"'\s\\]*)/gi;
-  while ((am = reMp3.exec(html))) found.push(am[1]);
-  dbg.foundInPage = found.slice(0, 6);
+  while ((am = reMp3.exec(html))) note(am[1]);
 
+  // Order: real MP3s first (play everywhere), then whatever the page offers (often m4a).
   const candidates = [];
   const seen = {};
   function add(u) { if (u && !seen[u]) { seen[u] = 1; candidates.push(u); } }
-  found.forEach(add);
   if (id) {
     add('https://cdn1.suno.ai/' + id + '.mp3');
     add('https://cdn2.suno.ai/' + id + '.mp3');
   }
+  found.filter(function (u) { return /\.mp3(\?|$)/i.test(u); }).forEach(add);
+  found.forEach(add);
   dbg.candidates = candidates;
 
   if (!candidates.length) {
@@ -85,23 +87,28 @@ module.exports = async (req, res) => {
         const head = b.slice(0, 1).toString('latin1');
         const htmlish = head === '<' || head === '{';
         const audioish = ct.indexOf('audio') !== -1 || ct.indexOf('mpeg') !== -1 || ct.indexOf('mp4') !== -1 || ct.indexOf('octet-stream') !== -1 || /\.(mp3|m4a)(\?|$)/i.test(c);
-        if (b.length > 20000 && !htmlish && audioish) {
-          audioBuf = b; usedUrl = c;
-          usedType = ct.indexOf('mp4') !== -1 || /\.m4a/i.test(c) ? 'audio/mp4' : 'audio/mpeg';
+        // Verify it is really decodable audio, not Suno's encrypted stream.
+        const isMp3 = (b[0] === 0x49 && b[1] === 0x44 && b[2] === 0x33) || (b[0] === 0xFF && (b[1] & 0xE0) === 0xE0);
+        const isMp4 = b.slice(4, 8).toString('latin1') === 'ftyp';
+        const validSig = isMp3 || isMp4;
+        att.validSig = validSig;
+        if (b.length > 20000 && !htmlish && audioish && validSig) {
           att.accepted = true;
-          dbg.attempts.push(att);
-          break;
-        }
-        att.rejected = true;
+          if (!audioBuf) {
+            audioBuf = b; usedUrl = c;
+            usedType = (ct.indexOf('mp4') !== -1 || /\.m4a/i.test(c)) ? 'audio/mp4' : 'audio/mpeg';
+          }
+        } else { att.rejected = true; }
       }
     } catch (e) { att.error = String(e); }
     dbg.attempts.push(att);
+    if (audioBuf && !debug) break;
   }
 
   if (debug) { res.setHeader('Content-Type', 'application/json'); res.status(200).send(JSON.stringify(dbg, null, 2)); return; }
 
   if (!audioBuf) {
-    res.status(502).send('Found the song page but every audio source came back empty or blocked. Add &debug=1 to the end of the link to see details, or use Suno\'s own Download button.');
+    res.status(451).send('Suno protects the audio on share links (it is encrypted), so it cannot be downloaded and played from the link alone. To save this song, open it in Suno and use Suno\'s own Download button, then add that file to your site.');
     return;
   }
 
