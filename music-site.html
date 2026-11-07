@@ -214,9 +214,9 @@
         <p class="hint">In Suno, hit <b>Share</b> on your song and copy the link.</p>
       </div>
       <div class="field">
-        <label for="t-file">Direct download link (optional)</label>
+        <label for="t-file">Direct file link (optional)</label>
         <input type="url" id="t-file" placeholder="https://.../mysong.mp3">
-        <p class="hint">For true one-click download: download the MP3 from Suno, upload it somewhere, and paste its link here. Leave blank and Download just opens your Suno page.</p>
+        <p class="hint">Leave this blank — the Download button now pulls the MP3 straight from your Suno link. Only fill it in if you want to point at a specific file instead.</p>
       </div>
       <button type="submit" class="btn-add">Add to my page</button>
     </form>
@@ -228,6 +228,7 @@
 
 <script>
   var KEY = "suno-tracks-v1";
+  var HELPER = "https://suno-grab-mu.vercel.app/api/download";
   var tracks = [];
 
   function load() {
@@ -260,8 +261,8 @@
     count.textContent = tracks.length + (tracks.length === 1 ? " song" : " songs");
 
     tracks.forEach(function (t, i) {
-      var dlHref = t.file ? t.file : t.suno;
-      var dlLabel = t.file ? "⬇ Download" : "⬇ Download on Suno";
+      var dlHref = t.file ? t.file : (HELPER + "?url=" + encodeURIComponent(t.suno) + "&name=" + encodeURIComponent(t.title));
+      var dlLabel = "⬇ Download";
       var card = document.createElement("div");
       card.className = "card";
       card.innerHTML =
@@ -272,7 +273,7 @@
         '</div>' +
         '<div class="actions">' +
           '<a class="act act-play" href="' + esc(t.suno) + '" target="_blank" rel="noopener">▶ Play</a>' +
-          '<a class="act act-dl" href="' + esc(dlHref) + '" target="_blank" rel="noopener"' + (t.file ? ' download' : '') + '>' + dlLabel + '</a>' +
+          '<a class="act act-dl" href="' + esc(dlHref) + '" target="_blank" rel="noopener">' + dlLabel + '</a>' +
         '</div>' +
         '<button class="remove" data-i="' + i + '" title="Remove" aria-label="Remove ' + esc(t.title) + '">&times;</button>';
       list.appendChild(card);
