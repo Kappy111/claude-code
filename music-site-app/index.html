@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>My Music</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap">
+<style>
+  :root {
+    --bg: #faf7f2; --surface: #ffffff; --fg: #1c1a17; --muted: #6b655c;
+    --line: #e7e1d7; --accent: #e0562d; --accent-ink: #ffffff; --ok: #2e7d4f;
+    --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+    --font-body: ui-sans-serif, system-ui, -apple-system, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #141210; --surface: #1f1c19; --fg: #f3efe8; --muted: #a39b8e;
+      --line: #322d28; --accent: #ff6b3d; --accent-ink: #1a0e08; --ok: #6bd49a;
+      color-scheme: dark;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font-body); line-height: 1.5; }
+  .wrap { max-width: 680px; margin: 0 auto; padding: 32px max(16px, env(safe-area-inset-left)) 72px max(16px, env(safe-area-inset-right)); }
+  header { margin-bottom: 26px; }
+  h1 { font-family: var(--font-display); font-size: clamp(2rem, 7vw, 2.8rem); font-weight: 700; letter-spacing: -0.02em; margin: 0 0 6px; }
+  .tagline { color: var(--muted); margin: 0; }
+  h2 { font-family: var(--font-display); font-size: 1rem; margin: 0 0 14px; }
+
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; margin-bottom: 26px; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  label { display: block; font-size: .76rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 5px; }
+  input[type=password], input[type=text] { width: 100%; padding: 11px 13px; font-size: 1rem; font-family: inherit; color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 9px; }
+  input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .field { margin-bottom: 14px; }
+  button { font-family: var(--font-display); font-weight: 600; cursor: pointer; border: none; border-radius: 9px; }
+  .btn { padding: 11px 16px; font-size: .95rem; background: var(--accent); color: var(--accent-ink); }
+  .btn[disabled] { opacity: .5; cursor: default; }
+  .btn-ghost { background: var(--bg); color: var(--fg); border: 1px solid var(--line); padding: 9px 14px; font-size: .85rem; }
+  .drop { border: 1.5px dashed var(--line); border-radius: 11px; padding: 20px; text-align: center; color: var(--muted); cursor: pointer; transition: border-color .15s, background .15s; }
+  .drop.over { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent); }
+  .status { font-size: .85rem; margin-top: 10px; min-height: 1.2em; }
+  .status.err { color: var(--accent); }
+  .status.ok { color: var(--ok); }
+
+  .count { font-size: .8rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin: 0 0 14px; }
+  .tracks { display: flex; flex-direction: column; gap: 12px; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; }
+  .card-top { display: flex; align-items: center; gap: 12px; }
+  .disc { width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0; background: radial-gradient(circle at 50% 50%, var(--surface) 22%, var(--accent) 24%, var(--accent) 34%, var(--line) 36%); border: 1px solid var(--line); }
+  .ttl { font-family: var(--font-display); font-weight: 600; font-size: 1.05rem; flex: 1; min-width: 0; overflow-wrap: anywhere; }
+  audio { width: 100%; margin-top: 12px; }
+  .acts { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+  a.dl { text-decoration: none; }
+  .empty { text-align: center; color: var(--muted); padding: 40px 16px; border: 1px dashed var(--line); border-radius: 14px; }
+  .toggle { background: none; color: var(--muted); font-size: .85rem; text-decoration: underline; padding: 0; margin-top: 4px; }
+  .hide { display: none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>My Music</h1>
+    <p class="tagline">Listen and download — the real files, free.</p>
+  </header>
+
+  <p class="count" id="count">Loading…</p>
+  <div class="tracks" id="tracks"></div>
+
+  <div style="margin-top:30px">
+    <button class="toggle" id="ownerToggle">Owner? Add or manage songs</button>
+    <section class="panel hide" id="ownerPanel" style="margin-top:12px">
+      <h2>Add songs</h2>
+      <div class="field">
+        <label for="pw">Your password</label>
+        <input type="password" id="pw" placeholder="the password you set" autocomplete="current-password">
+      </div>
+      <div class="drop" id="drop">
+        <strong>Click to choose</strong> or drop MP3 / WAV / M4A files here
+        <input type="file" id="file" accept="audio/*,.mp3,.wav,.m4a,.ogg" multiple class="hide">
+      </div>
+      <div class="status" id="status"></div>
+      <p style="font-size:.8rem;color:var(--muted);margin:14px 0 0">Tip: in Suno, open your song → ⋯ → Download → MP3, then add that file here.</p>
+    </section>
+  </div>
+</div>
+
+<script type="module">
+import { upload } from 'https://esm.sh/@vercel/blob@0.27.3/client';
+
+const $ = function (id) { return document.getElementById(id); };
+const tracksEl = $('tracks'), countEl = $('count'), statusEl = $('status');
+
+try { const saved = localStorage.getItem('music-pw'); if (saved) $('pw').value = saved; } catch (e) {}
+
+function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]; }); }
+
+async function loadSongs() {
+  try {
+    const r = await fetch('/api/songs');
+    const songs = await r.json();
+    render(Array.isArray(songs) ? songs : []);
+  } catch (e) {
+    countEl.textContent = '';
+    tracksEl.innerHTML = '<div class="empty">Could not load songs. Refresh to try again.</div>';
+  }
+}
+
+function render(songs) {
+  tracksEl.innerHTML = '';
+  if (!songs.length) {
+    countEl.textContent = '';
+    tracksEl.innerHTML = '<div class="empty"><strong>No songs yet.</strong><br>If you are the owner, add your first one below.</div>';
+    return;
+  }
+  countEl.textContent = songs.length + (songs.length === 1 ? ' song' : ' songs');
+  const pw = $('pw').value.trim();
+  songs.forEach(function (s) {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML =
+      '<div class="card-top">' +
+        '<div class="disc" aria-hidden="true"></div>' +
+        '<div class="ttl">' + esc(s.title) + '</div>' +
+      '</div>' +
+      '<audio controls preload="none" src="' + esc(s.url) + '"></audio>' +
+      '<div class="acts">' +
+        '<a class="btn dl" href="' + esc(s.downloadUrl) + '">⬇ Download</a>' +
+        (pw ? '<button class="btn-ghost rm" data-url="' + esc(s.url) + '" data-title="' + esc(s.title) + '">Remove</button>' : '') +
+      '</div>';
+    tracksEl.appendChild(card);
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('.rm'), function (b) {
+    b.addEventListener('click', function () { removeSong(b.getAttribute('data-url'), b.getAttribute('data-title')); });
+  });
+}
+
+async function removeSong(url, title) {
+  const pw = $('pw').value.trim();
+  if (!pw) { setStatus('Enter your password first.', 'err'); return; }
+  if (!window.confirm('Remove "' + title + '"?')) return;
+  setStatus('Removing…');
+  try {
+    const r = await fetch('/api/delete', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: pw, url: url }) });
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.error || 'Failed');
+    setStatus('Removed.', 'ok');
+    loadSongs();
+  } catch (e) { setStatus(e.message || 'Could not remove.', 'err'); }
+}
+
+function setStatus(msg, kind) { statusEl.textContent = msg; statusEl.className = 'status' + (kind ? ' ' + kind : ''); }
+
+async function handleFiles(files) {
+  const pw = $('pw').value.trim();
+  if (!pw) { setStatus('Enter your password first.', 'err'); return; }
+  try { localStorage.setItem('music-pw', pw); } catch (e) {}
+  const list = Array.from(files);
+  let done = 0;
+  for (const file of list) {
+    const ext = (file.name.match(/\.(mp3|wav|m4a|ogg)$/i) || ['.mp3'])[0];
+    const title = file.name.replace(/\.(mp3|wav|m4a|ogg)$/i, '');
+    const pathname = 'songs/' + title.replace(/[\/\\]+/g, '-') + ext;
+    setStatus('Uploading "' + title + '" (' + (done + 1) + ' of ' + list.length + ')…');
+    try {
+      await upload(pathname, file, {
+        access: 'public',
+        handleUploadUrl: '/api/upload',
+        clientPayload: pw,
+        contentType: file.type || 'audio/mpeg'
+      });
+      done++;
+    } catch (e) {
+      setStatus('Failed on "' + title + '": ' + (e.message || e), 'err');
+      loadSongs();
+      return;
+    }
+  }
+  setStatus(done + (done === 1 ? ' song added.' : ' songs added.'), 'ok');
+  loadSongs();
+}
+
+$('ownerToggle').addEventListener('click', function () {
+  $('ownerPanel').classList.toggle('hide');
+  loadSongs();
+});
+$('pw').addEventListener('change', loadSongs);
+$('drop').addEventListener('click', function () { $('file').click(); });
+$('file').addEventListener('change', function () { if (this.files.length) handleFiles(this.files); this.value = ''; });
+const drop = $('drop');
+['dragover', 'dragenter'].forEach(function (ev) { drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.add('over'); }); });
+['dragleave', 'drop'].forEach(function (ev) { drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.remove('over'); }); });
+drop.addEventListener('drop', function (e) { if (e.dataTransfer.files.length) handleFiles(e.dataTransfer.files); });
+
+loadSongs();
+</script>
+</body>
+</html>
