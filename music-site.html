@@ -1,0 +1,304 @@
+<title>My Suno Tracks</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+  /* Layout: a centered single column — header, add-song form, then a stack of track cards */
+  :root {
+    --bg: #faf7f2;
+    --surface: #ffffff;
+    --fg: #1c1a17;
+    --muted: #6b655c;
+    --line: #e7e1d7;
+    --accent: #e0562d;
+    --accent-ink: #ffffff;
+    --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+    --font-body: ui-sans-serif, system-ui, -apple-system, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #141210;
+      --surface: #1f1c19;
+      --fg: #f3efe8;
+      --muted: #a39b8e;
+      --line: #322d28;
+      --accent: #ff6b3d;
+      --accent-ink: #1a0e08;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #141210;
+    --surface: #1f1c19;
+    --fg: #f3efe8;
+    --muted: #a39b8e;
+    --line: #322d28;
+    --accent: #ff6b3d;
+    --accent-ink: #1a0e08;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-body);
+    line-height: 1.5;
+  }
+  .wrap {
+    max-width: 640px;
+    margin: 0 auto;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 32px 64px;
+  }
+
+  header { margin-bottom: 28px; }
+  h1 {
+    font-family: var(--font-display);
+    font-size: clamp(1.9rem, 6vw, 2.6rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin: 0 0 6px;
+    text-wrap: balance;
+  }
+  .tagline { color: var(--muted); margin: 0; font-size: 0.98rem; }
+
+  /* Add-song form */
+  .adder {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 18px;
+    margin-bottom: 28px;
+  }
+  .adder h2 {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    margin: 0 0 14px;
+    letter-spacing: 0.01em;
+  }
+  label {
+    display: block;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    margin: 0 0 5px;
+  }
+  .field { margin-bottom: 14px; }
+  .field:last-of-type { margin-bottom: 18px; }
+  input[type="text"], input[type="url"] {
+    width: 100%;
+    padding: 11px 13px;
+    font-size: 1rem;
+    font-family: inherit;
+    color: var(--fg);
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 9px;
+  }
+  input:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+  .hint { font-size: 0.78rem; color: var(--muted); margin: 5px 0 0; }
+
+  button {
+    font-family: var(--font-display);
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    border-radius: 9px;
+  }
+  .btn-add {
+    width: 100%;
+    padding: 12px;
+    font-size: 1rem;
+    background: var(--accent);
+    color: var(--accent-ink);
+  }
+  .btn-add:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
+
+  /* Track list */
+  .count {
+    font-size: 0.82rem;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--muted);
+    margin: 0 0 14px;
+  }
+  .tracks { display: flex; flex-direction: column; gap: 12px; }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  .disc {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 50% 50%, var(--surface) 22%, var(--accent) 24%, var(--accent) 34%, var(--line) 36%);
+    border: 1px solid var(--line);
+    flex-shrink: 0;
+  }
+  .card-body { flex: 1; min-width: 0; }
+  .card-title {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.05rem;
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+  .card-link {
+    font-size: 0.8rem;
+    color: var(--muted);
+    overflow-wrap: anywhere;
+    display: block;
+    margin-top: 2px;
+  }
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .act {
+    text-decoration: none;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 0.85rem;
+    padding: 9px 14px;
+    border-radius: 9px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .act-play { background: var(--accent); color: var(--accent-ink); }
+  .act-dl { background: var(--bg); color: var(--fg); border: 1px solid var(--line); }
+  .act:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .remove {
+    background: none;
+    color: var(--muted);
+    font-size: 1.3rem;
+    line-height: 1;
+    padding: 4px 8px;
+    border-radius: 7px;
+  }
+  .remove:hover { color: var(--accent); }
+
+  .empty {
+    text-align: center;
+    color: var(--muted);
+    padding: 40px 16px;
+    border: 1px dashed var(--line);
+    border-radius: 14px;
+  }
+  .empty strong { color: var(--fg); font-family: var(--font-display); }
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap">
+
+<div class="wrap">
+  <header>
+    <h1>My Suno Tracks</h1>
+    <p class="tagline">Paste a share link, and it shows up here with a play button for anyone who visits.</p>
+  </header>
+
+  <section class="adder">
+    <h2>Add a song</h2>
+    <form id="add-form">
+      <div class="field">
+        <label for="t-title">Song name</label>
+        <input type="text" id="t-title" placeholder="e.g. Midnight Drive" required>
+      </div>
+      <div class="field">
+        <label for="t-suno">Suno share link</label>
+        <input type="url" id="t-suno" placeholder="https://suno.com/song/..." required>
+        <p class="hint">In Suno, hit <b>Share</b> on your song and copy the link.</p>
+      </div>
+      <div class="field">
+        <label for="t-file">Direct download link (optional)</label>
+        <input type="url" id="t-file" placeholder="https://.../mysong.mp3">
+        <p class="hint">For true one-click download: download the MP3 from Suno, upload it somewhere, and paste its link here. Leave blank and Download just opens your Suno page.</p>
+      </div>
+      <button type="submit" class="btn-add">Add to my page</button>
+    </form>
+  </section>
+
+  <p class="count" id="count"></p>
+  <div class="tracks" id="tracks"></div>
+</div>
+
+<script>
+  var KEY = "suno-tracks-v1";
+  var tracks = [];
+
+  function load() {
+    try {
+      var raw = localStorage.getItem(KEY);
+      if (raw) tracks = JSON.parse(raw) || [];
+    } catch (e) { tracks = []; }
+  }
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(tracks)); } catch (e) {}
+  }
+
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  function render() {
+    var list = document.getElementById("tracks");
+    var count = document.getElementById("count");
+    list.innerHTML = "";
+
+    if (!tracks.length) {
+      count.textContent = "";
+      list.innerHTML = '<div class="empty"><strong>No songs yet.</strong><br>Add your first one above.</div>';
+      return;
+    }
+
+    count.textContent = tracks.length + (tracks.length === 1 ? " song" : " songs");
+
+    tracks.forEach(function (t, i) {
+      var dlHref = t.file ? t.file : t.suno;
+      var dlLabel = t.file ? "⬇ Download" : "⬇ Download on Suno";
+      var card = document.createElement("div");
+      card.className = "card";
+      card.innerHTML =
+        '<div class="disc" aria-hidden="true"></div>' +
+        '<div class="card-body">' +
+          '<p class="card-title">' + esc(t.title) + '</p>' +
+          '<span class="card-link">' + esc(t.suno) + '</span>' +
+        '</div>' +
+        '<div class="actions">' +
+          '<a class="act act-play" href="' + esc(t.suno) + '" target="_blank" rel="noopener">▶ Play</a>' +
+          '<a class="act act-dl" href="' + esc(dlHref) + '" target="_blank" rel="noopener"' + (t.file ? ' download' : '') + '>' + dlLabel + '</a>' +
+        '</div>' +
+        '<button class="remove" data-i="' + i + '" title="Remove" aria-label="Remove ' + esc(t.title) + '">&times;</button>';
+      list.appendChild(card);
+    });
+
+    Array.prototype.forEach.call(document.querySelectorAll(".remove"), function (b) {
+      b.addEventListener("click", function () {
+        tracks.splice(parseInt(b.getAttribute("data-i"), 10), 1);
+        save(); render();
+      });
+    });
+  }
+
+  document.getElementById("add-form").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var title = document.getElementById("t-title").value.trim();
+    var suno = document.getElementById("t-suno").value.trim();
+    var file = document.getElementById("t-file").value.trim();
+    if (!title || !suno) return;
+    tracks.unshift({ title: title, suno: suno, file: file });
+    save();
+    this.reset();
+    render();
+    document.getElementById("t-title").focus();
+  });
+
+  load();
+  render();
+</script>
