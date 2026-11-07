@@ -1,5 +1,5 @@
 // Owner-only: remove a song from the playlist by id.
-const { readList, writeList, readBody } = require('./_lib');
+const { deleteSong, readBody } = require('./_lib');
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   if (req.method === 'OPTIONS') { res.status(204).end(); return; }
@@ -13,9 +13,7 @@ module.exports = async (req, res) => {
   if (!body.id) { res.status(400).json({ error: 'Missing id' }); return; }
 
   try {
-    const arr = await readList();
-    const next = arr.filter(function (s) { return s.id !== body.id; });
-    await writeList(next);
+    await deleteSong(body.id);
     res.status(200).json({ ok: true });
   } catch (e) {
     res.status(500).json({ error: String(e && e.message || e) });

@@ -1,27 +1,39 @@
-// Shared helpers for the listen-site playlist (stored as one JSON blob).
+// Shared helpers. Each song is its own blob at songs/<id>.json, so concurrent
+// adds never overwrite one another (no shared read-modify-write).
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36';
 const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
 
 async function readList() {
   const { list } = await import('@vercel/blob');
-  const out = await list({ prefix: 'playlist.json' });
-  const b = (out.blobs || []).find(function (x) { return x.pathname === 'playlist.json'; });
-  if (!b) return [];
-  try {
-    const r = await fetch(b.url, { cache: 'no-store' });
-    const a = await r.json();
-    return Array.isArray(a) ? a : [];
-  } catch (e) { return []; }
+  const out = await list({ prefix: 'songs/' });
+  const blobs = (out.blobs || []).filter(function (b) { return /\.json$/i.test(b.pathname); });
+  const items = await Promise.all(blobs.map(async function (b) {
+    try {
+      const u = b.url + (b.url.indexOf('?') >= 0 ? '&' : '?') + 'v=' + encodeURIComponent(String(b.uploadedAt || ''));
+      const r = await fetch(u, { cache: 'no-store' });
+      const j = await r.json();
+      return (j && j.id) ? j : null;
+    } catch (e) { return null; }
+  }));
+  return items.filter(Boolean).sort(function (a, b) { return (b.addedAt || 0) - (a.addedAt || 0); });
 }
 
-async function writeList(arr) {
+async function putSong(entry) {
   const { put } = await import('@vercel/blob');
-  await put('playlist.json', JSON.stringify(arr), {
+  await put('songs/' + entry.id + '.json', JSON.stringify(entry), {
     access: 'public',
     addRandomSuffix: false,
     allowOverwrite: true,
     contentType: 'application/json'
   });
+}
+
+async function deleteSong(id) {
+  const { list, del } = await import('@vercel/blob');
+  const key = 'songs/' + id + '.json';
+  const out = await list({ prefix: key });
+  const b = (out.blobs || []).find(function (x) { return x.pathname === key; });
+  if (b) await del(b.url);
 }
 
 // Resolve a Suno link (short /s/ or full /song/) to its song id + a title.
@@ -51,4 +63,4 @@ function readBody(req) {
   });
 }
 
-module.exports = { readList, writeList, resolveSong, readBody, UA };
+module.exports = { readList, putSong, deleteSong, resolveSong, readBody, UA };

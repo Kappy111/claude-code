@@ -1,5 +1,5 @@
 // Owner-only: add a Suno link to the playlist.
-const { readList, writeList, resolveSong, readBody } = require('./_lib');
+const { putSong, resolveSong, readBody } = require('./_lib');
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   if (req.method === 'OPTIONS') { res.status(204).end(); return; }
@@ -21,13 +21,10 @@ module.exports = async (req, res) => {
   if (!info.id) { res.status(422).json({ error: 'Could not find the song on that link. Make sure it is a public Suno song link.' }); return; }
 
   const title = ((body.title || '').toString().trim()) || info.title || 'Untitled';
-  const arr = await readList();
-  const existing = arr.findIndex(function (s) { return s.id === info.id; });
   const entry = { id: info.id, title: title, link: link, addedAt: Date.now() };
-  if (existing >= 0) arr[existing] = entry; else arr.unshift(entry);
 
   try {
-    await writeList(arr);
+    await putSong(entry);
     res.status(200).json({ ok: true, entry: entry });
   } catch (e) {
     res.status(500).json({ error: String(e && e.message || e) });
