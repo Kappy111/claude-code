@@ -41,20 +41,26 @@ module.exports = async (req, res) => {
   const id = idMatch ? idMatch[0] : null;
   dbg.id = id;
 
-  let audioUrl = null;
+  // Collect every plausible audio URL from the page.
+  const found = [];
   let m = html.match(/<meta[^>]+property=["']og:audio["'][^>]+content=["']([^"']+)["']/i);
-  if (m) audioUrl = m[1];
-  if (!audioUrl) { m = html.match(/<meta[^>]+content=["']([^"']+\.mp3[^"']*)["'][^>]+property=["']og:audio["']/i); if (m) audioUrl = m[1]; }
-  if (!audioUrl) { m = html.match(/"audio_url"\s*:\s*"([^"]+)"/); if (m) audioUrl = m[1].replace(/\\u0026/g, '&').replace(/\\\//g, '/'); }
-  if (!audioUrl) { m = html.match(/(https?:\/\/[^"'\s]+\.(?:mp3|m4a)[^"'\s]*)/i); if (m) audioUrl = m[1]; }
-  dbg.audioUrl = audioUrl;
+  if (m) found.push(m[1]);
+  m = html.match(/<meta[^>]+content=["']([^"']+\.mp3[^"']*)["'][^>]+property=["']og:audio["']/i);
+  if (m) found.push(m[1]);
+  let am;
+  const reAudio = /"audio_url"\s*:\s*"([^"]+)"/g;
+  while ((am = reAudio.exec(html))) found.push(am[1].replace(/\\u0026/g, '&').replace(/\\\//g, '/'));
+  const reMp3 = /(https?:\/\/[^"'\s\\]+\.(?:mp3|m4a)[^"'\s\\]*)/gi;
+  while ((am = reMp3.exec(html))) found.push(am[1]);
+  dbg.foundInPage = found.slice(0, 6);
 
   const candidates = [];
-  if (audioUrl) candidates.push(audioUrl);
+  const seen = {};
+  function add(u) { if (u && !seen[u]) { seen[u] = 1; candidates.push(u); } }
+  found.forEach(add);
   if (id) {
-    candidates.push('https://cdn1.suno.ai/' + id + '.mp3');
-    candidates.push('https://cdn2.suno.ai/' + id + '.mp3');
-    candidates.push('https://audiopipe.suno.ai/?item_id=' + id);
+    add('https://cdn1.suno.ai/' + id + '.mp3');
+    add('https://cdn2.suno.ai/' + id + '.mp3');
   }
   dbg.candidates = candidates;
 
@@ -64,27 +70,46 @@ module.exports = async (req, res) => {
     return;
   }
 
-  let audioRes = null, usedUrl = null;
+  let audioBuf = null, usedType = 'audio/mpeg', usedUrl = null;
   dbg.attempts = [];
   for (const c of candidates) {
+    const att = { url: c };
     try {
-      const r = await fetch(c, { headers: { 'User-Agent': UA, 'Accept': '*/*', 'Referer': 'https://suno.com/' } });
-      dbg.attempts.push({ url: c, status: r.status, type: r.headers.get('content-type') });
-      if (r.ok) { audioRes = r; usedUrl = c; break; }
-    } catch (e) { dbg.attempts.push({ url: c, error: String(e) }); }
+      const r = await fetch(c, { headers: { 'User-Agent': UA, 'Accept': '*/*', 'Referer': 'https://suno.com/' }, redirect: 'follow' });
+      att.status = r.status;
+      const ct = (r.headers.get('content-type') || '').toLowerCase();
+      att.type = ct;
+      if (r.ok) {
+        const b = Buffer.from(await r.arrayBuffer());
+        att.bytes = b.length;
+        const head = b.slice(0, 1).toString('latin1');
+        const htmlish = head === '<' || head === '{';
+        const audioish = ct.indexOf('audio') !== -1 || ct.indexOf('mpeg') !== -1 || ct.indexOf('mp4') !== -1 || ct.indexOf('octet-stream') !== -1 || /\.(mp3|m4a)(\?|$)/i.test(c);
+        if (b.length > 20000 && !htmlish && audioish) {
+          audioBuf = b; usedUrl = c;
+          usedType = ct.indexOf('mp4') !== -1 || /\.m4a/i.test(c) ? 'audio/mp4' : 'audio/mpeg';
+          att.accepted = true;
+          dbg.attempts.push(att);
+          break;
+        }
+        att.rejected = true;
+      }
+    } catch (e) { att.error = String(e); }
+    dbg.attempts.push(att);
   }
 
   if (debug) { res.setHeader('Content-Type', 'application/json'); res.status(200).send(JSON.stringify(dbg, null, 2)); return; }
 
-  if (!audioRes) {
-    res.status(502).send('Could not reach the audio file for this song. It may be private or the link expired. Try making the song Public on Suno, or use Suno\'s own Download button.');
+  if (!audioBuf) {
+    res.status(502).send('Found the song page but every audio source came back empty or blocked. Add &debug=1 to the end of the link to see details, or use Suno\'s own Download button.');
     return;
   }
 
+  const ext = usedType === 'audio/mp4' ? '.m4a' : '.mp3';
   const safe = wantName.replace(/[^\w\- ]+/g, '').trim().slice(0, 80) || 'suno-song';
-  const buf = Buffer.from(await audioRes.arrayBuffer());
-  res.setHeader('Content-Type', 'audio/mpeg');
-  res.setHeader('Content-Disposition', 'attachment; filename="' + safe + '.mp3"');
+  res.setHeader('Content-Type', usedType);
+  res.setHeader('Content-Length', String(audioBuf.length));
+  res.setHeader('Content-Disposition', 'attachment; filename="' + safe + ext + '"');
   res.setHeader('Cache-Control', 'no-store');
-  res.status(200).send(buf);
+  res.status(200).send(audioBuf);
 };
