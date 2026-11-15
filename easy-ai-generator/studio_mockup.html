@@ -1,0 +1,49 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Studio Mockup</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0b0f19;--panel:#121826;--input:#0f1522;--border:#1f2937;--text:#e5e7eb;--muted:#9ca3af;--accent:#4f46e5}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-serif}
+.wrap{max-width:1200px;margin:0 auto;padding:24px 16px}
+.colab{background:#1e1e1e;border:1px solid #333;border-radius:8px;padding:10px 14px;font:13px ui-monospace,monospace;color:#8f8;margin-bottom:18px}
+.colab span{color:#aaa}
+#title{text-align:center;padding:8px 0 14px}#title h1{font-size:1.9rem;letter-spacing:-.02em;margin:0 0 2px}#title p{opacity:.65;margin:0;font-size:.95rem}
+.row{display:flex;gap:14px;flex-wrap:wrap}.col{flex:1;min-width:260px}
+.block{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:12px}
+label{display:block;font-size:.8rem;color:var(--muted);margin-bottom:6px}
+.inp{background:var(--input);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:1.05rem;width:100%}
+textarea.inp{min-height:84px;resize:none;font-family:inherit}
+.sel{display:flex;justify-content:space-between;align-items:center;font-size:.95rem}
+.tabs{display:flex;gap:6px;margin:18px 0 10px;border-bottom:1px solid var(--border)}
+.tab{padding:10px 16px;font-size:.95rem;color:var(--muted);border-bottom:2px solid transparent}.tab.on{color:var(--text);border-color:var(--accent)}
+.slider{height:4px;background:#243044;border-radius:2px;position:relative;margin:14px 0 4px}
+.slider i{position:absolute;top:-6px;width:16px;height:16px;border-radius:50%;background:var(--accent)}
+.btn{display:block;width:100%;height:52px;border:0;border-radius:10px;background:var(--accent);color:#fff;font:600 1.05rem Inter;margin:14px 0}
+.gal{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.img{aspect-ratio:1;border-radius:10px;position:relative;overflow:hidden}
+.img:after{content:"⤓";position:absolute;right:8px;top:8px;background:#0008;border-radius:6px;padding:2px 7px;font-size:14px}
+.a{background:radial-gradient(circle at 30% 70%,#f59e0b 0,#b45309 25%,#1e3a5f 60%,#0b1a2e 100%)}
+.b{background:radial-gradient(circle at 70% 30%,#fde68a 0,#f97316 20%,#7c2d12 50%,#111 100%)}
+.c{background:linear-gradient(160deg,#6ee7b7,#065f46 40%,#022c22)}
+.d{background:radial-gradient(circle at 50% 40%,#c4b5fd 0,#6d28d9 30%,#1e1b4b 70%,#0b0f19)}
+.status{font-size:.9rem;opacity:.7}.prog{height:6px;background:#243044;border-radius:3px;margin-top:10px}.prog i{display:block;height:100%;width:100%;background:var(--accent);border-radius:3px}
+.foot{opacity:.5;font-size:.85rem;text-align:center;margin-top:18px}
+</style></head><body><div class="wrap">
+<div class="colab">1/3 Installing ...<br>2/3 Building the studio ...<br>3/3 Ready. Use the studio below (backup link printed underneath).<br><span>Running on public URL: https://xxxx.gradio.live</span></div>
+<div class="block" style="padding:20px">
+<div id="title"><h1>◆ Studio</h1><p>Free image &amp; video generation · running on your own GPU session</p></div>
+<div class="row">
+ <div class="col" style="flex:5"><div class="block"><label>Prompt</label><textarea class="inp">A lone lighthouse on a cliff at dusk, waves crashing, warm light in the window</textarea>
+  <div class="row" style="margin-top:10px"><div class="col"><label>Style</label><div class="inp sel">Photorealistic <span>▾</span></div></div><div class="col"><label>Seed (-1 = random)</label><div class="inp">-1</div></div></div></div></div>
+ <div class="col" style="flex:3"><div class="block" style="height:100%"><div class="status">Done · seed 184203391 · 1024×1024</div><div class="prog"><i></i></div><div class="status" style="margin-top:8px">Rendering step 25/25</div></div></div>
+</div>
+<div class="tabs"><div class="tab on">Image</div><div class="tab">Video</div><div class="tab">History</div></div>
+<div class="row">
+ <div class="col"><div class="block"><label>Aspect ratio</label><div class="inp sel">Square 1:1 <span>▾</span></div></div></div>
+ <div class="col"><div class="block"><label>Images &nbsp; <b style="color:var(--text)">4</b></label><div class="slider"><i style="left:100%"></i></div></div></div>
+ <div class="col"><div class="block"><label>Quality (steps) &nbsp; <b style="color:var(--text)">25</b></label><div class="slider"><i style="left:40%"></i></div></div></div>
+</div>
+<button class="btn">Generate image</button>
+<div class="block"><label>Result</label><div class="gal"><div class="img a"></div><div class="img b"></div><div class="img c"></div><div class="img d"></div></div></div>
+<div class="foot">First run of each tab downloads its model (a few minutes). Afterwards: images ≈30 s, videos 2–5 min. Files are also saved in /content/outputs.</div>
+</div></div></body></html>
