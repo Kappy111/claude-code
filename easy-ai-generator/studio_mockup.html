@@ -2,48 +2,51 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0b0f19;--panel:#121826;--input:#0f1522;--border:#1f2937;--text:#e5e7eb;--muted:#9ca3af;--accent:#4f46e5}
+:root{--bg:#0b0f19;--panel:#121826;--input:#0b111d;--border:#1f2937;--b2:#243044;--text:#e5e7eb;--muted:#94a3b8}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-serif}
-.wrap{max-width:1200px;margin:0 auto;padding:24px 16px}
-.colab{background:#1e1e1e;border:1px solid #333;border-radius:8px;padding:10px 14px;font:13px ui-monospace,monospace;color:#8f8;margin-bottom:18px}
-.colab span{color:#aaa}
-#title{text-align:center;padding:8px 0 14px}#title h1{font-size:1.9rem;letter-spacing:-.02em;margin:0 0 2px}#title p{opacity:.65;margin:0;font-size:.95rem}
-.row{display:flex;gap:14px;flex-wrap:wrap}.col{flex:1;min-width:260px}
-.block{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:12px}
-label{display:block;font-size:.8rem;color:var(--muted);margin-bottom:6px}
-.inp{background:var(--input);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:1.05rem;width:100%}
-textarea.inp{min-height:84px;resize:none;font-family:inherit}
-.sel{display:flex;justify-content:space-between;align-items:center;font-size:.95rem}
-.tabs{display:flex;gap:6px;margin:18px 0 10px;border-bottom:1px solid var(--border)}
-.tab{padding:10px 16px;font-size:.95rem;color:var(--muted);border-bottom:2px solid transparent}.tab.on{color:var(--text);border-color:var(--accent)}
-.slider{height:4px;background:#243044;border-radius:2px;position:relative;margin:14px 0 4px}
-.slider i{position:absolute;top:-6px;width:16px;height:16px;border-radius:50%;background:var(--accent)}
-.btn{display:block;width:100%;height:52px;border:0;border-radius:10px;background:var(--accent);color:#fff;font:600 1.05rem Inter;margin:14px 0}
-.gal{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.img{aspect-ratio:1;border-radius:10px;position:relative;overflow:hidden}
+.wrap{max-width:1360px;margin:0 auto;padding:0 16px 24px}
+#topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 6px 10px;border-bottom:1px solid var(--border);margin-bottom:14px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:1.15rem}.mark{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#6366f1,#8b5cf6)}
+.brand small{font-weight:500;opacity:.55;font-size:.8rem;margin-left:6px}
+.badges{display:flex;gap:8px}.badge{font-size:.75rem;padding:4px 10px;border-radius:999px;border:1px solid var(--b2);background:#0f1522;color:#cbd5e1}
+.badge.ok{border-color:#14532d;color:#86efac;background:#052e16}.badge.ok:before{content:"●";margin-right:6px;font-size:.6rem}
+.row{display:flex;gap:16px;align-items:flex-start}
+#panel{flex:2;min-width:340px;background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px}
+#canvas{flex:5;background:#0f1522;border:1px solid var(--border);border-radius:14px;padding:14px;min-height:620px}
+.lbl{font-size:.74rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:14px 0 6px}.lbl:first-child{margin-top:0}
+.inp{background:var(--input);border:1px solid var(--b2);border-radius:8px;padding:10px 12px;font-size:.98rem}
+.sel{display:flex;justify-content:space-between}.seg{display:flex;background:var(--input);border:1px solid var(--b2);border-radius:8px;padding:3px}
+.seg div{flex:1;text-align:center;padding:7px;border-radius:6px;font-size:.9rem;color:var(--muted)}.seg .on{background:#4f46e5;color:#fff}
+.slider{height:4px;background:var(--b2);border-radius:2px;position:relative;margin:16px 0 6px}.slider i{position:absolute;top:-6px;width:16px;height:16px;border-radius:50%;background:#6366f1}
+.sl-h{display:flex;justify-content:space-between;font-size:.74rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-top:14px}.sl-h b{color:var(--text);text-transform:none;letter-spacing:0;font-size:.9rem}
+.acc{border:1px solid var(--b2);border-radius:8px;padding:10px 12px;font-size:.9rem;display:flex;justify-content:space-between;margin-top:14px}
+.btn{width:100%;height:50px;border:0;border-radius:10px;background:linear-gradient(135deg,#6366f1,#7c3aed);color:#fff;font:600 1rem Inter;margin-top:16px}
+.status{font-size:.85rem;color:var(--muted);margin-top:10px;display:flex;justify-content:space-between}
+.gal{display:grid;grid-template-columns:1fr 1fr;gap:10px}.img{aspect-ratio:4/3;border-radius:10px;position:relative}
 .img:after{content:"⤓";position:absolute;right:8px;top:8px;background:#0008;border-radius:6px;padding:2px 7px;font-size:14px}
-.a{background:radial-gradient(circle at 30% 70%,#f59e0b 0,#b45309 25%,#1e3a5f 60%,#0b1a2e 100%)}
-.b{background:radial-gradient(circle at 70% 30%,#fde68a 0,#f97316 20%,#7c2d12 50%,#111 100%)}
-.c{background:linear-gradient(160deg,#6ee7b7,#065f46 40%,#022c22)}
-.d{background:radial-gradient(circle at 50% 40%,#c4b5fd 0,#6d28d9 30%,#1e1b4b 70%,#0b0f19)}
-.status{font-size:.9rem;opacity:.7}.prog{height:6px;background:#243044;border-radius:3px;margin-top:10px}.prog i{display:block;height:100%;width:100%;background:var(--accent);border-radius:3px}
-.foot{opacity:.5;font-size:.85rem;text-align:center;margin-top:18px}
+.a{background:radial-gradient(circle at 30% 70%,#f59e0b 0,#b45309 25%,#1e3a5f 60%,#0b1a2e)}.b{background:radial-gradient(circle at 70% 30%,#fde68a,#f97316 20%,#7c2d12 50%,#111)}
+.c{background:linear-gradient(160deg,#6ee7b7,#065f46 40%,#022c22)}.d{background:radial-gradient(circle at 50% 40%,#c4b5fd,#6d28d9 30%,#1e1b4b 70%,#0b0f19)}
+.recent{display:grid;grid-template-columns:repeat(8,1fr);gap:6px}.recent>div{aspect-ratio:1;border-radius:6px;background:#1e293b}
+.recent .a,.recent .b,.recent .c,.recent .d{opacity:.9}
+.colab{background:#1e1e1e;border:1px solid #333;border-radius:8px;padding:10px 14px;font:13px ui-monospace,monospace;color:#8f8;margin:14px 0}
 </style></head><body><div class="wrap">
-<div class="colab">1/3 Installing ...<br>2/3 Building the studio ...<br>3/3 Ready. Use the studio below (backup link printed underneath).<br><span>Running on public URL: https://xxxx.gradio.live</span></div>
-<div class="block" style="padding:20px">
-<div id="title"><h1>◆ Studio</h1><p>Free image &amp; video generation · running on your own GPU session</p></div>
+<div class="colab">1/3 Installing ...<br>2/3 Building the studio ...<br>3/3 Ready. Use the studio below (backup link printed underneath).</div>
+<div id="topbar"><div class="brand"><span class="mark"></span>Studio<small>Image &amp; Video Generation</small></div>
+<div class="badges"><span class="badge ok">Tesla T4</span><span class="badge">SDXL 1.0</span><span class="badge">LTX-Video</span><span class="badge">Free session</span></div></div>
 <div class="row">
- <div class="col" style="flex:5"><div class="block"><label>Prompt</label><textarea class="inp">A lone lighthouse on a cliff at dusk, waves crashing, warm light in the window</textarea>
-  <div class="row" style="margin-top:10px"><div class="col"><label>Style</label><div class="inp sel">Photorealistic <span>▾</span></div></div><div class="col"><label>Seed (-1 = random)</label><div class="inp">-1</div></div></div></div></div>
- <div class="col" style="flex:3"><div class="block" style="height:100%"><div class="status">Done · seed 184203391 · 1024×1024</div><div class="prog"><i></i></div><div class="status" style="margin-top:8px">Rendering step 25/25</div></div></div>
+<div id="panel">
+ <div class="lbl">Mode</div><div class="seg"><div class="on">Image</div><div>Video</div></div>
+ <div class="lbl">Prompt</div><div class="inp" style="min-height:104px;line-height:1.45">A lone lighthouse on a cliff at dusk, waves crashing against the rocks, warm light glowing in the window, dramatic sky</div>
+ <div class="lbl">Style preset</div><div class="inp sel">Photorealistic <span>▾</span></div>
+ <div class="lbl">Aspect ratio</div><div class="inp sel">Landscape 4:3 <span>▾</span></div>
+ <div class="sl-h">Number of images <b>4</b></div><div class="slider"><i style="left:100%;margin-left:-16px"></i></div>
+ <div class="acc">Advanced <span>▸</span></div>
+ <button class="btn">Generate image</button>
+ <div class="status"><span>Done · seed 184203391</span><span>1152 × 896 · 28 s</span></div>
 </div>
-<div class="tabs"><div class="tab on">Image</div><div class="tab">Video</div><div class="tab">History</div></div>
-<div class="row">
- <div class="col"><div class="block"><label>Aspect ratio</label><div class="inp sel">Square 1:1 <span>▾</span></div></div></div>
- <div class="col"><div class="block"><label>Images &nbsp; <b style="color:var(--text)">4</b></label><div class="slider"><i style="left:100%"></i></div></div></div>
- <div class="col"><div class="block"><label>Quality (steps) &nbsp; <b style="color:var(--text)">25</b></label><div class="slider"><i style="left:40%"></i></div></div></div>
-</div>
-<button class="btn">Generate image</button>
-<div class="block"><label>Result</label><div class="gal"><div class="img a"></div><div class="img b"></div><div class="img c"></div><div class="img d"></div></div></div>
-<div class="foot">First run of each tab downloads its model (a few minutes). Afterwards: images ≈30 s, videos 2–5 min. Files are also saved in /content/outputs.</div>
-</div></div></body></html>
+<div id="canvas">
+ <div class="lbl">Result</div>
+ <div class="gal"><div class="img a"></div><div class="img b"></div><div class="img c"></div><div class="img d"></div></div>
+ <div class="lbl" style="margin-top:16px">Recent</div>
+ <div class="recent"><div class="a"></div><div class="b"></div><div class="c"></div><div class="d"></div><div></div><div></div><div></div><div></div></div>
+</div></div></div></body></html>
