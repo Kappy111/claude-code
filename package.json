@@ -1,0 +1,25 @@
+{
+  "name": "messenger",
+  "version": "1.0.0",
+  "description": "Phone-free messenger: username login, live chat over WebSockets.",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Kappy111/claude-code.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Kappy111/claude-code/issues"
+  },
+  "homepage": "https://github.com/Kappy111/claude-code#readme",
+  "dependencies": {
+    "express": "^4.21.2",
+    "ws": "^8.18.0"
+  },
+  "type": "module"
+}
