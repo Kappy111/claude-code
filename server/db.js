@@ -4,12 +4,14 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 let run; // (sql, params) => Promise<rows>
+let noDb = false;
 
 if (process.env.DATABASE_URL) {
   const { neon } = await import('@neondatabase/serverless');
   const sql = neon(process.env.DATABASE_URL);
   run = (text, params = []) => sql.query(text, params);
 } else if (process.env.VERCEL) {
+  noDb = true;
   run = async () => { throw Object.assign(new Error('DATABASE_URL is not set. Add a Neon Postgres database to this Vercel project.'), { status: 503 }); };
 } else {
   const { PGlite } = await import('@electric-sql/pglite');
@@ -74,6 +76,7 @@ const SCHEMA = `
 
 let readyPromise;
 export function ready() {
+  if (noDb) return Promise.resolve();
   if (!readyPromise) {
     readyPromise = (async () => {
       // Neon's HTTP driver runs one statement per query.
