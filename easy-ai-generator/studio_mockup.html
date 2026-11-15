@@ -29,24 +29,30 @@
 .recent{display:grid;grid-template-columns:repeat(8,1fr);gap:6px}.recent>div{aspect-ratio:1;border-radius:6px;background:#1e293b}
 .recent .a,.recent .b,.recent .c,.recent .d{opacity:.9}
 .colab{background:#1e1e1e;border:1px solid #333;border-radius:8px;padding:10px 14px;font:13px ui-monospace,monospace;color:#8f8;margin:14px 0}
+.vid{border-radius:10px;overflow:hidden;background:#000;aspect-ratio:16/9;position:relative}
+.scene{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 35%,#fbbf24 0,#f97316 8%,#7c2d12 22%,transparent 40%),linear-gradient(180deg,#1e3a5f 0,#0f2744 45%,#0b1a2e 55%,#06111d 100%)}
+.scene:before{content:"";position:absolute;left:0;right:0;top:55%;height:45%;background:repeating-linear-gradient(180deg,#0b2740 0 6px,#113a5c 6px 12px);opacity:.7}
+.ctrl{position:absolute;left:0;right:0;bottom:0;display:flex;align-items:center;gap:12px;padding:10px 14px;background:linear-gradient(transparent,#000c);font-size:.85rem}
+.bar{flex:1;height:4px;background:#ffffff40;border-radius:2px}.bar i{display:block;width:35%;height:100%;background:#fff;border-radius:2px}
 </style></head><body><div class="wrap">
 <div class="colab">1/3 Installing ...<br>2/3 Building the studio ...<br>3/3 Ready. Use the studio below (backup link printed underneath).</div>
 <div id="topbar"><div class="brand"><span class="mark"></span>Studio<small>Image &amp; Video Generation</small></div>
-<div class="badges"><span class="badge ok">Tesla T4</span><span class="badge">SDXL 1.0</span><span class="badge">LTX-Video</span><span class="badge">Free session</span></div></div>
+<div class="badges"><span class="badge ok">Tesla T4</span><span class="badge">SDXL · FLUX</span><span class="badge">LTX · Wan 2.1</span><span class="badge">Free session</span></div></div>
 <div class="row">
 <div id="panel">
- <div class="lbl">Mode</div><div class="seg"><div class="on">Image</div><div>Video</div></div>
+ <div class="lbl">Mode</div><div class="seg"><div>Image</div><div class="on">Video</div></div>
+ <div class="lbl">Model</div><div class="inp sel">Wan 2.1 1.3B <span>▾</span></div><div style="font-size:.75rem;color:var(--muted);margin-top:5px">LTX: fastest. Wan: better motion; use Fast speed on the free GPU</div>
  <div class="lbl">Prompt</div><div class="inp" style="min-height:104px;line-height:1.45">A lone lighthouse on a cliff at dusk, waves crashing against the rocks, warm light glowing in the window, dramatic sky</div>
  <div class="lbl">Style preset</div><div class="inp sel">Photorealistic <span>▾</span></div>
- <div class="lbl">Aspect ratio</div><div class="inp sel">Landscape 4:3 <span>▾</span></div>
- <div class="sl-h">Number of images <b>4</b></div><div class="slider"><i style="left:100%;margin-left:-16px"></i></div>
+ <div class="sl-h">Length (seconds) <b>3</b></div><div class="slider"><i style="left:33%"></i></div>
+ <div class="lbl">Speed</div><div class="seg"><div class="on">Fast</div><div>Balanced</div><div>Quality</div></div><div style="font-size:.75rem;color:var(--muted);margin-top:5px">Fast ≈ 2-4 min · Balanced ≈ 4-8 min · Quality = full steps</div>
  <div class="acc">Advanced <span>▸</span></div>
- <button class="btn">Generate image</button>
- <div class="status"><span>Done · seed 184203391</span><span>1152 × 896 · 28 s</span></div>
+ <button class="btn">Generate video</button>
+ <div class="status"><span>Done · Wan 2.1 · Fast · seed 7731</span><span>640 × 368 · 3.1 min</span></div>
 </div>
 <div id="canvas">
  <div class="lbl">Result</div>
- <div class="gal"><div class="img a"></div><div class="img b"></div><div class="img c"></div><div class="img d"></div></div>
+ <div class="vid"><div class="scene"></div><div class="ctrl"><span>▶</span><div class="bar"><i></i></div><span>0:01 / 0:03</span><span>⤓</span></div></div>
  <div class="lbl" style="margin-top:16px">Recent</div>
  <div class="recent"><div class="a"></div><div class="b"></div><div class="c"></div><div class="d"></div><div></div><div></div><div></div><div></div></div>
 </div></div></div></body></html>
