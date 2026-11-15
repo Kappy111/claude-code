@@ -1,12 +1,11 @@
 import crypto from 'node:crypto';
-import { q } from './db.js';
+import { query, one, num } from './db.js';
 
 const SESSION_TTL = 30 * 24 * 3600 * 1000;
 
 export function hashPassword(password) {
   const salt = crypto.randomBytes(16).toString('hex');
-  const hash = crypto.scryptSync(password, salt, 64).toString('hex');
-  return `${salt}:${hash}`;
+  return `${salt}:${crypto.scryptSync(password, salt, 64).toString('hex')}`;
 }
 
 export function verifyPassword(password, stored) {
@@ -16,24 +15,20 @@ export function verifyPassword(password, stored) {
   return candidate.length === expected.length && crypto.timingSafeEqual(candidate, expected);
 }
 
-export function createSession(userId) {
+export async function createSession(userId) {
   const token = crypto.randomBytes(32).toString('base64url');
   const now = Date.now();
-  q('INSERT INTO sessions (token, user_id, created_at, expires_at) VALUES (?, ?, ?, ?)')
-    .run(token, userId, now, now + SESSION_TTL);
+  await query('INSERT INTO sessions (token, user_id, created_at, expires_at) VALUES ($1, $2, $3, $4)', [token, userId, now, now + SESSION_TTL]);
   return token;
 }
 
-export function destroySession(token) {
-  q('DELETE FROM sessions WHERE token = ?').run(token);
-}
+export const destroySession = (token) => query('DELETE FROM sessions WHERE token = $1', [token]);
 
-export function userFromToken(token) {
+export async function userFromToken(token) {
   if (!token) return null;
-  const row = q(`SELECT u.id, u.username, u.display_name FROM sessions s
-                 JOIN users u ON u.id = s.user_id
-                 WHERE s.token = ? AND s.expires_at > ?`).get(token, Date.now());
-  return row || null;
+  return num(await one(`SELECT u.id, u.username, u.display_name FROM sessions s
+                        JOIN users u ON u.id = s.user_id
+                        WHERE s.token = $1 AND s.expires_at > $2`, [token, Date.now()]));
 }
 
 export function parseCookies(header = '') {
@@ -45,19 +40,16 @@ export function parseCookies(header = '') {
   return out;
 }
 
-export function cookieOptions() {
-  return {
-    httpOnly: true,
-    sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production',
-    maxAge: SESSION_TTL,
-    path: '/',
-  };
-}
+export const cookieOptions = () => ({
+  httpOnly: true, sameSite: 'lax', path: '/', maxAge: SESSION_TTL,
+  secure: process.env.NODE_ENV === 'production' || !!process.env.VERCEL,
+});
 
-export function requireAuth(req, res, next) {
-  const user = userFromToken(req.cookies.session);
-  if (!user) return res.status(401).json({ error: 'Not signed in' });
-  req.user = user;
-  next();
+export async function requireAuth(req, res, next) {
+  try {
+    const user = await userFromToken(req.cookies.session);
+    if (!user) return res.status(401).json({ error: 'Not signed in' });
+    req.user = user;
+    next();
+  } catch (e) { next(e); }
 }

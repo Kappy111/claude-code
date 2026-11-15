@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "description": "Phone-free messenger: username login, live chat over WebSockets.",
   "scripts": {
-    "start": "node server/index.js",
-    "dev": "node --watch server/index.js"
+    "start": "node server.js",
+    "dev": "node --watch server.js"
   },
   "repository": {
     "type": "git",
@@ -18,8 +18,12 @@
   },
   "homepage": "https://github.com/Kappy111/claude-code#readme",
   "dependencies": {
-    "express": "^4.21.2",
-    "ws": "^8.18.0"
+    "@electric-sql/pglite": "^0.3.7",
+    "@neondatabase/serverless": "^1.0.1",
+    "express": "^4.21.2"
   },
-  "type": "module"
+  "type": "module",
+  "engines": {
+    "node": "22.x"
+  }
 }

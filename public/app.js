@@ -2,7 +2,7 @@
   const app = document.getElementById('app');
   const state = {
     user: null, conversations: [], active: null, messages: new Map(),
-    online: new Set(), typing: new Map(), ws: null, wsRetry: 1000,
+    online: new Set(), typing: new Map(),
   };
 
   // ---------- utils ----------
@@ -152,7 +152,7 @@
   function renderStatus() {
     const c = state.conversations.find((x) => x.id === state.active);
     if (!c) return;
-    const typers = [...(state.typing.get(c.id)?.keys() || [])]
+    const typers = [...(state.typing.get(c.id) || [])]
       .map((id) => c.members.find((m) => m.id === id)?.display_name).filter(Boolean);
     if (typers.length) { els.status.textContent = `${typers.join(', ')} ${typers.length > 1 ? 'are' : 'is'} typing…`; return; }
     const msgs = state.messages.get(c.id) || [];
@@ -173,6 +173,7 @@
     renderConvList(); renderActive();
     markRead();
     els.input.focus();
+    poll();
   }
 
   async function onScroll() {
@@ -200,7 +201,10 @@
     const body = els.input.value.trim();
     if (!body || !state.active) return;
     els.input.value = ''; els.input.style.height = '';
-    try { await api(`/api/conversations/${state.active}/messages`, { method: 'POST', body: { body } }); }
+    try {
+      const { message } = await api(`/api/conversations/${state.active}/messages`, { method: 'POST', body: { body } });
+      handle({ type: 'message', message });
+    }
     catch (ex) { els.status.textContent = 'Failed to send: ' + ex.message; els.input.value = body; }
   }
 
@@ -209,9 +213,9 @@
     els.input.style.height = 'auto';
     els.input.style.height = Math.min(els.input.scrollHeight, 140) + 'px';
     const t = Date.now();
-    if (t - typingTimer > 2000 && state.ws?.readyState === 1) {
+    if (t - typingTimer > 2500 && state.active && els.input.value) {
       typingTimer = t;
-      state.ws.send(JSON.stringify({ type: 'typing', conversation_id: state.active }));
+      api(`/api/conversations/${state.active}/typing`, { method: 'POST', body: {} }).catch(() => {});
     }
   }
 
@@ -272,20 +276,32 @@
     }
   }
 
-  // ---------- websocket ----------
-  function connect() {
-    const proto = location.protocol === 'https:' ? 'wss' : 'ws';
-    const ws = new WebSocket(`${proto}://${location.host}/ws`);
-    state.ws = ws;
-    ws.onopen = () => { state.wsRetry = 1000; };
-    ws.onmessage = (e) => handle(JSON.parse(e.data));
-    ws.onclose = (e) => {
-      if (e.code === 4001) return location.reload();
-      setTimeout(connect, state.wsRetry); state.wsRetry = Math.min(state.wsRetry * 2, 15000);
-      refresh();
-    };
-    const ping = setInterval(() => ws.readyState === 1 ? ws.send('{"type":"ping"}') : clearInterval(ping), 25000);
+  // ---------- polling sync ----------
+  let cursor = 0, pollTimer = 0, polling = false;
+  async function poll() {
+    clearTimeout(pollTimer);
+    if (polling) return;
+    polling = true;
+    try {
+      const data = await api(`/api/sync?since=${cursor}&conv=${state.active || 0}`);
+      cursor = data.cursor;
+      const onlineBefore = [...state.online].join(',');
+      state.online = new Set(data.online);
+      const typingNow = new Set(data.typing);
+      if (state.active) {
+        state.typing.set(state.active, typingNow);
+      }
+      for (const ev of data.events) handle(ev);
+      if (onlineBefore !== [...state.online].join(',')) { renderConvList(); renderActive(); }
+      else renderStatus();
+    } catch (ex) {
+      if (String(ex.message).includes('Not signed in')) return location.reload();
+    } finally {
+      polling = false;
+      pollTimer = setTimeout(poll, document.hidden ? 10000 : 2500);
+    }
   }
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) poll(); });
 
   async function refresh() {
     try {
@@ -301,8 +317,6 @@
 
   function handle(ev) {
     switch (ev.type) {
-      case 'hello': state.online = new Set(ev.online); renderConvList(); renderActive(); break;
-      case 'presence': ev.online ? state.online.add(ev.user_id) : state.online.delete(ev.user_id); renderConvList(); renderActive(); break;
       case 'conversation': upsertConversation(ev.conversation); break;
       case 'message': {
         const m = ev.message;
@@ -313,6 +327,7 @@
         state.conversations.sort((a, b) => (b.last_message?.created_at || 0) - (a.last_message?.created_at || 0));
         if (state.messages.has(c.id)) state.messages.get(c.id).push(m);
         state.typing.get(c.id)?.delete(m.sender_id);
+        poll();
         if (m.sender_id === state.user.id) c.members.find((x) => x.id === m.sender_id).last_read_id = m.id;
         renderConvList();
         if (state.active === c.id) { renderMessages(c); renderStatus(); if (document.hasFocus()) markRead(); }
@@ -323,14 +338,6 @@
         const c = state.conversations.find((x) => x.id === ev.conversation_id);
         const mem = c?.members.find((x) => x.id === ev.user_id);
         if (mem) { mem.last_read_id = Math.max(mem.last_read_id, ev.last_read_id); if (state.active === c.id) renderStatus(); }
-        break;
-      }
-      case 'typing': {
-        if (!state.typing.has(ev.conversation_id)) state.typing.set(ev.conversation_id, new Map());
-        const map = state.typing.get(ev.conversation_id);
-        clearTimeout(map.get(ev.user_id));
-        map.set(ev.user_id, setTimeout(() => { map.delete(ev.user_id); renderStatus(); }, 3500));
-        renderStatus();
         break;
       }
     }
@@ -349,7 +356,7 @@
     const { conversations } = await api('/api/conversations');
     state.conversations = conversations;
     renderShell();
-    connect();
+    poll();
     if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission().catch(() => {});
   }
 
