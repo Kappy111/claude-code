@@ -1,0 +1,144 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Studio</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0b0f19;--panel:#121826;--input:#0b111d;--border:#1f2937;--b2:#243044;--text:#e5e7eb;--muted:#94a3b8;--acc:#6366f1}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-serif}
+.wrap{max-width:1360px;margin:0 auto;padding:0 16px 32px}
+#topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:14px 6px 10px;border-bottom:1px solid var(--border);margin-bottom:14px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:1.15rem}.mark{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#6366f1,#8b5cf6)}
+.brand small{font-weight:500;opacity:.55;font-size:.8rem;margin-left:6px}
+.badges{display:flex;gap:8px;flex-wrap:wrap}.badge{font-size:.75rem;padding:4px 10px;border-radius:999px;border:1px solid var(--b2);background:#0f1522;color:#cbd5e1}
+.badge.ok{border-color:#14532d;color:#86efac;background:#052e16}.badge.bad{border-color:#7f1d1d;color:#fca5a5;background:#2a0a0a}
+.row{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}
+#panel{flex:2;min-width:320px;background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px}
+#canvas{flex:5;min-width:320px;background:#0f1522;border:1px solid var(--border);border-radius:14px;padding:14px;min-height:620px}
+.lbl{font-size:.74rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:14px 0 6px}.lbl:first-child{margin-top:0}
+input,select,textarea{width:100%;background:var(--input);border:1px solid var(--b2);border-radius:8px;padding:10px 12px;font:inherit;font-size:.98rem;color:var(--text)}
+textarea{min-height:104px;resize:vertical;line-height:1.45}
+.seg{display:flex;background:var(--input);border:1px solid var(--b2);border-radius:8px;padding:3px}
+.seg button{flex:1;border:0;background:transparent;padding:7px;border-radius:6px;font:inherit;font-size:.9rem;color:var(--muted);cursor:pointer}.seg button.on{background:#4f46e5;color:#fff}
+.hint{font-size:.75rem;color:var(--muted);margin-top:5px}
+.btn{width:100%;height:50px;border:0;border-radius:10px;background:linear-gradient(135deg,#6366f1,#7c3aed);color:#fff;font:600 1rem Inter;margin-top:16px;cursor:pointer}
+.btn:disabled{opacity:.5;cursor:wait}.btn.sec{background:#1e293b;height:40px;font-weight:500}
+.status{font-size:.85rem;color:var(--muted);margin-top:10px;min-height:1.2em}
+.prog{height:6px;background:var(--b2);border-radius:3px;margin-top:8px;overflow:hidden}.prog i{display:block;height:100%;width:0;background:var(--acc);transition:width .3s}
+.gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
+.gal figure{margin:0;position:relative;border-radius:10px;overflow:hidden;background:#000}.gal img{width:100%;display:block}
+.gal a{position:absolute;right:8px;top:8px;background:#0009;color:#fff;border-radius:6px;padding:2px 8px;text-decoration:none;font-size:14px}
+video{width:100%;border-radius:10px;background:#000;max-height:560px}
+.recent{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:6px}.recent img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:6px;cursor:pointer}
+.empty{color:var(--muted);text-align:center;padding:120px 20px;font-size:.95rem;line-height:1.7}
+details{border:1px solid var(--b2);border-radius:8px;padding:10px 12px;margin-top:14px;font-size:.9rem}summary{cursor:pointer}
+.setup{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:14px}
+.setup ol{margin:8px 0 0;padding-left:20px;line-height:1.8;font-size:.92rem}.setup code{background:#0b111d;padding:2px 6px;border-radius:4px}
+a.link{color:#a5b4fc}
+</style></head><body><div class="wrap">
+<div id="topbar">
+  <div class="brand"><span class="mark"></span>Studio<small>Image &amp; Video Generation</small></div>
+  <div class="badges"><span id="conn" class="badge bad">Not connected</span><span class="badge">SDXL · FLUX</span><span class="badge">LTX · Wan 2.1</span><span class="badge">Free session</span></div>
+</div>
+
+<div class="setup" id="setup">
+  <strong>Connect your free GPU backend</strong>
+  <ol>
+    <li><a class="link" id="colab" target="_blank" href="#">Open the notebook in Google Colab</a>, set <b>Runtime → T4 GPU</b>, press ▶️ and wait ~10 min.</li>
+    <li>Copy the link it prints that ends in <code>gradio.live</code> and paste it below.</li>
+  </ol>
+  <div class="row" style="margin-top:10px;align-items:center"><input id="backend" placeholder="https://xxxxxxxx.gradio.live" style="flex:1;min-width:240px"><button class="btn sec" id="connect" style="width:160px;margin:0">Connect</button></div>
+  <div class="hint">The link changes every time you restart Colab. Keep the Colab tab open while you work.</div>
+</div>
+
+<div class="row">
+<div id="panel">
+  <div class="lbl">Mode</div><div class="seg" id="mode"><button class="on" data-v="Image">Image</button><button data-v="Video">Video</button></div>
+  <div class="lbl">Model</div>
+  <select id="imodel"><option>SDXL</option><option>FLUX.1 schnell</option></select>
+  <select id="vmodel" hidden><option>LTX-Video</option><option>Wan 2.1 1.3B</option></select>
+  <div class="hint" id="mhint">SDXL: fast (~30 s). FLUX: sharper, 1-2 min, first load ~10 min</div>
+  <div class="lbl">Prompt</div><textarea id="prompt" placeholder="Describe the scene, subject, lighting and mood…"></textarea>
+  <div class="lbl">Style preset</div>
+  <select id="style"><option>None</option><option selected>Photorealistic</option><option>Cinematic</option><option>Anime</option><option>3D Render</option><option>Watercolor</option><option>Digital Art</option></select>
+  <div id="imgopts">
+    <div class="lbl">Aspect ratio</div><select id="size"><option>Square 1:1</option><option>Portrait 3:4</option><option>Landscape 4:3</option><option>Widescreen 16:9</option></select>
+    <div class="lbl">Number of images <b id="countv" style="float:right;color:var(--text)">1</b></div><input type="range" id="count" min="1" max="4" value="1">
+  </div>
+  <div id="vidopts" hidden>
+    <div class="lbl">Length (seconds) <b id="secsv" style="float:right;color:var(--text)">3</b></div><input type="range" id="secs" min="2" max="5" value="3">
+    <div class="lbl">Speed</div><div class="seg" id="speed"><button class="on" data-v="Fast">Fast</button><button data-v="Balanced">Balanced</button><button data-v="Quality">Quality</button></div>
+    <div class="hint">Fast ≈ 2-4 min · Balanced ≈ 4-8 min · Quality = full steps (slow on free GPU)</div>
+  </div>
+  <details><summary>Advanced</summary>
+    <div class="lbl">Quality (steps) <b id="stepsv" style="float:right;color:var(--text)">25</b></div><input type="range" id="steps" min="15" max="40" value="25">
+    <div class="lbl">Seed (-1 = random)</div><input type="number" id="seed" value="-1">
+  </details>
+  <button class="btn" id="go">Generate image</button>
+  <div class="status" id="status">Connect a backend to begin.</div>
+  <div class="prog"><i id="bar"></i></div>
+</div>
+<div id="canvas">
+  <div class="lbl">Result</div>
+  <div id="result"><div class="empty">Your images and videos appear here.<br>Nothing leaves your own GPU session.</div></div>
+  <div class="lbl" style="margin-top:16px">Recent</div><div class="recent" id="recent"></div>
+</div>
+</div></div>
+
+<script type="module">
+let Client=null;
+async function lib(){ if(!Client){ ({Client} = await import("https://cdn.jsdelivr.net/npm/@gradio/client@1.14.2/+esm")); } return Client; }
+const $ = s => document.querySelector(s);
+const COLAB = "https://colab.research.google.com/github/Kappy111/claude-code/blob/claude/sharp-sagan-1gudj5/easy-ai-generator/Easy_Image_Video_Generator.ipynb";
+$("#colab").href = COLAB;
+let client = null, mode = "Image", speed = "Fast";
+const recent = [];
+
+function seg(id, cb){ $(id).querySelectorAll("button").forEach(b=>b.onclick=()=>{ $(id).querySelectorAll("button").forEach(x=>x.classList.remove("on")); b.classList.add("on"); cb(b.dataset.v); }); }
+seg("#mode", v=>{ mode=v; const img=v==="Image"; $("#imodel").hidden=!img; $("#vmodel").hidden=img; $("#imgopts").hidden=!img; $("#vidopts").hidden=img;
+  $("#go").textContent = img?"Generate image":"Generate video";
+  $("#mhint").textContent = img?"SDXL: fast (~30 s). FLUX: sharper, 1-2 min, first load ~10 min":"LTX: fastest. Wan: better motion; use Fast speed on the free GPU"; });
+seg("#speed", v=>speed=v);
+for (const [r,l] of [["#count","#countv"],["#secs","#secsv"],["#steps","#stepsv"]]) $(r).oninput=()=>$(l).textContent=$(r).value;
+
+const saved = localStorage.getItem("backend"); if (saved) { $("#backend").value = saved; }
+async function connect(){
+  const url = $("#backend").value.trim().replace(/\/$/,"");
+  if(!url) return;
+  $("#conn").textContent="Connecting…"; $("#conn").className="badge";
+  try { const C = await lib(); client = await C.connect(url); localStorage.setItem("backend", url);
+        $("#conn").textContent="Connected · GPU ready"; $("#conn").className="badge ok"; $("#status").textContent="Ready.";
+        $("#setup").style.display="none"; }
+  catch(e){ client=null; $("#conn").textContent="Not connected"; $("#conn").className="badge bad"; $("#status").textContent="Could not reach that link. Is the Colab cell still running?"; }
+}
+$("#connect").onclick = connect; if (saved) connect();
+$("#backend").addEventListener("keydown", e=>{ if(e.key==="Enter") connect(); });
+
+function fileUrl(f){ if(!f) return null; if(typeof f==="string") return f; return f.url || (f.image&&f.image.url) || (f.video&&f.video.url) || f.path || null; }
+function addRecent(u){ recent.unshift(u); $("#recent").innerHTML = recent.slice(0,24).map(x=>`<img src="${x}" onclick="window.open('${x}')">`).join(""); }
+
+$("#go").onclick = async ()=>{
+  if(!client){ $("#setup").style.display=""; $("#status").textContent="Connect a backend first."; return; }
+  const prompt=$("#prompt").value.trim(); if(!prompt){ $("#status").textContent="Type a description first."; return; }
+  $("#go").disabled=true; $("#bar").style.width="2%"; $("#status").textContent="Starting…";
+  const args=[mode,$("#imodel").value,$("#vmodel").value,prompt,$("#style").value,$("#size").value,+$("#count").value,+$("#steps").value,+$("#secs").value,speed,+$("#seed").value];
+  try{
+    const job = client.submit("/generate", args);
+    let final=null;
+    for await (const msg of job){
+      if(msg.type==="status"){ if(msg.progress_data&&msg.progress_data[0]){ const p=msg.progress_data[0]; if(p.index!=null&&p.length) $("#bar").style.width=Math.round(100*(p.index+1)/p.length)+"%"; if(p.desc) $("#status").textContent=p.desc; }
+        else if(msg.queue&&msg.position>0) $("#status").textContent=`Waiting in queue (${msg.position})…`; }
+      if(msg.type==="data") final=msg.data;
+    }
+    const [gal, vid, , st] = final;
+    $("#bar").style.width="100%"; $("#status").textContent = st || "Done.";
+    if(mode==="Image" && Array.isArray(gal)){
+      const urls = gal.map(fileUrl).filter(Boolean);
+      $("#result").innerHTML = `<div class="gal">${urls.map(u=>`<figure><img src="${u}"><a href="${u}" download target="_blank">⤓</a></figure>`).join("")}</div>`;
+      urls.forEach(addRecent);
+    } else {
+      const u = fileUrl(vid);
+      $("#result").innerHTML = `<video src="${u}" controls autoplay loop></video><div style="margin-top:8px"><a class="link" href="${u}" download target="_blank">Download video</a></div>`;
+    }
+  }catch(e){ $("#status").textContent="Error: "+(e.message||e); console.error(e); }
+  finally{ $("#go").disabled=false; }
+};
+</script></body></html>
