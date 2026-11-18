@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voice Widget</title>
+<style>
+  :root { --bg:#f7f7f8; --fg:#1a1a1a; --card:#fff; --accent:#2563eb; --muted:#6b7280; }
+  body { margin:0; font-family:system-ui,sans-serif; background:var(--bg); color:var(--fg); }
+  #vw-btn { position:fixed; right:20px; bottom:20px; width:64px; height:64px; border-radius:50%;
+    border:none; background:var(--accent); color:#fff; font-size:28px; cursor:pointer;
+    box-shadow:0 6px 20px rgba(0,0,0,.2); transition:transform .15s; }
+  #vw-btn.listening { background:#dc2626; animation:pulse 1.2s infinite; }
+  @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.08)} }
+  #vw-panel { position:fixed; right:20px; bottom:96px; width:min(340px,calc(100vw - 40px));
+    max-height:60vh; overflow:auto; background:var(--card); border-radius:14px; padding:14px;
+    box-shadow:0 10px 30px rgba(0,0,0,.15); display:none; }
+  #vw-panel.open { display:block; }
+  .msg { margin:6px 0; padding:8px 10px; border-radius:10px; font-size:14px; }
+  .you { background:#e0e7ff; text-align:right; }
+  .bot { background:#f3f4f6; }
+  .status { color:var(--muted); font-size:12px; }
+</style>
+</head>
+<body>
+<div id="vw-panel"><div class="status" id="vw-status">Tap the mic and speak.</div><div id="vw-log"></div></div>
+<button id="vw-btn" aria-label="Talk">🎤</button>
+<script>
+(() => {
+  const btn = document.getElementById('vw-btn'), panel = document.getElementById('vw-panel');
+  const log = document.getElementById('vw-log'), status = document.getElementById('vw-status');
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const add = (t, c) => { const d = document.createElement('div'); d.className = 'msg ' + c; d.textContent = t; log.appendChild(d); panel.scrollTop = panel.scrollHeight; };
+  const say = t => { add(t, 'bot'); speechSynthesis.cancel(); speechSynthesis.speak(new SpeechSynthesisUtterance(t)); };
+
+  // Simple local replies — edit these to customize your assistant.
+  function reply(q) {
+    q = q.toLowerCase();
+    if (/\b(hi|hello|hey)\b/.test(q)) return "Hello! How can I help you today?";
+    if (q.includes('time')) return "It's " + new Date().toLocaleTimeString([], {hour:'numeric', minute:'2-digit'}) + ".";
+    if (q.includes('date') || q.includes('today')) return "Today is " + new Date().toLocaleDateString([], {weekday:'long', month:'long', day:'numeric'}) + ".";
+    if (q.includes('name')) return "I'm your voice assistant.";
+    if (q.includes('thank')) return "You're welcome!";
+    if (/\b(bye|goodbye)\b/.test(q)) return "Goodbye!";
+    return "You said: " + q + ". I can tell you the time or date, or you can teach me more replies.";
+  }
+
+  if (!SR) { status.textContent = "Speech recognition isn't supported here. Try Chrome or Edge."; }
+  let rec, on = false;
+  btn.onclick = () => {
+    panel.classList.add('open');
+    if (!SR) return;
+    if (on) { rec.stop(); return; }
+    rec = new SR(); rec.lang = 'en-US'; rec.interimResults = false;
+    rec.onstart = () => { on = true; btn.classList.add('listening'); status.textContent = 'Listening…'; };
+    rec.onend = () => { on = false; btn.classList.remove('listening'); status.textContent = 'Tap the mic and speak.'; };
+    rec.onerror = e => { status.textContent = 'Error: ' + e.error; };
+    rec.onresult = e => { const t = e.results[0][0].transcript; add(t, 'you'); say(reply(t)); };
+    rec.start();
+  };
+})();
+</script>
+</body>
+</html>
